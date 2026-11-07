@@ -20,7 +20,7 @@ const TRAITS={
  Gigante:{n:'Gigante',tiers:[2,3],fx:['Golpe en área al 75%','Golpe en área al 100%']},
  Volador:{n:'Volador',tiers:[3,6],fx:['+25% vel. de ataque','+50% vel. de ataque']},
  Draconico:{n:'Dracónico',tiers:[3,6],fx:['+20% de vida','+35% de vida']},
- NoMuerto:{n:'No muerto',tiers:[3,6],fx:['30% de levantarse al morir','50% de levantarse al morir']},
+ NoMuerto:{n:'No muerto',tiers:[3,6],fx:['25% de levantarse al morir','45% de levantarse al morir']},
  Infernal:{n:'Infernal',tiers:[3,6],fx:['Al matar recuperan 20% de vida','Al matar recuperan 35% de vida']},
  Celestial:{n:'Celestial',tiers:[3,6],fx:['Escudo divino del 20% de vida','Escudo divino del 35% de vida']},
 };
@@ -79,8 +79,8 @@ const WEATHERS=[
 ];
 const PRESETS=[
  {id:'random',n:'Aleatorio'},
- {id:'gemelas',n:'Colinas gemelas'},
- {id:'vado',n:'El vado'},
- {id:'bosque',n:'Bosque partido'},
- {id:'meseta',n:'Meseta central'},
+ {id:'fortaleza',n:'Fortaleza en la colina'},
+ {id:'rio',n:'Río fronterizo'},
+ {id:'emboscada',n:'Bosque de la emboscada'},
+ {id:'paso',n:'Paso estrecho'},
 ];

@@ -46,7 +46,8 @@ function frame(now){
  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(S.map[r][c]===3){const ph=Math.floor(now/260+c*1.7+r*2.3)%8;ctx.fillRect(c*T+((ph*5)%12)+2,r*T+4+(ph%3)*4,3,1)}
  // zonas de despliegue
  if(S.state==='deploy'||S.state==='setup'){
-  for(const side of [0,1]){if(S.state==='deploy'&&side!==S.side)continue;ctx.fillStyle=side?'rgba(255,106,79,0.10)':'rgba(74,163,255,0.12)';const x0=side?(COLS-ZONE)*T:0;ctx.fillRect(x0,0,ZONE*T,H);ctx.fillStyle=side?'rgba(255,106,79,0.7)':'rgba(74,163,255,0.8)';const ex=side?x0:ZONE*T-1;for(let y=0;y<H;y+=6)ctx.fillRect(ex,y,1,3)}
+  for(const side of [0,1]){if(S.state==='deploy'&&side!==S.side)continue;ctx.fillStyle=side?'rgba(255,106,79,0.13)':'rgba(74,163,255,0.15)';for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(dvOf(side,c,r)<ZV)ctx.fillRect(c*T,r*T,T,T)}
+  ctx.fillStyle='rgba(255,240,200,0.5)';for(let i=0;i<=W;i+=7)ctx.fillRect(i,Math.round(H-i*H/W),2,1);
  }
  for(const c of S.corpses)drawCorpse(c);
  const list=S.trees.map(t=>({y:t.y,f:()=>drawTree(t)}));

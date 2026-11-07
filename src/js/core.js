@@ -1,5 +1,8 @@
 'use strict';
-const T=16,COLS=30,ROWS=18,W=COLS*T,H=ROWS*T,ZONE=7,CAP=60,MAXU=50,TLIM=120;
+const T=16,COLS=30,ROWS=18,W=COLS*T,H=ROWS*T,ZV=0.64,CAP=60,CAPB=0,MAXU=50,TLIM=120;
+// Geometría diagonal: v=0 esquina azul (arriba-izquierda), v=2 esquina roja (abajo-derecha); u recorre la línea del frente.
+const vOf=(c,r)=>(c+0.5)/COLS+(r+0.5)/ROWS, uOf=(c,r)=>(c+0.5)/COLS-(r+0.5)/ROWS;
+const dvOf=(side,c,r)=>side===0?vOf(c,r):2-vOf(c,r);
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
 const $=id=>document.getElementById(id);

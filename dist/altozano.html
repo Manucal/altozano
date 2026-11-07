@@ -92,7 +92,7 @@ select{font:inherit;background:var(--panel-2);color:var(--ink);border:1px solid 
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
 </style>
 <header class="top">
-  <div class="brand"><h1>Altozano</h1><span>prototipo 0.2</span></div>
+  <div class="brand"><h1>Altozano</h1><span>prototipo 0.3</span></div>
   <div class="fieldtag" id="fieldtag"></div>
 </header>
 <main class="layout">
@@ -109,7 +109,10 @@ select{font:inherit;background:var(--panel-2);color:var(--ink);border:1px solid 
 <script>
 (()=>{
 'use strict';
-const T=16,COLS=30,ROWS=18,W=COLS*T,H=ROWS*T,ZONE=7,CAP=60,MAXU=50,TLIM=120;
+const T=16,COLS=30,ROWS=18,W=COLS*T,H=ROWS*T,ZV=0.64,CAP=60,CAPB=0,MAXU=50,TLIM=120;
+// Geometría diagonal: v=0 esquina azul (arriba-izquierda), v=2 esquina roja (abajo-derecha); u recorre la línea del frente.
+const vOf=(c,r)=>(c+0.5)/COLS+(r+0.5)/ROWS, uOf=(c,r)=>(c+0.5)/COLS-(r+0.5)/ROWS;
+const dvOf=(side,c,r)=>side===0?vOf(c,r):2-vOf(c,r);
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
 const $=id=>document.getElementById(id);
@@ -140,7 +143,7 @@ const TRAITS={
  Gigante:{n:'Gigante',tiers:[2,3],fx:['Golpe en área al 75%','Golpe en área al 100%']},
  Volador:{n:'Volador',tiers:[3,6],fx:['+25% vel. de ataque','+50% vel. de ataque']},
  Draconico:{n:'Dracónico',tiers:[3,6],fx:['+20% de vida','+35% de vida']},
- NoMuerto:{n:'No muerto',tiers:[3,6],fx:['30% de levantarse al morir','50% de levantarse al morir']},
+ NoMuerto:{n:'No muerto',tiers:[3,6],fx:['25% de levantarse al morir','45% de levantarse al morir']},
  Infernal:{n:'Infernal',tiers:[3,6],fx:['Al matar recuperan 20% de vida','Al matar recuperan 35% de vida']},
  Celestial:{n:'Celestial',tiers:[3,6],fx:['Escudo divino del 20% de vida','Escudo divino del 35% de vida']},
 };
@@ -199,10 +202,10 @@ const WEATHERS=[
 ];
 const PRESETS=[
  {id:'random',n:'Aleatorio'},
- {id:'gemelas',n:'Colinas gemelas'},
- {id:'vado',n:'El vado'},
- {id:'bosque',n:'Bosque partido'},
- {id:'meseta',n:'Meseta central'},
+ {id:'fortaleza',n:'Fortaleza en la colina'},
+ {id:'rio',n:'Río fronterizo'},
+ {id:'emboscada',n:'Bosque de la emboscada'},
+ {id:'paso',n:'Paso estrecho'},
 ];
 
 'use strict';
@@ -308,28 +311,35 @@ function iconURL(id){const s=SPR[id].f[0],c=document.createElement('canvas');con
 
 'use strict';
 /* ================= ESTADO ================= */
-const S={state:'setup',mode:'ai',preset:'random',seed:1,weatherSel:'random',weather:WEATHERS[0],map:null,mapName:'',
+const S={state:'setup',mode:'ai',preset:'random',defSel:'random',def:1,seed:1,weatherSel:'random',weather:WEATHERS[0],map:null,mapName:'',
  armies:[{fac:0,units:[]},{fac:1,units:[]}],side:0,sel:null,units:[],proj:[],parts:[],corpses:[],trees:[],time:0,speed:1,syn:[{},{}],stats:null,result:null,hover:null,toast:null,claims:new Set(),wx:[]};
 
 'use strict';
 /* ================= MAPA ================= */
-function genMap(preset,seed){
- const r=rng(seed),m=Array.from({length:ROWS},()=>Array(COLS).fill(0));
- const blob=(type,cx,cy,rad)=>{for(let y=0;y<ROWS;y++)for(let x=0;x<15;x++){const dx=x+0.5-cx,dy=(y+0.5-cy)*1.15;if(Math.hypot(dx,dy)<=rad+(r()-0.5)*0.9)m[y][x]=type}};
+function genMap(preset,seed,d){
+ const r=rng(seed),m=Array.from({length:ROWS},()=>Array(COLS).fill(0)),A=1-d;
  const R=(a,b)=>a+r()*(b-a);
- let river=false;
- if(preset==='gemelas'){blob(1,R(2.5,4),R(5,13),R(2.4,3));if(r()<0.7)blob(1,R(9,11),r()<0.5?R(2,4):R(14,16),R(1.4,2));blob(2,R(11,13.5),R(4,14),R(1.6,2.4))}
- else if(preset==='vado'){river=true;blob(1,R(3,6),R(3,6),R(1.6,2.2));blob(1,R(3,6),R(12,15),R(1.4,2));blob(2,R(8,11),R(7,11),R(1.5,2.2))}
- else if(preset==='bosque'){for(let i=0;i<4;i++)blob(2,R(12,15),R(1,17),R(1.8,2.6));blob(1,R(4,7),R(2,5),R(1.8,2.3));blob(1,R(4,7),R(13,16),R(1.8,2.3))}
- else if(preset==='meseta'){blob(1,15,R(7.5,10.5),R(3.4,4.2));blob(2,R(5,8),R(1,4),R(1.4,2));blob(2,R(5,8),R(14,17),R(1.4,2))}
- else{const nh=1+(r()*3|0),nf=1+(r()*3|0);for(let i=0;i<nh;i++)blob(1,R(1,14),R(1,17),R(1.4,3));for(let i=0;i<nf;i++)blob(2,R(5,15),R(1,17),R(1.3,2.6));river=r()<0.4}
- if(river){let w=0;for(let y=0;y<ROWS;y++){if(r()<0.25)w=1-w;m[y][14]=3;if(w)m[y][13]=3;else if(m[y][13]===3)m[y][13]=0}}
- for(let y=0;y<ROWS;y++)for(let x=0;x<15;x++)m[y][COLS-1-x]=m[y][x];
+ // centro en coordenadas (dv del bando, u) -> casilla
+ const P=(side,dv,u)=>{const v=side===0?dv:2-dv;return {x:(v+u)/2*COLS,y:(v-u)/2*ROWS}};
+ const blob=(type,side,dv,u,rad)=>{const c=P(side,dv,u);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(Math.hypot(x+0.5-c.x,(y+0.5-c.y)*1.15)<=rad+(r()-0.5)*0.9)m[y][x]=type}};
+ const river=(rv,w,fords)=>{for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const dv=dvOf(d,x,y),u=uOf(x,y);if(Math.abs(dv-rv)<w&&!fords.some(f=>Math.abs(u-f)<0.075))m[y][x]=3}};
+ if(preset==='fortaleza'){blob(1,d,R(0.4,0.5),R(-0.2,0.2),R(2.8,3.4));blob(2,d,R(0.55,0.7),R(-0.6,-0.4),R(1.6,2.2));blob(2,d,R(0.55,0.7),R(0.4,0.6),R(1.6,2.2));blob(2,A,R(0.6,0.8),R(-0.3,0.3),R(1.2,1.8))}
+ else if(preset==='rio'){blob(1,d,R(0.35,0.5),R(-0.3,0.3),R(1.8,2.4));blob(1,A,R(0.5,0.6),R(-0.4,0.4),R(1.2,1.6));blob(2,d,R(0.5,0.6),R(-0.6,0.6),R(1.4,1.9));river(R(0.78,0.84),0.045,[R(-0.55,-0.15),R(0.15,0.55)])}
+ else if(preset==='emboscada'){blob(2,d,R(0.8,0.9),R(-0.45,-0.2),R(2.2,2.8));blob(2,d,R(0.8,0.9),R(0.2,0.45),R(2.2,2.8));blob(1,d,R(0.35,0.5),R(-0.2,0.2),R(1.4,1.9))}
+ else if(preset==='paso'){blob(2,d,R(0.9,1.0),-0.6,R(3,3.6));blob(2,d,R(0.9,1.0),0.6,R(3,3.6));blob(1,d,R(0.45,0.55),R(-0.1,0.1),R(1.8,2.3));blob(1,A,R(0.55,0.7),R(-0.2,0.2),R(1,1.5))}
+ else{
+  const nh=1+(r()*2|0),nf=1+(r()*2|0);
+  for(let i=0;i<nh;i++)blob(1,d,R(0.3,0.75),R(-0.6,0.6),R(1.5,2.8));
+  for(let i=0;i<nf;i++)blob(2,d,R(0.5,1.05),R(-0.6,0.6),R(1.4,2.6));
+  if(r()<0.6)blob(r()<0.5?1:2,A,R(0.4,0.85),R(-0.6,0.6),R(1.2,2));
+  if(r()<0.4)river(R(0.75,0.95),0.045,[R(-0.6,-0.1),R(0.1,0.6)]);
+ }
  return m;
 }
 function newField(keepSeed){
  if(!keepSeed)S.seed=(Math.random()*1e9)|0;
- S.map=genMap(S.preset,S.seed);
+ S.def=S.defSel==='random'?(rng(S.seed^99)()<0.5?0:1):+S.defSel;
+ S.map=genMap(S.preset,S.seed,S.def);
  const p=PRESETS.find(p=>p.id===S.preset);
  S.mapName=S.preset==='random'?'Campo n.º '+(S.seed%1000):p.n;
  S.weather=S.weatherSel==='random'?WEATHERS[(rng(S.seed^77)()*WEATHERS.length)|0]:WEATHERS.find(w=>w.id===S.weatherSel);
@@ -376,9 +386,8 @@ function renderTerrain(){
 function buildTrees(){
  const r=rng(S.seed^0x51ed);S.trees=[];
  for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++)if(S.map[ty][tx]===2){
-  const mx=tx<15?tx:COLS-1-tx;const rr=rng(S.seed^(ty*97+mx*13));const jx=(rr()-0.5)*5,jy=(rr()-0.5)*3;
-  const flip=tx>=15;
-  S.trees.push({x:tx*T+8+(flip?-jx:jx),y:ty*T+13+jy,v:(rr()*2)|0});
+  const rr=rng(S.seed^(ty*97+tx*13));const jx=(rr()-0.5)*5,jy=(rr()-0.5)*3;
+  S.trees.push({x:tx*T+8+jx,y:ty*T+13+jy,v:(rr()*2)|0});
  }
 }
 
@@ -399,8 +408,9 @@ function drawWeather(dt,now){
 
 'use strict';
 /* ================= EJÉRCITO AUTOMÁTICO / IA ================= */
-function zoneTiles(side){const o=[];for(let r=0;r<ROWS;r++)for(let c=0;c<ZONE;c++)o.push({c:side?COLS-ZONE+c:c,r});return o}
-const inZone=(t,side)=>t&&(side===0?t.c<ZONE:t.c>=COLS-ZONE);
+function zoneTiles(side){const o=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(dvOf(side,c,r)<ZV)o.push({c,r});return o}
+const inZone=(t,side)=>!!t&&dvOf(side,t.c,t.r)<ZV;
+const capFor=side=>side===S.def?CAP:CAP+CAPB;
 function autoArmy(side,fi){
  const pool=UNITS.filter(u=>u.f===fi),r=Math.random;
  const role=u=>u.heal?'heal':u.fly?'fly':u.rng>1?'ranged':u.big?'big':u.charge?'mount':'melee';
@@ -408,23 +418,25 @@ function autoArmy(side,fi){
  const zone=zoneTiles(side),m=S.map,wid=S.weather.id;
  const hills=zone.filter(t=>m[t.r][t.c]===1);
  const wf=wid==='windE'?(side===0?1:-1):wid==='windW'?(side===1?1:-1):0;
- const wts={ranged:0.36+(hills.length>=6?0.16:0)+(wid==='fog'||wid==='rain'?-0.16:0)+wf*0.1,heal:0.1,melee:0.3,big:0.12,mount:wid==='snow'?0.03:0.12,fly:0.08};
- let cap=CAP;const picks=[];const minC=Math.min(...pool.map(p=>p.cost));
+ const isDef=side===S.def;
+ const wts={ranged:0.36+(hills.length>=6?0.16:0)+(wid==='fog'||wid==='rain'?-0.16:0)+wf*0.1,heal:0.1,melee:0.3,big:0.12,mount:wid==='snow'?0.03:isDef?0.07:0.12,fly:0.08};
+ let cap=capFor(side);const picks=[];const minC=Math.min(...pool.map(p=>p.cost));
  for(let tries=0;tries<500&&picks.length<MAXU&&cap>=minC;tries++){
   const roles=Object.keys(wts).filter(k=>by[k]);const tot=roles.reduce((a,k)=>a+wts[k],0);let x=r()*tot,k=roles[0];
   for(const kk of roles){x-=wts[kk];if(x<=0){k=kk;break}}
   if(k==='heal'&&picks.filter(p=>p.heal).length>=3)continue;
   const u=by[k][(r()*by[k].length)|0];if(u.cost<=cap){picks.push(u);cap-=u.cost}
  }
- const occ=new Set(),units=[],mid=(ROWS-1)/2;
- const depth=t=>side===0?ZONE-1-t.c:t.c-(COLS-ZONE);
+ const occ=new Set(),units=[];
+ const depth=t=>(ZV-dvOf(side,t.c,t.r))*10;
+ const fl=t=>Math.abs(uOf(t.c,t.r))*9;
  const sil=u=>u.tr.includes('Silvano');
  const key={
-  ranged:(t,u)=>m[t.r][t.c]===1?depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)?5+depth(t)*0.2+r()*0.3:10-depth(t)+Math.abs(t.r-mid)*0.05+r()*0.6,
-  big:t=>depth(t)+Math.abs(t.r-mid)*0.1+r()*0.5,
-  melee:t=>depth(t)+Math.abs(t.r-mid)*0.06+r()*0.8,
-  mount:t=>depth(t)*0.6-Math.abs(t.r-mid)*0.3+r()*0.6,
-  heal:t=>Math.abs(depth(t)-3.5)+Math.abs(t.r-mid)*0.1+r()*0.5,
+  ranged:(t,u)=>m[t.r][t.c]===1?depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
+  big:t=>depth(t)+fl(t)*0.1+r()*0.5,
+  melee:t=>depth(t)+fl(t)*0.06+r()*0.8,
+  mount:t=>depth(t)*0.6-fl(t)*0.3+r()*0.6,
+  heal:t=>Math.abs(depth(t)-3.5)+fl(t)*0.1+r()*0.5,
   fly:t=>Math.abs(depth(t)-4)+r(),
  };
  for(const k of ['ranged','big','melee','mount','heal','fly']){
@@ -441,7 +453,7 @@ function aiArmy(){
  const g=(f+1+((Math.random()*(FACTIONS.length-1))|0))%FACTIONS.length;
  const A=autoArmy(1,f),B=autoArmy(1,g);const occ=new Set(),units=[];let cost=0;
  const all=sortBy([...A.units,...B.units],()=>Math.random());
- for(const u of all){const k=u.c+','+u.r,c=UBY[u.id].cost;if(occ.has(k)||cost+c>CAP||units.length>=MAXU)continue;occ.add(k);units.push(u);cost+=c}
+ for(const u of all){const k=u.c+','+u.r,c=UBY[u.id].cost;if(occ.has(k)||cost+c>capFor(1)||units.length>=MAXU)continue;occ.add(k);units.push(u);cost+=c}
  return {fac:f,units};
 }
 
@@ -463,7 +475,7 @@ function startBattle(){
   const a=S.armies[side];S.syn[side]=computeSyn(a.units);
   for(const it of a.units)S.units.push(mkUnit(UBY[it.id],side,it.c+0.5,it.r+0.5));
  }
- for(const u of S.units)if(u.def.rng>1&&!u.def.heal&&terrAt(u)===1)u.hold=true;
+ for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&terrAt(u)===1)u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
  S.total=[0,1].map(s=>S.units.filter(u=>u.side===s).reduce((a,u)=>a+u.def.cost,0));
  S.state='battle';S.lastPanel=0;renderPanel();
 }
@@ -550,7 +562,7 @@ function deal(att,tg,base,ranged){
  if(tg.hp<=0)kill(tg,att);
 }
 function kill(tg,att){
- if(tg.def.tr.includes('NoMuerto')&&!tg.risen){const t=tier(tg.side,'NoMuerto'),ch=t===2?0.5:t===1?0.3:0;if(Math.random()<ch){tg.risen=true;tg.hp=tg.max*0.4;tg.burn=0;burst(tg.x*T,tg.y*T-6,'#b06aff',12);return}}
+ if(tg.def.tr.includes('NoMuerto')&&!tg.risen){const t=tier(tg.side,'NoMuerto'),ch=t===2?0.45:t===1?0.25:0;if(Math.random()<ch){tg.risen=true;tg.hp=tg.max*0.4;tg.burn=0;burst(tg.x*T,tg.y*T-6,'#b06aff',12);return}}
  tg.alive=false;
  if(att){S.stats[att.side].kills++;if(att.alive&&att.def.tr.includes('Infernal')){const t=tier(att.side,'Infernal');if(t)att.hp=Math.min(att.max,att.hp+att.max*(t===2?0.35:0.2))}}
  S.corpses.push({x:tg.x,y:tg.y,def:tg.def,face:tg.face,el:elev(tg),t:0});burst(tg.x*T,tg.y*T-4,tg.def.tr.includes('NoMuerto')?'#e6e0cc':'#b23a2a',10);if(tg.dest)S.claims.delete(tg.dest.k);
@@ -580,7 +592,8 @@ function step(dt){
   const reach=u.def.rng<=1?0.78+(tg.def.big?0.22:0)+(u.def.big?0.22:0):rg;
   if(d<=reach){u.idle=0;u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;if(u.cd<=0){attack(u,tg);u.cd=cool(u)}}
   else{
-   if(u.hold){u.idle=(u.idle||0)+dt;if((S.time>20&&d>rg+6)||u.idle>6)u.hold=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
+   if(u.guard){if(d<rg+5||S.time>60||u.hp<u.max)u.guard=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
+   if(u.hold){u.idle=(u.idle||0)+dt;if(u.side!==S.def&&((S.time>20&&d>rg+6)||u.idle>6))u.hold=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
    if(u.dest){moveTo(u,u.dest.x,u.dest.y,dt,0.05);if(dist(u,u.dest)<0.2){S.claims.delete(u.dest.k);u.dest=null;if(elev(u))u.hold=true}}
    else moveTo(u,tg.x,tg.y,dt,reach*0.9);
   }
@@ -598,7 +611,7 @@ function step(dt){
 }
 function valueLeft(side){return S.units.filter(u=>u.alive&&u.side===side).reduce((a,u)=>a+u.def.cost*u.hp/u.max,0)}
 function endBattle(n0,n1){
- let win;if(n0===0&&n1===0)win=-1;else if(n1===0)win=0;else if(n0===0)win=1;else{const v0=valueLeft(0),v1=valueLeft(1);win=Math.abs(v0-v1)<0.5?-1:v0>v1?0:1}
+ let win;if(n0===0&&n1===0)win=-1;else if(n1===0)win=0;else if(n0===0)win=1;else win=S.def;
  S.result={win,n:[n0,n1],timeout:S.time>=TLIM};S.state='result';renderPanel();showResult();
 }
 
@@ -650,7 +663,8 @@ function frame(now){
  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(S.map[r][c]===3){const ph=Math.floor(now/260+c*1.7+r*2.3)%8;ctx.fillRect(c*T+((ph*5)%12)+2,r*T+4+(ph%3)*4,3,1)}
  // zonas de despliegue
  if(S.state==='deploy'||S.state==='setup'){
-  for(const side of [0,1]){if(S.state==='deploy'&&side!==S.side)continue;ctx.fillStyle=side?'rgba(255,106,79,0.10)':'rgba(74,163,255,0.12)';const x0=side?(COLS-ZONE)*T:0;ctx.fillRect(x0,0,ZONE*T,H);ctx.fillStyle=side?'rgba(255,106,79,0.7)':'rgba(74,163,255,0.8)';const ex=side?x0:ZONE*T-1;for(let y=0;y<H;y+=6)ctx.fillRect(ex,y,1,3)}
+  for(const side of [0,1]){if(S.state==='deploy'&&side!==S.side)continue;ctx.fillStyle=side?'rgba(255,106,79,0.13)':'rgba(74,163,255,0.15)';for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(dvOf(side,c,r)<ZV)ctx.fillRect(c*T,r*T,T,T)}
+  ctx.fillStyle='rgba(255,240,200,0.5)';for(let i=0;i<=W;i+=7)ctx.fillRect(i,Math.round(H-i*H/W),2,1);
  }
  for(const c of S.corpses)drawCorpse(c);
  const list=S.trees.map(t=>({y:t.y,f:()=>drawTree(t)}));
@@ -682,7 +696,7 @@ function swatch(t){const c=document.createElement('canvas');c.width=16;c.height=
 const sampleCache={};
 function terrCvSample(t){if(sampleCache[t])return sampleCache[t];const c=document.createElement('canvas');c.width=16;c.height=16;const x=c.getContext('2d'),r=rng(t+5),cols=TER[t].col;for(let j=0;j<16;j++)for(let i=0;i<16;i++){x.fillStyle=r()<0.6?cols[0]:r()<0.5?cols[1]:cols[2];if(t===1&&j>=12)x.fillStyle=j===12?'#5c4027':'#7a5a38';if(t===1&&j===11)x.fillStyle='#c4dc78';x.fillRect(i,j,1,1)}if(t===2){const tr=treeSprite(false,0);x.drawImage(tr,1,2)}return sampleCache[t]=c}
 function renderFieldTag(){
- $('fieldtag').innerHTML=`<span class="chip">Campo <b>${esc(S.mapName)}</b></span><span class="chip">Clima <b>${esc(S.weather.n)}</b></span>`;
+ $('fieldtag').innerHTML=`<span class="chip">Campo <b>${esc(S.mapName)}</b></span><span class="chip">Defiende <b>${S.def?'Rojo':'Azul'}</b></span><span class="chip">Clima <b>${esc(S.weather.n)}</b></span>`;
 }
 function armyFacName(a){const fs=[...new Set(a.units.map(u=>UBY[u.id].f))];return fs.length===1?FACTIONS[fs[0]].name:fs.length?'Ejército mixto':'Sin tropas'}
 function armyCost(a){return a.units.reduce((s,u)=>s+UBY[u.id].cost,0)}
@@ -703,13 +717,16 @@ function renderPanel(){
   <div class="sec"><h2>Campo de batalla</h2>
    <div class="row"><select id="sel-map" aria-label="Tipo de campo">${PRESETS.map(p=>`<option value="${p.id}" ${p.id===S.preset?'selected':''}>${p.n}</option>`).join('')}</select>
    <select id="sel-wx" aria-label="Clima"><option value="random" ${S.weatherSel==='random'?'selected':''}>Clima aleatorio</option>${WEATHERS.map(w=>`<option value="${w.id}" ${w.id===S.weatherSel?'selected':''}>${w.n}</option>`).join('')}</select></div>
+   <select id="sel-def" aria-label="Quién defiende"><option value="random" ${S.defSel==='random'?'selected':''}>Defensor aleatorio</option><option value="0" ${S.defSel==='0'?'selected':''}>Defiende el azul</option><option value="1" ${S.defSel==='1'?'selected':''}>Defiende el rojo</option></select>
    <button class="btn" id="b-reroll">Generar otro campo</button></div>
+  <div class="sec"><h2>Atacante y defensor</h2><p class="note" style="color:var(--ink)">Defiende el <b>${S.def?'rojo':'azul'}</b>: tiene el terreno a favor y gana si resiste ${TLIM} s. El atacante debe eliminar a todo el ejército defensor antes de que acabe el tiempo.</p></div>
   <div class="sec"><h2>Clima: ${esc(S.weather.n)}</h2><p class="note" style="color:var(--ink)">${esc(S.weather.d)}</p></div>
-  <div class="sec"><h2>Terreno</h2>${legendHTML()}<p class="note">Los dos lados del mapa son simétricos. El clima y el viento sí pueden favorecer a un bando, y se ven antes de armar el ejército.</p></div>
+  <div class="sec"><h2>Terreno</h2>${legendHTML()}<p class="note">El campo se divide en diagonal: azul arriba, rojo abajo. El mapa no es simétrico: el lado del defensor tiene mejor terreno.</p></div>
   <button class="btn primary" id="b-go">Armar ejército</button>`;
   $('m-ai').onclick=()=>{S.mode='ai';renderPanel()};$('m-pvp').onclick=()=>{S.mode='pvp';renderPanel()};
   $('sel-map').onchange=e=>{S.preset=e.target.value;newField();renderPanel()};
   $('sel-wx').onchange=e=>{S.weatherSel=e.target.value;newField(true);renderPanel()};
+  $('sel-def').onchange=e=>{S.defSel=e.target.value;newField(true);renderPanel()};
   $('b-reroll').onclick=()=>{newField();renderPanel()};
   $('b-go').onclick=()=>{S.side=0;S.sel=null;S.state='deploy';renderPanel();renderHud()};
  }
@@ -718,10 +735,10 @@ function renderPanel(){
   const fu=UNITS.filter(u=>u.f===fac);
   P.innerHTML=`
   <div class="sec"><div class="who"><span class="dot ${S.side?'p2':'p1'}"></span><h3>${playerLabel(S.side)}</h3></div>
-   <p class="note">Elige una tropa y toca casillas de tu zona (la franja ${S.side?'derecha':'izquierda'}). Arrastra para colocar varias. Toca una tropa colocada para quitarla.</p></div>
+   <p class="note">${S.side===S.def?'<b>Defiendes</b>: aguanta '+TLIM+' s y ganas.':'<b>Atacas</b>: elimina a todo el ejército defensor antes de '+TLIM+' s.'} Elige una tropa y toca casillas de tu zona (el triángulo ${S.side?'rojo, abajo':'azul, arriba'}). Arrastra para colocar varias. Toca una tropa colocada para quitarla.</p></div>
   <div class="sec"><h2>Facción</h2><div class="seg" role="group">${FACTIONS.map((f,i)=>`<button data-fac="${i}" aria-pressed="${i===fac}">${esc(f.name)}</button>`).join('')}</div><p class="note">${esc(FACTIONS[fac].blurb)} Puedes mezclar tropas de varias facciones: los rasgos se suman entre todas.</p></div>
   <div class="sec">
-   <div class="meter"><span>Capacidad</span><div class="bar"><i style="width:${cost/CAP*100}%"></i></div><b>${cost}/${CAP}</b></div>
+   <div class="meter"><span>Capacidad</span><div class="bar"><i style="width:${cost/capFor(S.side)*100}%"></i></div><b>${cost}/${capFor(S.side)}</b></div>
    <div class="meter"><span>Unidades</span><div class="bar"><i style="width:${n/MAXU*100}%"></i></div><b>${n}/${MAXU}</b></div>
   </div>
   <div class="sec"><h2>Tropas</h2><div class="cards">${fu.map(u=>`<button class="card" data-u="${u.id}" aria-pressed="${S.sel===u.id}">
@@ -743,7 +760,7 @@ function renderPanel(){
   P.innerHTML=`
   <div class="sec"><h2>Velocidad</h2><div class="seg" role="group">${[1,2,4].map(s=>`<button data-sp="${s}" aria-pressed="${S.speed===s}">x${s}</button>`).join('')}</div></div>
   ${[0,1].map(side=>`<div class="sec"><div class="who"><span class="dot ${side?'p2':'p1'}"></span><h3>${playerLabel(side)} · ${esc(armyFacName(S.armies[side]))}</h3></div>${synHTML(S.armies[side].units,null)}</div>`).join('')}
-  <button class="btn" id="b-end">${S.state==='battle'?'Terminar ya (gana quien tenga más valor vivo)':'Ver resultado'}</button>`;
+  <button class="btn" id="b-end">${S.state==='battle'?'Terminar ya (gana el defensor)':'Ver resultado'}</button>`;
   P.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{S.speed=+b.dataset.sp;P.querySelectorAll('[data-sp]').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.sp===S.speed))});
   $('b-end').onclick=()=>{if(S.state==='battle'){S.time=TLIM;const al=S.units.filter(u=>u.alive);endBattle(al.filter(u=>!u.side).length,al.filter(u=>u.side).length)}else showResult()};
  }
@@ -759,7 +776,7 @@ function showResult(){
  const R_=S.result;const lbl=s=>playerLabel(s);
  let title=R_.win===-1?'Empate':S.mode==='ai'?(R_.win===0?'Victoria':'Derrota'):`Gana ${lbl(R_.win)}`;
  const best=s=>{const b=S.stats[s].byType;const k=Object.keys(b).sort((x,y)=>b[y]-b[x])[0];return k?UBY[k].name:'—'};
- showOverlay(`<h2>${title}</h2>${R_.timeout?'<p class="muted">Se acabó el tiempo: gana quien conserva más valor de ejército.</p>':''}
+ showOverlay(`<h2>${title}</h2>${R_.timeout?'<p class="muted">Se acabó el tiempo: el defensor resistió.</p>':''}
  <div class="res-table"><span class="h"></span><span class="h">${esc(lbl(0))}</span><span class="h">${esc(lbl(1))}</span>
  <span>Supervivientes</span><b>${R_.n[0]}/${S.armies[0].units.length}</b><b>${R_.n[1]}/${S.armies[1].units.length}</b>
  <span>Daño causado</span><b>${Math.round(S.stats[0].dmg)}</b><b>${Math.round(S.stats[1].dmg)}</b>
@@ -779,7 +796,7 @@ function renderHud(){
   const v=[0,1].map(s=>valueLeft(s)/Math.max(1,S.total[s])*100),n=[0,1].map(s=>S.units.filter(u=>u.alive&&u.side===s).length);
   h.innerHTML=`<div class="side"><span>${esc(playerLabel(0))} · ${n[0]}</span><div class="bar"><i style="width:${v[0]}%"></i></div></div><div class="clock">${Math.max(0,Math.ceil(TLIM-S.time))}s</div><div class="side r"><span>${n[1]} · ${esc(playerLabel(1))}</span><div class="bar"><i style="width:${v[1]}%"></i></div></div>`;
  }else if(S.state==='deploy'){
-  h.innerHTML=`<div class="side"><span>${esc(playerLabel(S.side))}: despliega en la franja ${S.side?'roja':'azul'}</span></div><div></div><div></div>`;
+  h.innerHTML=`<div class="side"><span>${esc(playerLabel(S.side))}: ${S.side===S.def?'defiende':'ataca'} desde el triángulo ${S.side?'rojo':'azul'}</span></div><div></div><div></div>`;
  }else h.innerHTML=`<div class="side"><span>Estudia el campo antes de elegir tropas</span></div><div></div><div></div>`;
 }
 let toastT=0;
@@ -799,7 +816,7 @@ function applyPaint(t){
  if(!S.sel){toast('Primero elige una tropa en el panel.');return}
  const def=UBY[S.sel];
  if(a.units.length>=MAXU){toast('Límite de '+MAXU+' unidades.');return}
- if(armyCost(a)+def.cost>CAP){toast('No queda capacidad: '+def.name+' cuesta '+def.cost+'.');return}
+ if(armyCost(a)+def.cost>capFor(S.side)){toast('No queda capacidad: '+def.name+' cuesta '+def.cost+'.');return}
  a.units.push({id:def.id,c:t.c,r:t.r});renderPanel();
 }
 cv.addEventListener('pointerdown',e=>{

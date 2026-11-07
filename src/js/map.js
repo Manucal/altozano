@@ -1,22 +1,29 @@
 'use strict';
 /* ================= MAPA ================= */
-function genMap(preset,seed){
- const r=rng(seed),m=Array.from({length:ROWS},()=>Array(COLS).fill(0));
- const blob=(type,cx,cy,rad)=>{for(let y=0;y<ROWS;y++)for(let x=0;x<15;x++){const dx=x+0.5-cx,dy=(y+0.5-cy)*1.15;if(Math.hypot(dx,dy)<=rad+(r()-0.5)*0.9)m[y][x]=type}};
+function genMap(preset,seed,d){
+ const r=rng(seed),m=Array.from({length:ROWS},()=>Array(COLS).fill(0)),A=1-d;
  const R=(a,b)=>a+r()*(b-a);
- let river=false;
- if(preset==='gemelas'){blob(1,R(2.5,4),R(5,13),R(2.4,3));if(r()<0.7)blob(1,R(9,11),r()<0.5?R(2,4):R(14,16),R(1.4,2));blob(2,R(11,13.5),R(4,14),R(1.6,2.4))}
- else if(preset==='vado'){river=true;blob(1,R(3,6),R(3,6),R(1.6,2.2));blob(1,R(3,6),R(12,15),R(1.4,2));blob(2,R(8,11),R(7,11),R(1.5,2.2))}
- else if(preset==='bosque'){for(let i=0;i<4;i++)blob(2,R(12,15),R(1,17),R(1.8,2.6));blob(1,R(4,7),R(2,5),R(1.8,2.3));blob(1,R(4,7),R(13,16),R(1.8,2.3))}
- else if(preset==='meseta'){blob(1,15,R(7.5,10.5),R(3.4,4.2));blob(2,R(5,8),R(1,4),R(1.4,2));blob(2,R(5,8),R(14,17),R(1.4,2))}
- else{const nh=1+(r()*3|0),nf=1+(r()*3|0);for(let i=0;i<nh;i++)blob(1,R(1,14),R(1,17),R(1.4,3));for(let i=0;i<nf;i++)blob(2,R(5,15),R(1,17),R(1.3,2.6));river=r()<0.4}
- if(river){let w=0;for(let y=0;y<ROWS;y++){if(r()<0.25)w=1-w;m[y][14]=3;if(w)m[y][13]=3;else if(m[y][13]===3)m[y][13]=0}}
- for(let y=0;y<ROWS;y++)for(let x=0;x<15;x++)m[y][COLS-1-x]=m[y][x];
+ // centro en coordenadas (dv del bando, u) -> casilla
+ const P=(side,dv,u)=>{const v=side===0?dv:2-dv;return {x:(v+u)/2*COLS,y:(v-u)/2*ROWS}};
+ const blob=(type,side,dv,u,rad)=>{const c=P(side,dv,u);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(Math.hypot(x+0.5-c.x,(y+0.5-c.y)*1.15)<=rad+(r()-0.5)*0.9)m[y][x]=type}};
+ const river=(rv,w,fords)=>{for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const dv=dvOf(d,x,y),u=uOf(x,y);if(Math.abs(dv-rv)<w&&!fords.some(f=>Math.abs(u-f)<0.075))m[y][x]=3}};
+ if(preset==='fortaleza'){blob(1,d,R(0.4,0.5),R(-0.2,0.2),R(2.8,3.4));blob(2,d,R(0.55,0.7),R(-0.6,-0.4),R(1.6,2.2));blob(2,d,R(0.55,0.7),R(0.4,0.6),R(1.6,2.2));blob(2,A,R(0.6,0.8),R(-0.3,0.3),R(1.2,1.8))}
+ else if(preset==='rio'){blob(1,d,R(0.35,0.5),R(-0.3,0.3),R(1.8,2.4));blob(1,A,R(0.5,0.6),R(-0.4,0.4),R(1.2,1.6));blob(2,d,R(0.5,0.6),R(-0.6,0.6),R(1.4,1.9));river(R(0.78,0.84),0.045,[R(-0.55,-0.15),R(0.15,0.55)])}
+ else if(preset==='emboscada'){blob(2,d,R(0.8,0.9),R(-0.45,-0.2),R(2.2,2.8));blob(2,d,R(0.8,0.9),R(0.2,0.45),R(2.2,2.8));blob(1,d,R(0.35,0.5),R(-0.2,0.2),R(1.4,1.9))}
+ else if(preset==='paso'){blob(2,d,R(0.9,1.0),-0.6,R(3,3.6));blob(2,d,R(0.9,1.0),0.6,R(3,3.6));blob(1,d,R(0.45,0.55),R(-0.1,0.1),R(1.8,2.3));blob(1,A,R(0.55,0.7),R(-0.2,0.2),R(1,1.5))}
+ else{
+  const nh=1+(r()*2|0),nf=1+(r()*2|0);
+  for(let i=0;i<nh;i++)blob(1,d,R(0.3,0.75),R(-0.6,0.6),R(1.5,2.8));
+  for(let i=0;i<nf;i++)blob(2,d,R(0.5,1.05),R(-0.6,0.6),R(1.4,2.6));
+  if(r()<0.6)blob(r()<0.5?1:2,A,R(0.4,0.85),R(-0.6,0.6),R(1.2,2));
+  if(r()<0.4)river(R(0.75,0.95),0.045,[R(-0.6,-0.1),R(0.1,0.6)]);
+ }
  return m;
 }
 function newField(keepSeed){
  if(!keepSeed)S.seed=(Math.random()*1e9)|0;
- S.map=genMap(S.preset,S.seed);
+ S.def=S.defSel==='random'?(rng(S.seed^99)()<0.5?0:1):+S.defSel;
+ S.map=genMap(S.preset,S.seed,S.def);
  const p=PRESETS.find(p=>p.id===S.preset);
  S.mapName=S.preset==='random'?'Campo n.º '+(S.seed%1000):p.n;
  S.weather=S.weatherSel==='random'?WEATHERS[(rng(S.seed^77)()*WEATHERS.length)|0]:WEATHERS.find(w=>w.id===S.weatherSel);
@@ -63,8 +70,7 @@ function renderTerrain(){
 function buildTrees(){
  const r=rng(S.seed^0x51ed);S.trees=[];
  for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++)if(S.map[ty][tx]===2){
-  const mx=tx<15?tx:COLS-1-tx;const rr=rng(S.seed^(ty*97+mx*13));const jx=(rr()-0.5)*5,jy=(rr()-0.5)*3;
-  const flip=tx>=15;
-  S.trees.push({x:tx*T+8+(flip?-jx:jx),y:ty*T+13+jy,v:(rr()*2)|0});
+  const rr=rng(S.seed^(ty*97+tx*13));const jx=(rr()-0.5)*5,jy=(rr()-0.5)*3;
+  S.trees.push({x:tx*T+8+jx,y:ty*T+13+jy,v:(rr()*2)|0});
  }
 }

@@ -16,7 +16,7 @@ function startBattle(){
   const a=S.armies[side];S.syn[side]=computeSyn(a.units);
   for(const it of a.units)S.units.push(mkUnit(UBY[it.id],side,it.c+0.5,it.r+0.5));
  }
- for(const u of S.units)if(u.def.rng>1&&!u.def.heal&&terrAt(u)===1)u.hold=true;
+ for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&terrAt(u)===1)u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
  S.total=[0,1].map(s=>S.units.filter(u=>u.side===s).reduce((a,u)=>a+u.def.cost,0));
  S.state='battle';S.lastPanel=0;renderPanel();
 }
@@ -103,7 +103,7 @@ function deal(att,tg,base,ranged){
  if(tg.hp<=0)kill(tg,att);
 }
 function kill(tg,att){
- if(tg.def.tr.includes('NoMuerto')&&!tg.risen){const t=tier(tg.side,'NoMuerto'),ch=t===2?0.5:t===1?0.3:0;if(Math.random()<ch){tg.risen=true;tg.hp=tg.max*0.4;tg.burn=0;burst(tg.x*T,tg.y*T-6,'#b06aff',12);return}}
+ if(tg.def.tr.includes('NoMuerto')&&!tg.risen){const t=tier(tg.side,'NoMuerto'),ch=t===2?0.45:t===1?0.25:0;if(Math.random()<ch){tg.risen=true;tg.hp=tg.max*0.4;tg.burn=0;burst(tg.x*T,tg.y*T-6,'#b06aff',12);return}}
  tg.alive=false;
  if(att){S.stats[att.side].kills++;if(att.alive&&att.def.tr.includes('Infernal')){const t=tier(att.side,'Infernal');if(t)att.hp=Math.min(att.max,att.hp+att.max*(t===2?0.35:0.2))}}
  S.corpses.push({x:tg.x,y:tg.y,def:tg.def,face:tg.face,el:elev(tg),t:0});burst(tg.x*T,tg.y*T-4,tg.def.tr.includes('NoMuerto')?'#e6e0cc':'#b23a2a',10);if(tg.dest)S.claims.delete(tg.dest.k);
@@ -133,7 +133,8 @@ function step(dt){
   const reach=u.def.rng<=1?0.78+(tg.def.big?0.22:0)+(u.def.big?0.22:0):rg;
   if(d<=reach){u.idle=0;u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;if(u.cd<=0){attack(u,tg);u.cd=cool(u)}}
   else{
-   if(u.hold){u.idle=(u.idle||0)+dt;if((S.time>20&&d>rg+6)||u.idle>6)u.hold=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
+   if(u.guard){if(d<rg+5||S.time>60||u.hp<u.max)u.guard=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
+   if(u.hold){u.idle=(u.idle||0)+dt;if(u.side!==S.def&&((S.time>20&&d>rg+6)||u.idle>6))u.hold=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
    if(u.dest){moveTo(u,u.dest.x,u.dest.y,dt,0.05);if(dist(u,u.dest)<0.2){S.claims.delete(u.dest.k);u.dest=null;if(elev(u))u.hold=true}}
    else moveTo(u,tg.x,tg.y,dt,reach*0.9);
   }
@@ -151,6 +152,6 @@ function step(dt){
 }
 function valueLeft(side){return S.units.filter(u=>u.alive&&u.side===side).reduce((a,u)=>a+u.def.cost*u.hp/u.max,0)}
 function endBattle(n0,n1){
- let win;if(n0===0&&n1===0)win=-1;else if(n1===0)win=0;else if(n0===0)win=1;else{const v0=valueLeft(0),v1=valueLeft(1);win=Math.abs(v0-v1)<0.5?-1:v0>v1?0:1}
+ let win;if(n0===0&&n1===0)win=-1;else if(n1===0)win=0;else if(n0===0)win=1;else win=S.def;
  S.result={win,n:[n0,n1],timeout:S.time>=TLIM};S.state='result';renderPanel();showResult();
 }

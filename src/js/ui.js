@@ -6,7 +6,7 @@ function swatch(t){const c=document.createElement('canvas');c.width=16;c.height=
 const sampleCache={};
 function terrCvSample(t){if(sampleCache[t])return sampleCache[t];const c=document.createElement('canvas');c.width=16;c.height=16;const x=c.getContext('2d'),r=rng(t+5),cols=TER[t].col;for(let j=0;j<16;j++)for(let i=0;i<16;i++){x.fillStyle=r()<0.6?cols[0]:r()<0.5?cols[1]:cols[2];if(t===1&&j>=12)x.fillStyle=j===12?'#5c4027':'#7a5a38';if(t===1&&j===11)x.fillStyle='#c4dc78';x.fillRect(i,j,1,1)}if(t===2){const tr=treeSprite(false,0);x.drawImage(tr,1,2)}return sampleCache[t]=c}
 function renderFieldTag(){
- $('fieldtag').innerHTML=`<span class="chip">Campo <b>${esc(S.mapName)}</b></span><span class="chip">Clima <b>${esc(S.weather.n)}</b></span>`;
+ $('fieldtag').innerHTML=`<span class="chip">Campo <b>${esc(S.mapName)}</b></span><span class="chip">Defiende <b>${S.def?'Rojo':'Azul'}</b></span><span class="chip">Clima <b>${esc(S.weather.n)}</b></span>`;
 }
 function armyFacName(a){const fs=[...new Set(a.units.map(u=>UBY[u.id].f))];return fs.length===1?FACTIONS[fs[0]].name:fs.length?'Ejército mixto':'Sin tropas'}
 function armyCost(a){return a.units.reduce((s,u)=>s+UBY[u.id].cost,0)}
@@ -27,13 +27,16 @@ function renderPanel(){
   <div class="sec"><h2>Campo de batalla</h2>
    <div class="row"><select id="sel-map" aria-label="Tipo de campo">${PRESETS.map(p=>`<option value="${p.id}" ${p.id===S.preset?'selected':''}>${p.n}</option>`).join('')}</select>
    <select id="sel-wx" aria-label="Clima"><option value="random" ${S.weatherSel==='random'?'selected':''}>Clima aleatorio</option>${WEATHERS.map(w=>`<option value="${w.id}" ${w.id===S.weatherSel?'selected':''}>${w.n}</option>`).join('')}</select></div>
+   <select id="sel-def" aria-label="Quién defiende"><option value="random" ${S.defSel==='random'?'selected':''}>Defensor aleatorio</option><option value="0" ${S.defSel==='0'?'selected':''}>Defiende el azul</option><option value="1" ${S.defSel==='1'?'selected':''}>Defiende el rojo</option></select>
    <button class="btn" id="b-reroll">Generar otro campo</button></div>
+  <div class="sec"><h2>Atacante y defensor</h2><p class="note" style="color:var(--ink)">Defiende el <b>${S.def?'rojo':'azul'}</b>: tiene el terreno a favor y gana si resiste ${TLIM} s. El atacante debe eliminar a todo el ejército defensor antes de que acabe el tiempo.</p></div>
   <div class="sec"><h2>Clima: ${esc(S.weather.n)}</h2><p class="note" style="color:var(--ink)">${esc(S.weather.d)}</p></div>
-  <div class="sec"><h2>Terreno</h2>${legendHTML()}<p class="note">Los dos lados del mapa son simétricos. El clima y el viento sí pueden favorecer a un bando, y se ven antes de armar el ejército.</p></div>
+  <div class="sec"><h2>Terreno</h2>${legendHTML()}<p class="note">El campo se divide en diagonal: azul arriba, rojo abajo. El mapa no es simétrico: el lado del defensor tiene mejor terreno.</p></div>
   <button class="btn primary" id="b-go">Armar ejército</button>`;
   $('m-ai').onclick=()=>{S.mode='ai';renderPanel()};$('m-pvp').onclick=()=>{S.mode='pvp';renderPanel()};
   $('sel-map').onchange=e=>{S.preset=e.target.value;newField();renderPanel()};
   $('sel-wx').onchange=e=>{S.weatherSel=e.target.value;newField(true);renderPanel()};
+  $('sel-def').onchange=e=>{S.defSel=e.target.value;newField(true);renderPanel()};
   $('b-reroll').onclick=()=>{newField();renderPanel()};
   $('b-go').onclick=()=>{S.side=0;S.sel=null;S.state='deploy';renderPanel();renderHud()};
  }
@@ -42,10 +45,10 @@ function renderPanel(){
   const fu=UNITS.filter(u=>u.f===fac);
   P.innerHTML=`
   <div class="sec"><div class="who"><span class="dot ${S.side?'p2':'p1'}"></span><h3>${playerLabel(S.side)}</h3></div>
-   <p class="note">Elige una tropa y toca casillas de tu zona (la franja ${S.side?'derecha':'izquierda'}). Arrastra para colocar varias. Toca una tropa colocada para quitarla.</p></div>
+   <p class="note">${S.side===S.def?'<b>Defiendes</b>: aguanta '+TLIM+' s y ganas.':'<b>Atacas</b>: elimina a todo el ejército defensor antes de '+TLIM+' s.'} Elige una tropa y toca casillas de tu zona (el triángulo ${S.side?'rojo, abajo':'azul, arriba'}). Arrastra para colocar varias. Toca una tropa colocada para quitarla.</p></div>
   <div class="sec"><h2>Facción</h2><div class="seg" role="group">${FACTIONS.map((f,i)=>`<button data-fac="${i}" aria-pressed="${i===fac}">${esc(f.name)}</button>`).join('')}</div><p class="note">${esc(FACTIONS[fac].blurb)} Puedes mezclar tropas de varias facciones: los rasgos se suman entre todas.</p></div>
   <div class="sec">
-   <div class="meter"><span>Capacidad</span><div class="bar"><i style="width:${cost/CAP*100}%"></i></div><b>${cost}/${CAP}</b></div>
+   <div class="meter"><span>Capacidad</span><div class="bar"><i style="width:${cost/capFor(S.side)*100}%"></i></div><b>${cost}/${capFor(S.side)}</b></div>
    <div class="meter"><span>Unidades</span><div class="bar"><i style="width:${n/MAXU*100}%"></i></div><b>${n}/${MAXU}</b></div>
   </div>
   <div class="sec"><h2>Tropas</h2><div class="cards">${fu.map(u=>`<button class="card" data-u="${u.id}" aria-pressed="${S.sel===u.id}">
@@ -67,7 +70,7 @@ function renderPanel(){
   P.innerHTML=`
   <div class="sec"><h2>Velocidad</h2><div class="seg" role="group">${[1,2,4].map(s=>`<button data-sp="${s}" aria-pressed="${S.speed===s}">x${s}</button>`).join('')}</div></div>
   ${[0,1].map(side=>`<div class="sec"><div class="who"><span class="dot ${side?'p2':'p1'}"></span><h3>${playerLabel(side)} · ${esc(armyFacName(S.armies[side]))}</h3></div>${synHTML(S.armies[side].units,null)}</div>`).join('')}
-  <button class="btn" id="b-end">${S.state==='battle'?'Terminar ya (gana quien tenga más valor vivo)':'Ver resultado'}</button>`;
+  <button class="btn" id="b-end">${S.state==='battle'?'Terminar ya (gana el defensor)':'Ver resultado'}</button>`;
   P.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{S.speed=+b.dataset.sp;P.querySelectorAll('[data-sp]').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.sp===S.speed))});
   $('b-end').onclick=()=>{if(S.state==='battle'){S.time=TLIM;const al=S.units.filter(u=>u.alive);endBattle(al.filter(u=>!u.side).length,al.filter(u=>u.side).length)}else showResult()};
  }
@@ -83,7 +86,7 @@ function showResult(){
  const R_=S.result;const lbl=s=>playerLabel(s);
  let title=R_.win===-1?'Empate':S.mode==='ai'?(R_.win===0?'Victoria':'Derrota'):`Gana ${lbl(R_.win)}`;
  const best=s=>{const b=S.stats[s].byType;const k=Object.keys(b).sort((x,y)=>b[y]-b[x])[0];return k?UBY[k].name:'—'};
- showOverlay(`<h2>${title}</h2>${R_.timeout?'<p class="muted">Se acabó el tiempo: gana quien conserva más valor de ejército.</p>':''}
+ showOverlay(`<h2>${title}</h2>${R_.timeout?'<p class="muted">Se acabó el tiempo: el defensor resistió.</p>':''}
  <div class="res-table"><span class="h"></span><span class="h">${esc(lbl(0))}</span><span class="h">${esc(lbl(1))}</span>
  <span>Supervivientes</span><b>${R_.n[0]}/${S.armies[0].units.length}</b><b>${R_.n[1]}/${S.armies[1].units.length}</b>
  <span>Daño causado</span><b>${Math.round(S.stats[0].dmg)}</b><b>${Math.round(S.stats[1].dmg)}</b>
@@ -103,7 +106,7 @@ function renderHud(){
   const v=[0,1].map(s=>valueLeft(s)/Math.max(1,S.total[s])*100),n=[0,1].map(s=>S.units.filter(u=>u.alive&&u.side===s).length);
   h.innerHTML=`<div class="side"><span>${esc(playerLabel(0))} · ${n[0]}</span><div class="bar"><i style="width:${v[0]}%"></i></div></div><div class="clock">${Math.max(0,Math.ceil(TLIM-S.time))}s</div><div class="side r"><span>${n[1]} · ${esc(playerLabel(1))}</span><div class="bar"><i style="width:${v[1]}%"></i></div></div>`;
  }else if(S.state==='deploy'){
-  h.innerHTML=`<div class="side"><span>${esc(playerLabel(S.side))}: despliega en la franja ${S.side?'roja':'azul'}</span></div><div></div><div></div>`;
+  h.innerHTML=`<div class="side"><span>${esc(playerLabel(S.side))}: ${S.side===S.def?'defiende':'ataca'} desde el triángulo ${S.side?'rojo':'azul'}</span></div><div></div><div></div>`;
  }else h.innerHTML=`<div class="side"><span>Estudia el campo antes de elegir tropas</span></div><div></div><div></div>`;
 }
 let toastT=0;
@@ -123,7 +126,7 @@ function applyPaint(t){
  if(!S.sel){toast('Primero elige una tropa en el panel.');return}
  const def=UBY[S.sel];
  if(a.units.length>=MAXU){toast('Límite de '+MAXU+' unidades.');return}
- if(armyCost(a)+def.cost>CAP){toast('No queda capacidad: '+def.name+' cuesta '+def.cost+'.');return}
+ if(armyCost(a)+def.cost>capFor(S.side)){toast('No queda capacidad: '+def.name+' cuesta '+def.cost+'.');return}
  a.units.push({id:def.id,c:t.c,r:t.r});renderPanel();
 }
 cv.addEventListener('pointerdown',e=>{
