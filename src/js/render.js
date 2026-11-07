@@ -16,10 +16,12 @@ function drawUnitAt(def,side,x,y,opts={}){
  const dx=px-img.width/2+lx,dy=py-img.height+1;
  drawSprite(img,dx,dy,face<0);
  if(opts.flash>0){ctx.globalAlpha=0.75;drawSprite(s.w[fr],dx,dy,face<0);ctx.globalAlpha=1}
+ if(opts.sh>0){const bw=def.big?14:10,bx=Math.round(px-bw/2),by=Math.round(dy)-6;ctx.fillStyle='#120c14';ctx.fillRect(bx-1,by-1,bw+2,3);ctx.fillStyle='#ffe066';ctx.fillRect(bx,by,Math.max(1,Math.round(bw*opts.sh)),1)}
  if(opts.hp!==undefined&&opts.hp<1){const bw=def.big?14:10,bx=Math.round(px-bw/2),by=Math.round(dy)-3;ctx.fillStyle='#120c14';ctx.fillRect(bx-1,by-1,bw+2,4);ctx.fillStyle='#3a2a2a';ctx.fillRect(bx,by,bw,2);ctx.fillStyle=side?'#ff6a4f':'#4aa3ff';ctx.fillRect(bx,by,Math.max(1,Math.round(bw*opts.hp)),2)}
 }
 function drawTree(t){const img=treeSprite(S.weather.id==='snow',t.v);ctx.drawImage(img,Math.round(t.x-img.width/2),Math.round(t.y-img.height+2))}
 function drawCorpse(c){
+ if(c.used)return;
  const img=SPR[c.def.id].f[0];ctx.save();ctx.globalAlpha=c.t<0.4?1-c.t*1.2:0.45;
  const px=Math.round(c.x*T),py=Math.round(c.y*T+3-(c.el?3:0));
  ctx.translate(px,py);if(c.face<0)ctx.scale(-1,1);ctx.rotate(Math.PI/2);ctx.drawImage(img,-img.width/2-2,-img.height/2);ctx.restore();
@@ -29,6 +31,8 @@ function drawProj(p){
  const x=p.x0+(tx-p.x0)*k,arc=(p.kind==='arrow'||p.kind==='axe')?Math.sin(k*Math.PI)*Math.min(18,Math.abs(tx-p.x0)*0.15):0,y=p.y0+(ty-p.y0)*k-arc;
  const vx=x-p.lx,vy=y-p.ly;p.lx=x;p.ly=y;
  if(p.kind==='arrow'||p.kind==='bolt'){const l=Math.hypot(vx,vy)||1,ux=vx/l,uy=vy/l;ctx.fillStyle=p.kind==='bolt'?'#cfd8e3':'#efe0bf';for(let i=0;i<(p.kind==='bolt'?3:4);i++)ctx.fillRect(Math.round(x-ux*i),Math.round(y-uy*i),1,1);ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
+ else if(p.kind==='fire'){const f=((p.t*24)|0)%2;ctx.fillStyle='#ff7a2a';ctx.fillRect(Math.round(x)-1,Math.round(y)-1,3,3);ctx.fillStyle=f?'#ffe066':'#ffb040';ctx.fillRect(Math.round(x),Math.round(y)-1,1,2);ctx.globalAlpha=0.5;ctx.fillStyle='#ff5a2a';ctx.fillRect(Math.round(x-vx*1.5),Math.round(y-vy*1.5),2,2);ctx.globalAlpha=1}
+ else if(p.kind==='light'){const l=Math.hypot(vx,vy)||1,ux=vx/l,uy=vy/l;ctx.fillStyle='#fff6c0';for(let i=0;i<5;i++)ctx.fillRect(Math.round(x-ux*i),Math.round(y-uy*i),1,1);ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
  else if(p.kind==='axe'){const ph=((p.t*20)|0)%2;ctx.fillStyle='#b8b8b0';ctx.fillRect(Math.round(x)-1,Math.round(y)-(ph?1:0),ph?1:3,ph?3:1);ctx.fillStyle='#8b5a2b';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
  else{const c=p.kind==='heal'?'#7dff8a':(p.col||'#ffe066');ctx.fillStyle=c;ctx.fillRect(Math.round(x)-1,Math.round(y)-1,3,3);ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(x),Math.round(y),1,1);ctx.globalAlpha=0.4;ctx.fillStyle=c;ctx.fillRect(Math.round(x-vx*2)-1,Math.round(y-vy*2),2,2);ctx.globalAlpha=1}
 }
@@ -47,7 +51,7 @@ function frame(now){
  for(const c of S.corpses)drawCorpse(c);
  const list=S.trees.map(t=>({y:t.y,f:()=>drawTree(t)}));
  if(S.state==='battle'||S.state==='result'){
-  for(const u of S.units)if(u.alive)list.push({y:u.y*T+5+(u.def.fly?30:0),f:()=>drawUnitAt(u.def,u.side,u.x,u.y,{frame:u.moving?(Math.floor(u.anim)%2):(u.def.fly?Math.floor(now/180)%2:0),face:u.face,el:elev(u),flash:u.flash,hp:u.hp/u.max,lunge:u.lunge>0,t:now/1000})});
+  for(const u of S.units)if(u.alive)list.push({y:u.y*T+5+(u.def.fly?30:0),f:()=>drawUnitAt(u.def,u.side,u.x,u.y,{frame:u.moving?(Math.floor(u.anim)%2):(u.def.fly?Math.floor(now/180)%2:0),face:u.face,el:elev(u),flash:u.flash,hp:u.hp/u.max,sh:u.shMax?u.sh/u.shMax:0,lunge:u.lunge>0,t:now/1000})});
  }else if(S.state==='deploy'||S.state==='handoff'){
   for(const side of [0,1]){
    if(S.mode==='ai'&&side===1)continue;

@@ -2,7 +2,7 @@
 
 Juego de estrategia de batallas de ejércitos en pixel art. Armas un ejército con capacidad limitada (60 de capacidad, máximo 50 unidades), lo despliegas y la batalla se juega sola. El terreno y el clima deciden la estrategia.
 
-Nombre provisional. Prototipo 0.1.
+Nombre provisional. Prototipo 0.2.
 
 ## Jugar
 
@@ -11,8 +11,9 @@ Nombre provisional. Prototipo 0.1.
 
 ## Contenido actual
 
-- 3 facciones x 5 tropas (Legión de Hierro, Clan Colmillo, Círculo del Bosque). Los ejércitos se pueden mezclar.
-- 9 rasgos con sinergias por número de tropas.
+- 7 facciones x 5 tropas: Legión de Hierro, Clan Colmillo, Círculo del Bosque, Draconianos, Muertos vivientes, Demonios y Ángeles. Los ejércitos se pueden mezclar.
+- 13 rasgos con sinergias por número de tropas.
+- Mecánicas por facción: fuego que quema (y castiga al bosque), resurrección y nigromancia, curación al matar y frenesí, escudo divino y daño sagrado.
 - Terreno: llanura, colina (tiradores +2 alcance y +25% daño), bosque (cobertura contra proyectiles), río (lento, -3 armadura). Mapas simétricos.
 - 7 climas: despejado, lluvia, niebla, ventisca, viento del oeste, viento del este, sol abrasador.
 - Modos: contra la IA y 2 jugadores en el mismo dispositivo.
