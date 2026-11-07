@@ -31,6 +31,11 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-
 .hud .clock{font-size:18px;color:var(--gold);font-variant-numeric:tabular-nums}
 .canvas-wrap{position:relative;border:2px solid var(--line);background:#0c0a10;line-height:0}
 canvas#cv{width:100%;height:auto;aspect-ratio:704/416;image-rendering:pixelated;image-rendering:crisp-edges;display:block;touch-action:none}
+.zoombar{position:absolute;right:8px;bottom:8px;display:flex;align-items:center;gap:0;background:rgba(18,12,20,.86);border:1px solid var(--line);line-height:1.2;font-size:13px}
+.zoombar button{background:transparent;border:0;border-right:1px solid var(--line);padding:6px 10px;min-width:34px;font-family:var(--f-display);font-size:16px}
+.zoombar button:last-child{border-right:0;font-family:var(--f-body);font-size:13px}
+.zoombar button:disabled{opacity:.4;cursor:default}
+.zoombar span{padding:0 8px;color:var(--muted);font-variant-numeric:tabular-nums;border-right:1px solid var(--line);align-self:stretch;display:flex;align-items:center}
 .tileinfo{font-size:14px;color:var(--muted);min-height:40px}
 .tileinfo b{color:var(--ink)}
 .tileinfo.warn{color:var(--bad)}
@@ -68,6 +73,8 @@ select{font:inherit;background:var(--panel-2);color:var(--ink);border:1px solid 
 .card{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;text-align:left;background:var(--panel-2);border:1px solid var(--line);padding:6px 8px}
 .card img{width:48px;height:48px;image-rendering:pixelated}
 .card[aria-pressed="true"]{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.card.elite{border-color:#6a5326;background:linear-gradient(90deg,#3a2e1c,var(--panel-2) 60%)}
+.badge{font-family:var(--f-display);font-size:11px;padding:0 5px;background:var(--gold);color:var(--gold-ink);border-radius:2px;vertical-align:1px}
 .card .nm{font-weight:600;font-size:15px}
 .card .st{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .card .ds{font-size:12px}

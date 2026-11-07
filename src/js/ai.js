@@ -1,7 +1,7 @@
 'use strict';
 /* ================= EJÉRCITO AUTOMÁTICO / IA ================= */
-function zoneTiles(side){const o=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(dvOf(side,c,r)<ZV)o.push({c,r});return o}
-const inZone=(t,side)=>!!t&&dvOf(side,t.c,t.r)<ZV;
+function zoneTiles(side){const o=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(dvOf(side,c,r)<ZV&&S.map[r][c]!==8)o.push({c,r});return o}
+const inZone=(t,side)=>!!t&&dvOf(side,t.c,t.r)<ZV&&S.map[t.r][t.c]!==8;
 const capFor=side=>side===S.def?CAP:CAP+CAPB;
 function autoArmy(side,fi){
  const pool=UNITS.filter(u=>u.f===fi),r=Math.random;
@@ -17,7 +17,7 @@ function autoArmy(side,fi){
   const roles=Object.keys(wts).filter(k=>by[k]);const tot=roles.reduce((a,k)=>a+wts[k],0);let x=r()*tot,k=roles[0];
   for(const kk of roles){x-=wts[kk];if(x<=0){k=kk;break}}
   if(k==='heal'&&picks.filter(p=>p.heal).length>=3)continue;
-  const u=by[k][(r()*by[k].length)|0];if(u.cost<=cap){picks.push(u);cap-=u.cost}
+  const u=by[k][(r()*by[k].length)|0];if(u.elite&&picks.filter(p=>p.elite).length>=ELITEMAX)continue;if(u.cost<=cap){picks.push(u);cap-=u.cost}
  }
  const occ=new Set(),units=[];
  const depth=t=>(ZV-dvOf(side,t.c,t.r))*10;
@@ -45,6 +45,6 @@ function aiArmy(){
  const g=(f+1+((Math.random()*(FACTIONS.length-1))|0))%FACTIONS.length;
  const A=autoArmy(1,f),B=autoArmy(1,g);const occ=new Set(),units=[];let cost=0;
  const all=sortBy([...A.units,...B.units],()=>Math.random());
- for(const u of all){const k=u.c+','+u.r,c=UBY[u.id].cost;if(occ.has(k)||cost+c>capFor(1)||units.length>=MAXU)continue;occ.add(k);units.push(u);cost+=c}
+ for(const u of all){const k=u.c+','+u.r,c=UBY[u.id].cost;if(occ.has(k)||cost+c>capFor(1)||units.length>=MAXU||(UBY[u.id].elite&&units.filter(x=>UBY[x.id].elite).length>=ELITEMAX))continue;occ.add(k);units.push(u);cost+=c}
  return {fac:f,units};
 }

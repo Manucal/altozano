@@ -7,9 +7,13 @@ const sampleCache={};
 function terrCvSample(t){if(sampleCache[t])return sampleCache[t];const c=document.createElement('canvas');c.width=16;c.height=16;const x=c.getContext('2d'),r=rng(t+5),cols=TER[t].col;
  for(let j=0;j<16;j++)for(let i=0;i<16;i++){x.fillStyle=r()<0.6?cols[0]:r()<0.5?cols[1]:cols[2];
   if((t===1&&j>=12)||(t===5&&j>=8))x.fillStyle=j%4===0?'#5c4027':r()<0.5?'#7a5a38':'#6a4c2e';if((t===1&&j===11)||(t===5&&j===7))x.fillStyle='#d4e090';if(t===4&&j%4===0)x.fillStyle='#8a7048';x.fillRect(i,j,1,1)}
- if(t===2){const tr=treeSprite(false,0);x.drawImage(tr,1,2)}return sampleCache[t]=c}
+ if(t===2){const tr=treeSprite(false,0);x.drawImage(tr,1,2)}
+ if(t===6){x.fillStyle='#bfa462';for(let i=0;i<16;i+=5){x.fillRect(i,4+(i%3),3,1);x.fillRect(i+2,11-(i%2),3,1)}}
+ if(t===7){x.fillStyle='#2a2222';x.fillRect(3,5,5,1);x.fillRect(8,6,4,1);x.fillRect(6,11,6,1);x.fillStyle='#ff7a2a';x.fillRect(12,3,1,1)}
+ if(t===8){x.fillStyle='#7a2410';x.fillRect(0,6,7,1);x.fillRect(7,7,9,1);x.fillRect(4,12,8,1);x.fillStyle='#ffe070';x.fillRect(10,3,2,2)}
+ return sampleCache[t]=c}
 function renderFieldTag(){
- $('fieldtag').innerHTML=`<span class="chip">Campo <b>${esc(S.mapName)}</b></span><span class="chip">Defiende <b>${S.def?'Rojo':'Azul'}</b></span><span class="chip">Clima <b>${esc(S.weather.n)}</b></span>`;
+ $('fieldtag').innerHTML=`<span class="chip">Campo <b>${esc(S.mapName)}</b></span><span class="chip">Bioma <b>${esc(BIOMES.find(b=>b.id===S.biome).n.replace(/ \(.*\)/,''))}</b></span><span class="chip">Defiende <b>${S.def?'Rojo':'Azul'}</b></span><span class="chip">Clima <b>${esc(S.weather.n)}</b></span>`;
 }
 function armyFacName(a){const fs=[...new Set(a.units.map(u=>UBY[u.id].f))];return fs.length===1?FACTIONS[fs[0]].name:fs.length?'Ejército mixto':'Sin tropas'}
 function armyCost(a){return a.units.reduce((s,u)=>s+UBY[u.id].cost,0)}
@@ -18,7 +22,8 @@ function synHTML(units,fac){
  return `<div class="syn">${[...traits].map(k=>{const t=tt[k]||0,tr=TRAITS[k],c=cnt[k]||0;const next=t<2?tr.tiers[t]:null;return `<div class="${t?'on':'off'}"><span>${tr.n}</span><span class="pip">${c}/${next??tr.tiers[1]}</span><span>${t?esc(tr.fx[t-1]):'Con '+tr.tiers[0]+': '+esc(tr.fx[0])}</span></div>`}).join('')}</div>`;
 }
 function legendHTML(){
- return `<ul class="legend">${TER.map((t,i)=>`<li><img class="sw" alt="" src="${swatch(i)}"><span><b>${t.n}.</b> ${esc(t.d)}</span></li>`).join('')}</ul>`;
+ const has=new Set([0,1,2]);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const k=S.map[r][c],h=S.hgt[r][c];has.add(k);if(h)has.add(h===2?5:1)}
+ return `<ul class="legend">${TER.map((t,i)=>!has.has(i)?'':`<li><img class="sw" alt="" src="${swatch(i)}"><span><b>${t.n}.</b> ${esc(t.d)}</span></li>`).join('')}</ul>`;
 }
 function playerLabel(side){if(S.mode==='ai')return side===0?'Tu ejército':'IA';return side===0?'Jugador 1':'Jugador 2'}
 function renderPanel(){
@@ -30,6 +35,7 @@ function renderPanel(){
   <div class="sec"><h2>Campo de batalla</h2>
    <div class="row"><select id="sel-map" aria-label="Tipo de campo">${PRESETS.map(p=>`<option value="${p.id}" ${p.id===S.preset?'selected':''}>${p.n}</option>`).join('')}</select>
    <select id="sel-wx" aria-label="Clima"><option value="random" ${S.weatherSel==='random'?'selected':''}>Clima aleatorio</option>${WEATHERS.map(w=>`<option value="${w.id}" ${w.id===S.weatherSel?'selected':''}>${w.n}</option>`).join('')}</select></div>
+   <select id="sel-bio" aria-label="Bioma" ${S.preset==='oasis'||S.preset==='caldera'?'disabled':''}>${BIOMES.map(b=>`<option value="${b.id}" ${b.id===S.biomeSel?'selected':''}>${b.n}</option>`).join('')}</select>
    <select id="sel-def" aria-label="Quién defiende"><option value="random" ${S.defSel==='random'?'selected':''}>Defensor aleatorio</option><option value="0" ${S.defSel==='0'?'selected':''}>Defiende el azul</option><option value="1" ${S.defSel==='1'?'selected':''}>Defiende el rojo</option></select>
    <button class="btn" id="b-reroll">Generar otro campo</button></div>
   <div class="sec"><h2>Atacante y defensor</h2><p class="note" style="color:var(--ink)">Defiende el <b>${S.def?'rojo':'azul'}</b>: tiene el terreno a favor y gana si resiste ${TLIM} s. El atacante debe eliminar a todo el ejército defensor antes de que acabe el tiempo.</p></div>
@@ -39,6 +45,7 @@ function renderPanel(){
   $('m-ai').onclick=()=>{S.mode='ai';renderPanel()};$('m-pvp').onclick=()=>{S.mode='pvp';renderPanel()};
   $('sel-map').onchange=e=>{S.preset=e.target.value;newField();renderPanel()};
   $('sel-wx').onchange=e=>{S.weatherSel=e.target.value;newField(true);renderPanel()};
+  $('sel-bio').onchange=e=>{S.biomeSel=e.target.value;newField(true);renderPanel()};
   $('sel-def').onchange=e=>{S.defSel=e.target.value;newField(true);renderPanel()};
   $('b-reroll').onclick=()=>{newField();renderPanel()};
   $('b-go').onclick=()=>{S.side=0;S.sel=null;S.state='deploy';renderPanel();renderHud()};
@@ -53,10 +60,10 @@ function renderPanel(){
   <div class="sec">
    <div class="meter"><span>Capacidad</span><div class="bar"><i style="width:${cost/capFor(S.side)*100}%"></i></div><b>${cost}/${capFor(S.side)}</b></div>
    <div class="meter"><span>Grupos</span><div class="bar"><i style="width:${n/MAXU*100}%"></i></div><b>${n}/${MAXU}</b></div>
-   <p class="note">${a.units.reduce((s,u)=>s+UBY[u.id].n,0)} soldados en total.</p>
+   <p class="note">${a.units.reduce((s,u)=>s+UBY[u.id].n,0)} soldados en total · Élites ${a.units.filter(u=>UBY[u.id].elite).length}/${ELITEMAX}</p>
   </div>
-  <div class="sec"><h2>Tropas</h2><div class="cards">${fu.map(u=>`<button class="card" data-u="${u.id}" aria-pressed="${S.sel===u.id}">
-   <img alt="" src="${ICON[u.id]}"><span><span class="nm">${esc(u.name)}${u.n>1?' x'+u.n:''}</span>
+  <div class="sec"><h2>Tropas</h2><div class="cards">${fu.map(u=>`<button class="card${u.elite?' elite':''}" data-u="${u.id}" aria-pressed="${S.sel===u.id}">
+   <img alt="" src="${ICON[u.id]}"><span><span class="nm">${u.elite?'<span class="badge">Élite</span> ':''}${esc(u.name)}${u.n>1?' x'+u.n:''}</span>
    <span class="st"> · ${u.n>1?'Grupo de '+u.n+' · Vida '+Math.round(u.hp/u.n)+' c/u':'Vida '+u.hp} · Ataque ${u.atk}${u.heal?' · Cura '+u.heal:''} · Alcance ${u.rng} · Armadura ${u.arm}</span>
    <span class="trs">${u.tr.map(t=>`<span class="tr">${TRAITS[t].n}</span>`).join('')}</span><span class="ds">${esc(u.desc)}</span></span>
    <span class="cost">${u.cost}<small>cap.</small></span></button>`).join('')}</div></div>
@@ -113,14 +120,15 @@ function renderHud(){
   h.innerHTML=`<div class="side"><span>${esc(playerLabel(S.side))}: ${S.side===S.def?'defiende':'ataca'} desde el triángulo ${S.side?'rojo':'azul'}</span></div><div></div><div></div>`;
  }else h.innerHTML=`<div class="side"><span>Estudia el campo antes de elegir tropas</span></div><div></div><div></div>`;
 }
+const HINT='Pasa el cursor por el mapa para ver qué hace cada terreno. Rueda del ratón o pellizco para acercar; arrastra para moverte (al colocar tropas, con el botón derecho o con dos dedos).';
 let toastT=0;
 function toast(msg){const el=$('tileinfo');el.textContent=msg;el.classList.add('warn');clearTimeout(toastT);toastT=setTimeout(()=>{el.classList.remove('warn');updateTileInfo()},2200)}
 function updateTileInfo(){
  const el=$('tileinfo');if(el.classList.contains('warn'))return;const t=S.hover;
- if(!t){el.innerHTML='Pasa el cursor por el mapa para ver qué hace cada terreno.';return}
- const sf=S.map[t.r][t.c],hh=S.hgt[t.r][t.c],ter=TER[sf===3?3:sf===4?4:sf===2?2:hh===2?5:hh===1?1:0];el.innerHTML=`<b>${ter.n}${sf===2&&hh?(hh===2?' en montaña':' en colina'):''}.</b> ${esc(ter.d)}${sf===2&&hh?' '+esc(TER[hh===2?5:1].d):''}`;
+ if(!t){el.innerHTML=HINT;return}
+ const sf=S.map[t.r][t.c],hh=S.hgt[t.r][t.c],own=sf===2||sf===6||sf===7||sf===8,ter=TER[own||sf===3||sf===4?sf:hh===2?5:hh===1?1:0],up=own&&hh;el.innerHTML=`<b>${ter.n}${up?(hh===2?' en montaña':' en colina'):''}.</b> ${esc(ter.d)}${up?' '+esc(TER[hh===2?5:1].d):''}`;
 }
-function tileOf(e){const r=cv.getBoundingClientRect();const c=Math.floor((e.clientX-r.left)/r.width*COLS),rr=Math.floor((e.clientY-r.top)/r.height*ROWS);if(c<0||rr<0||c>=COLS||rr>=ROWS)return null;return {c,r:rr}}
+function tileOf(e){const w=toWorld(scr(e));const c=Math.floor(w.x/T),rr=Math.floor(w.y/T);if(c<0||rr<0||c>=COLS||rr>=ROWS)return null;return {c,r:rr}}
 let paint=null,lastPaint=null;
 function applyPaint(t){
  if(!t||!inZone(t,S.side))return;const k=t.c+','+t.r;if(k===lastPaint)return;lastPaint=k;
@@ -130,17 +138,18 @@ function applyPaint(t){
  if(!S.sel){toast('Primero elige una tropa en el panel.');return}
  const def=UBY[S.sel];
  if(a.units.length>=MAXU){toast('Límite de '+MAXU+' grupos.');return}
+ if(def.elite&&a.units.filter(u=>UBY[u.id].elite).length>=ELITEMAX){toast('Máximo '+ELITEMAX+' élites por ejército.');return}
  if(armyCost(a)+def.cost>capFor(S.side)){toast('No queda capacidad: '+def.name+' cuesta '+def.cost+'.');return}
  a.units.push({id:def.id,c:t.c,r:t.r});renderPanel();
 }
 cv.addEventListener('pointerdown',e=>{
- if(S.state!=='deploy')return;const t=tileOf(e);if(!t)return;
+ if(S.state!=='deploy'||e.button!==0)return;const t=tileOf(e);if(!t)return;
  if(!inZone(t,S.side)){toast('Solo puedes desplegar en tu franja.');return}
  const a=S.armies[S.side];paint=a.units.some(u=>u.c===t.c&&u.r===t.r)?'del':'add';lastPaint=null;applyPaint(t);
  try{cv.setPointerCapture(e.pointerId)}catch(_){}
  e.preventDefault();
 });
-cv.addEventListener('pointermove',e=>{const t=tileOf(e);const ch=!S.hover||!t||t.c!==S.hover.c||t.r!==S.hover.r;S.hover=t;if(ch)updateTileInfo();if(paint)applyPaint(t)});
+cv.addEventListener('pointermove',e=>{if(CAM.pinch)return;const t=tileOf(e);const ch=!S.hover||!t||t.c!==S.hover.c||t.r!==S.hover.r;S.hover=t;if(ch)updateTileInfo();if(paint)applyPaint(t)});
 const endPaint=()=>{paint=null;lastPaint=null};
 cv.addEventListener('pointerup',endPaint);cv.addEventListener('pointercancel',endPaint);
 cv.addEventListener('pointerleave',()=>{if(!paint){S.hover=null;updateTileInfo()}});

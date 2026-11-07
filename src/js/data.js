@@ -60,6 +60,14 @@ const UNITS=[
  {id:'sanadora',f:6,name:'Sanadora',cost:4,hp:75,atk:6,rng:5,as:1.3,spd:1.1,arm:1,tr:['Celestial','Mistico'],heal:15,proj:'light',desc:'La mejor curandera.',sp:{k:'foot',head:'angel',torso:'robe',legs:'robe',weap:['staff'],wings:'W'}},
  {id:'arcangel',f:6,name:'Arcángel',cost:7,hp:360,atk:24,rng:1,as:1.3,spd:1.6,arm:5,tr:['Celestial','Volador'],fly:true,big:true,splash:true,holy:true,desc:'Gigante volador y sagrado, con golpe en área.',sp:{k:'brute',halo:true,wings:'W'}},
  {id:'halcon',f:2,name:'Halcón espíritu',cost:3,hp:55,atk:9,rng:1,as:0.6,spd:3.2,arm:0,tr:['Volador','Silvano'],fly:true,desc:'Vuela sobre todo terreno y caza tiradores.',sp:{k:'bird'}},
+ // ===== ÉLITES: una por facción, con una mecánica propia (máximo ELITEMAX grupos de élite por ejército) =====
+ {id:'paladin',f:0,elite:true,name:'Paladín abanderado',cost:6,hp:320,atk:18,rng:1,as:1.2,spd:1.1,arm:6,tr:['Infanteria','Escudo'],aura:true,desc:'Estandarte: los aliados a 2,5 casillas hacen +15% de daño y tienen +2 de armadura.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['banner','sword2'],pal:{a:'#c9d2de',c:'#2f4f9a'}}},
+ {id:'caudillo',f:1,elite:true,name:'Caudillo de guerra',cost:6,hp:400,atk:26,rng:1,as:1.5,spd:1.15,arm:4,tr:['Bestia','Gigante'],splash:true,big:true,warcry:true,desc:'Grito de guerra cada 8 s: los aliados a 3,5 casillas atacan un 35% más rápido durante 4 s.',sp:{k:'brute',horns:true,spikes:true,pal:{a:'#4a2e1a',b:'#d8a030',d:'#2a1a10',h:'#1a0e08'}}},
+ {id:'acechadora',f:2,elite:true,name:'Acechadora',cost:6,hp:150,atk:30,rng:8,as:2.6,spd:1.3,arm:0,tr:['Tirador','Silvano'],pierce:true,stealth:true,proj:'arrow',desc:'Invisible hasta que dispara (y otra vez 2,5 s después). En el bosque solo la ve quien está pegado a ella. Perforante.',sp:{k:'foot',head:'elfHood',torso:'leather',legs:'pants',weap:['bow'],pal:{c:'#1f3d26',b:'#2c4a2a',a:'#556b3a',d:'#1e2a1a'}}},
+ {id:'magma',f:3,elite:true,name:'Invocadora de magma',cost:6,hp:150,atk:18,rng:6,as:2.2,spd:1.0,arm:2,tr:['Draconico','Mistico'],lava:true,proj:'magma',desc:'Sus proyectiles dejan un charco de magma 4 s que quema a todos los enemigos de a pie que lo pisen.',sp:{k:'foot',head:'drac',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#3a1610',b:'#ff7a1a',y:'#ff5a1a',s:'#d0702a'}}},
+ {id:'liche',f:4,elite:true,name:'Liche',cost:6,hp:270,atk:12,rng:5,as:1.6,spd:0.9,arm:2,tr:['NoMuerto','Mistico'],drain:true,proj:'orb',desc:'Cada 2 s absorbe vida de todos los enemigos a 2,5 casillas (ignora armadura) y se cura con ella.',sp:{k:'foot',head:'lich',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#2a1a3a',b:'#7dffcf',y:'#7dffcf'}}},
+ {id:'segador',f:5,elite:true,name:'Segador de almas',cost:6,hp:250,atk:30,rng:1,as:1.3,spd:1.4,arm:3,tr:['Infernal','Infanteria'],blink:true,desc:'Cada 6 s se teletransporta junto a su objetivo si está a más de 3 casillas. Ignora acantilados y ríos.',sp:{k:'foot',head:'demon',torso:'robe',legs:'robe',weap:['scythe'],wings:'v',pal:{c:'#2a0a12',b:'#ff9a30'}}},
+ {id:'serafin',f:6,elite:true,name:'Serafín',cost:7,hp:270,atk:14,rng:5,as:1.4,spd:1.4,arm:2,tr:['Celestial','Volador'],fly:true,holy:true,massheal:true,proj:'light',desc:'Vuela. Cada 5 s cura 22 de vida a todos los aliados a 3 casillas. Sagrado.',sp:{k:'foot',head:'angel',torso:'robe',legs:'robe',weap:['staff'],wings:'y',pal:{c:'#fff4d4',b:'#e0b84a',y:'#fff0a0'}}},
 ];
 for(const u of UNITS)u.n=SQUAD[u.id]||1;
 const UBY=Object.fromEntries(UNITS.map(u=>[u.id,u]));
@@ -70,6 +78,9 @@ const TER=[
  {n:'Río',mv:0.45,col:['#2f6fa8','#3579b5','#2a6299'],d:'Muy lento de cruzar y -3 de armadura dentro del agua. Los voladores lo ignoran.'},
  {n:'Rampa',mv:0.75,col:['#b39466','#a68759','#c2a374'],d:'La única forma de subir o bajar un nivel. Es estrecha: un buen sitio para defender.'},
  {n:'Montaña',mv:1,col:['#a7b97a','#b5c688','#98ab6c'],d:'Altura 2. Tiradores: +3 de alcance y +40% de daño contra unidades más bajas. Cuerpo a cuerpo cuesta arriba: -20% por nivel. Se sube por rampa desde la colina.'},
+ {n:'Desierto',mv:0.85,col:['#d8c07a','#e0c988','#cdb46c'],d:'Arena: las tropas de a pie van un 15% más lentas y la armadura pesada (4 o más) ataca un 15% más lenta. Con sol abrasador, el doble. Dracónicos, Infernales y voladores no lo notan.'},
+ {n:'Ceniza volcánica',mv:1,col:['#4e4646','#575050','#463e3e'],d:'Suelo ardiente: las tropas de a pie pierden un 0,5% de vida por segundo (la lluvia lo apaga). Dracónicos e Infernales no sufren y hacen +10% de daño sobre ella.'},
+ {n:'Lava',mv:0,col:['#ff7a1a','#ffb040','#d8401a'],d:'Infranqueable para las tropas de a pie. Los voladores pasan por encima.'},
 ];
 const WEATHERS=[
  {id:'clear',n:'Despejado',d:'Sin efectos.'},
@@ -87,4 +98,6 @@ const PRESETS=[
  {id:'emboscada',n:'Bosque de la emboscada'},
  {id:'paso',n:'Paso estrecho'},
  {id:'cumbre',n:'Cumbre central'},
+ {id:'oasis',n:'Oasis del desierto'},
+ {id:'caldera',n:'Caldera volcánica'},
 ];

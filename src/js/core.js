@@ -1,8 +1,8 @@
 'use strict';
-const T=32,TT=16,COLS=44,ROWS=26,W=COLS*T,H=ROWS*T,ZV=0.6,CAP=60,CAPB=0,MAXU=30,TLIM=150;
+const T=32,TT=16,COLS=44,ROWS=26,W=COLS*T,H=ROWS*T,ZV=0.6,CAP=60,CAPB=0,MAXU=30,TLIM=150,ELITEMAX=2;
 // T: píxeles de pantalla por casilla. TT: tamaño de la textura del terreno (se dibuja a x2).
 // MAXU: máximo de grupos por ejército. Cada grupo tiene def.n soldados.
-const SQUAD={lancero:4,arquero:4,ballestero:3,caballero:3,clerigo:2,saqueador:4,hachero:4,jinete:3,bruto:1,chaman:2,guarda:4,danza:3,arboreo:1,druida:2,halcon:3,escamado:4,escupefuego:3,drakejinete:3,draco:1,sacerdotisa:2,esqueleto:5,arqesq:4,espectral:3,abominacion:1,nigromante:1,diablillo:4,cornudo:3,hechicera:3,sabueso:3,senor:1,guardian:3,arqluz:3,valquiria:2,sanadora:2,arcangel:1};
+const SQUAD={lancero:4,arquero:4,ballestero:3,caballero:3,clerigo:2,saqueador:4,hachero:4,jinete:3,bruto:1,chaman:2,guarda:4,danza:3,arboreo:1,druida:2,halcon:3,escamado:4,escupefuego:3,drakejinete:3,draco:1,sacerdotisa:2,esqueleto:5,arqesq:4,espectral:3,abominacion:1,nigromante:1,diablillo:4,cornudo:3,hechicera:3,sabueso:3,senor:1,guardian:3,arqluz:3,valquiria:2,sanadora:2,arcangel:1,paladin:1,caudillo:1,acechadora:2,magma:1,liche:1,segador:1,serafin:1};
 // posiciones de cada soldado dentro de su casilla
 const FORM={1:[[0,0]],2:[[-0.2,0],[0.2,0]],3:[[-0.2,-0.17],[0.2,-0.17],[0,0.2]],4:[[-0.2,-0.2],[0.2,-0.2],[-0.2,0.2],[0.2,0.2]],5:[[-0.24,-0.2],[0.24,-0.2],[0,0],[-0.24,0.22],[0.24,0.22]]};
 // Geometría diagonal: v=0 esquina azul (arriba-izquierda), v=2 esquina roja (abajo-derecha); u recorre la línea del frente.
