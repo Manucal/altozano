@@ -1,4 +1,4 @@
 'use strict';
 /* ================= ESTADO ================= */
 const S={state:'setup',mode:'ai',preset:'random',defSel:'random',def:1,seed:1,weatherSel:'random',biomeSel:'random',biome:'templado',weather:WEATHERS[0],map:null,mapName:'',
- armies:[{fac:0,units:[]},{fac:1,units:[]}],side:0,sel:null,units:[],proj:[],parts:[],corpses:[],fields:[],trees:[],time:0,speed:1,syn:[{},{}],stats:null,result:null,hover:null,toast:null,claims:new Set(),wx:[]};
+ armies:[{fac:0,units:[]},{fac:1,units:[]}],side:0,sel:null,units:[],proj:[],parts:[],corpses:[],fields:[],marks:[],selG:new Set(),gMode:false,paused:false,trees:[],time:0,speed:1,syn:[{},{}],stats:null,result:null,hover:null,toast:null,claims:new Set(),wx:[]};

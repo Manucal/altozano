@@ -43,7 +43,7 @@ function drawProj(p){
 let last=performance.now();
 function frame(now){
  const dt=Math.min(0.05,(now-last)/1000);last=now;
- if(S.state==='battle'){let acc=dt*S.speed;while(acc>0&&S.state==='battle'){const h=Math.min(1/30,acc);step(h);acc-=h}}
+ if(S.state==='battle'&&!S.paused){let acc=dt*S.speed;while(acc>0&&S.state==='battle'){const h=Math.min(1/30,acc);step(h);acc-=h}}
  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#0c0a10';ctx.fillRect(0,0,W,H);
  const z=S.cam.z;ctx.setTransform(z,0,0,z,-S.cam.x*z,-S.cam.y*z);
  ctx.drawImage(terrCv,0,0,W,H);
@@ -58,6 +58,7 @@ function frame(now){
   ctx.fillStyle='rgba(255,240,200,0.5)';for(let i=0;i<=W;i+=7)ctx.fillRect(i,Math.round(H-i*H/W),2,1);
  }
  for(const c of S.corpses)drawCorpse(c);
+ if(S.state==='battle')drawSelection();
  for(const f of S.fields||[]){const a=Math.min(1,f.t/1.2);const g=ctx.createRadialGradient(f.x*T,f.y*T,2,f.x*T,f.y*T,f.r*T);g.addColorStop(0,`rgba(255,200,80,${0.75*a})`);g.addColorStop(0.55,`rgba(240,90,20,${0.55*a})`);g.addColorStop(1,'rgba(120,20,10,0)');ctx.fillStyle=g;ctx.fillRect(f.x*T-f.r*T,f.y*T-f.r*T,f.r*T*2,f.r*T*2)}
  const list=S.trees.map(t=>({y:t.y,f:()=>drawTree(t)}));
  if(S.state==='battle'||S.state==='result'){
@@ -73,6 +74,7 @@ function frame(now){
  for(const p of S.proj)drawProj(p);
  for(const p of S.parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=140*dt;ctx.fillStyle=p.col;ctx.fillRect(Math.round(p.x),Math.round(p.y),1,1)}
  S.parts=S.parts.filter(p=>p.life>0);
+ drawMarks(dt);
  // casilla bajo el cursor
  if(S.hover&&(S.state==='deploy'||S.state==='setup')){const ok=S.state==='setup'||inZone(S.hover,S.side);ctx.strokeStyle=ok?'rgba(255,240,200,0.9)':'rgba(255,120,100,0.6)';ctx.lineWidth=1;ctx.strokeRect(S.hover.c*T+0.5,S.hover.r*T+0.5,T-1,T-1)}
  ctx.setTransform(1,0,0,1,0,0);

@@ -10,11 +10,11 @@ function mkUnit(def,side,x,y){
  return u;
 }
 function startBattle(){
- S.units=[];S.proj=[];S.parts=[];S.corpses=[];S.fields=[];S.time=0;S.result=null;S.claims=new Set();
+ S.units=[];S.proj=[];S.parts=[];S.corpses=[];S.fields=[];S.marks=[];S.selG=new Set();S.gMode=false;S.paused=false;S.gidN=5000;S.time=0;S.result=null;S.claims=new Set();
  S.stats=[{dmg:0,kills:0,byType:{}},{dmg:0,kills:0,byType:{}}];
  for(const side of [0,1]){
   const a=S.armies[side];S.syn[side]=computeSyn(a.units);
-  for(const it of a.units){const def=UBY[it.id];for(const [ox,oy] of FORM[def.n])S.units.push(mkUnit(def,side,it.c+0.5+ox,it.r+0.5+oy))}
+  a.units.forEach((it,gi)=>{const def=UBY[it.id];for(const [ox,oy] of FORM[def.n]){const u=mkUnit(def,side,it.c+0.5+ox,it.r+0.5+oy);u.gid=side*1000+gi;S.units.push(u)}});
  }
  for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&elev(u)>=1)u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
  S.total=[0,1].map(s=>S.units.filter(u=>u.side===s).reduce((a,u)=>a+u.def.cost/u.def.n,0));S.count0=[0,1].map(s=>S.units.filter(u=>u.side===s).length);
@@ -50,6 +50,7 @@ function pickTarget(u){
  for(const e of S.units){if(!e.alive||e.side===u.side||hiddenFrom(e,u))continue;let d=dist(u,e);if(ranged&&e.def.rng>1)d*=0.45;if(d<bd){bd=d;best=e}}
  return best;
 }
+function nearestOfGroup(u,gid){let b=null,bd=1e9;for(const e of S.units){if(!e.alive||e.gid!==gid||hiddenFrom(e,u))continue;const d=dist(u,e);if(d<bd){bd=d;b=e}}return b}
 function pickHeal(u){let best=null,br=0.92;for(const a of S.units){if(!a.alive||a.side!==u.side||a===u)continue;const r=a.hp/a.max;if(r<br&&dist(u,a)<8){br=r;best=a}}return best}
 function seekHill(u){
  const cur=elev(u);if(cur>=2||u.def.fly||!u.tgt)return;
@@ -181,12 +182,20 @@ function step(dt){
   if(!u.def.fly&&S.weather.id!=='rain'&&terrAt(u)===7&&!heatProof(u)){u.hp-=u.max*0.005*dt;if(u.hp<=0){kill(u,null);continue}}
   if(u.poison>0){u.poison-=dt;u.hp-=(u.poisonDps||2)*dt;if(Math.random()<dt*5)S.parts.push({x:u.x*T+(Math.random()-0.5)*6,y:u.y*T-4,vx:0,vy:-18,life:0.35,col:'#8fd05a'});if(u.hp<=0){kill(u,null);continue}}
   if(u.def.regen)u.hp=Math.min(u.max,u.hp+u.max*u.def.regen*dt);
-  if(u.def.raise){u.raiseT-=dt;if(u.raiseT<=0){u.raiseT=1;for(let q=0;q<2&&u.raised<8;q++){const c=S.corpses.find(c=>!c.used&&!c.def.big&&Math.hypot(c.x-u.x,c.y-u.y)<5);if(c){c.used=true;u.raised++;u.raiseT=4;const z=mkUnit(UBY.esqueleto,u.side,c.x,c.y);z.risen=true;S.units.push(z);burst(c.x*T,c.y*T-4,'#b06aff',12)}}}}
+  if(u.def.raise){u.raiseT-=dt;if(u.raiseT<=0){u.raiseT=1;for(let q=0;q<2&&u.raised<8;q++){const c=S.corpses.find(c=>!c.used&&!c.def.big&&Math.hypot(c.x-u.x,c.y-u.y)<5);if(c){c.used=true;u.raised++;u.raiseT=4;const z=mkUnit(UBY.esqueleto,u.side,c.x,c.y);z.risen=true;z.gid=S.gidN++;S.units.push(z);burst(c.x*T,c.y*T-4,'#b06aff',12)}}}}
   if(u.def.tr.includes('Silvano')){const t=tier(u.side,'Silvano');if((t>=1&&terrAt(u)===2)||t>=2)u.hp=Math.min(u.max,u.hp+u.max*0.03*dt)}
-  if(u.ret<=0||!u.tgt||!u.tgt.alive||hiddenFrom(u.tgt,u)){u.tgt=pickTarget(u);u.ret=0.4+Math.random()*0.2;if(u.def.rng>1&&!u.def.heal&&!u.hold&&!(u.seekCD>S.time))seekHill(u)}
+  if(u.ret<=0||!u.tgt||!u.tgt.alive||hiddenFrom(u.tgt,u)){u.tgt=pickTarget(u);u.ret=0.4+Math.random()*0.2;if(u.def.rng>1&&!u.def.heal&&!u.hold&&!u.order&&!(u.seekCD>S.time))seekHill(u)}
+  // órdenes del jugador
+  const o=u.order;
+  if(o){
+   if(o.type==='move'){goTo(u,o.x,o.y,dt,0.1);if(Math.hypot(o.x-u.x,o.y-u.y)<0.35||S.time>o.until){u.order={type:'hold'};u.moving=false}continue}
+   if(o.type==='attack'&&(!u.tgt||!u.tgt.alive||u.tgt.gid!==o.gid)){u.tgt=nearestOfGroup(u,o.gid);if(!u.tgt){u.order=null;u.tgt=pickTarget(u)}}
+   if(o.type==='amove'){const t=u.tgt,near=t&&dist(u,t)<=effRange(u,t)+(u.def.rng>1?1:2.5);if(!near&&!(u.def.heal&&pickHeal(u))){goTo(u,o.x,o.y,dt,0.1);if(Math.hypot(o.x-u.x,o.y-u.y)<0.5||S.time>o.until)u.order=null;continue}}
+  }
+  const holding=o&&o.type==='hold';
   if(u.def.heal){
    const ally=pickHeal(u);
-   if(ally){const d=dist(u,ally),hr=effRange(u,null);if(d<=hr){u.moving=false;u.face=Math.sign(ally.x-u.x)||u.face;if(u.cd<=0){doHeal(u,ally);u.cd=cool(u)}continue}else if(d<8){goTo(u,ally.x,ally.y,dt,hr*0.8);continue}}
+   if(ally){const d=dist(u,ally),hr=effRange(u,null);if(d<=hr){u.moving=false;u.face=Math.sign(ally.x-u.x)||u.face;if(u.cd<=0){doHeal(u,ally);u.cd=cool(u)}continue}else if(d<8&&!holding){goTo(u,ally.x,ally.y,dt,hr*0.8);continue}}
   }
   const tg=u.tgt;if(!tg){u.moving=false;continue}
   const d=dist(u,tg),rg=effRange(u,tg);
@@ -194,6 +203,7 @@ function step(dt){
   const blocked=u.def.rng<=1&&!u.def.fly&&!tg.def.fly&&d<=reach&&!lineClear(u.x,u.y,tg.x,tg.y);
   if(d<=reach&&!blocked){u.idle=0;u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;if(u.cd<=0){attack(u,tg);u.cd=cool(u)}}
   else{
+   if(holding){u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}
    if(u.guard){if(d<rg+5||S.time>60||u.hp<u.max)u.guard=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
    if(u.hold){u.idle=(u.idle||0)+dt;if(u.side!==S.def&&((S.time>20&&d>rg+6)||u.idle>6)){u.hold=false;u.seekCD=S.time+25}else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
    if(u.def.blink&&d>3&&!(u.blinkCD>S.time)&&!tg.def.fly&&blink(u,tg))continue;

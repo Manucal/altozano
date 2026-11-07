@@ -80,8 +80,10 @@ function renderPanel(){
  else if(S.state==='battle'||S.state==='result'){
   P.innerHTML=`
   <div class="sec"><h2>Velocidad</h2><div class="seg" role="group">${[1,2,4].map(s=>`<button data-sp="${s}" aria-pressed="${S.speed===s}">x${s}</button>`).join('')}</div></div>
+  ${S.state==='battle'?ordersHTML():''}
   ${[0,1].map(side=>`<div class="sec"><div class="who"><span class="dot ${side?'p2':'p1'}"></span><h3>${playerLabel(side)} · ${esc(armyFacName(S.armies[side]))}</h3></div>${synHTML(S.armies[side].units,null)}</div>`).join('')}
   <button class="btn" id="b-end">${S.state==='battle'?'Terminar ya (gana el defensor)':'Ver resultado'}</button>`;
+  if(S.state==='battle')renderOrders();else{S.gMode=false;updCursor()}
   P.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{S.speed=+b.dataset.sp;P.querySelectorAll('[data-sp]').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.sp===S.speed))});
   $('b-end').onclick=()=>{if(S.state==='battle'){S.time=TLIM;const al=S.units.filter(u=>u.alive);endBattle(al.filter(u=>!u.side).length,al.filter(u=>u.side).length)}else showResult()};
  }

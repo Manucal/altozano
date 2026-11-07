@@ -92,3 +92,5 @@ select{font:inherit;background:var(--panel-2);color:var(--ink);border:1px solid 
 .dot.p1{background:var(--p1)} .dot.p2{background:var(--p2)}
 .note{font-size:13px;color:var(--muted);margin:0}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+.btn[aria-pressed="true"]{background:var(--bad);color:#1a0a08;border-color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
