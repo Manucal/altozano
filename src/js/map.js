@@ -210,15 +210,17 @@ function renderTerrain(){
  const put=(px,py,rgb,mul=1)=>{let a=rgb[0]*mul,b=rgb[1]*mul,c=rgb[2]*mul;if(tint){const[t,k]=tint;a=a*(1-k)+t[0]*k;b=b*(1-k)+t[1]*k;c=c*(1-k)+t[2]*k}const i=(py*COLS*TT+px)*4;d[i]=a;d[i+1]=b;d[i+2]=c;d[i+3]=255};
  const H_=(c,rr)=>c<0||rr<0||c>=COLS||rr>=ROWS?null:hg[rr][c];
  const P={};for(const k in PAL)P[k]=PAL[k].map(hex);
- const SAND=hex('#c9b27a'),DARKG=hex('#3c6e2c'),STONE=hex('#8e8a78'),FL=['#e8d36a','#e88aa0','#f0f0f0'].map(hex),PEB=hex('#a08860'),CRACK=hex('#2a2222'),EMBER=hex('#ff7a2a'),LAVAC=hex('#7a2410'),MOSS=hex('#6a8a4a'),WT=['#b4ad9e','#a8a192','#bdb7a8'].map(hex),WF=hex('#6e685c'),WD=hex('#4a463e');
+ const FOAM=hex('#d6ecf2'),SAND=hex('#c9b27a'),DARKG=hex('#3c6e2c'),STONE=hex('#8e8a78'),FL=['#e8d36a','#e88aa0','#f0f0f0'].map(hex),PEB=hex('#a08860'),CRACK=hex('#2a2222'),EMBER=hex('#ff7a2a'),LAVAC=hex('#7a2410'),MOSS=hex('#6a8a4a'),WT=['#b4ad9e','#a8a192','#bdb7a8'].map(hex),WF=hex('#6e685c'),WD=hex('#4a463e');
  const pick=a=>r()<0.6?a[0]:r()<0.5?a[1]:a[2];
  // indicadores de bioma por casilla, interpolados por píxel con ruido: bordes orgánicos, sin cuadros
  const isD=(c,rr)=>{const v=m[rr][c];if(v===6)return 1;if(v===4){for(const [i,j] of [[1,0],[-1,0],[0,1],[0,-1]]){const x2=c+i,y2=rr+j;if(x2>=0&&y2>=0&&x2<COLS&&y2<ROWS&&m[y2][x2]===6)return 1}}return 0};
  const isA=(c,rr)=>{const v=m[rr][c];if(v===7||v===8)return 1;if(v===4){for(const [i,j] of [[1,0],[-1,0],[0,1],[0,-1]]){const x2=c+i,y2=rr+j;if(x2>=0&&y2>=0&&x2<COLS&&y2<ROWS&&(m[y2][x2]===7||m[y2][x2]===8))return 1}}return 0};
  const DI=[],AI=[],LI=[],FI=[],WI=[],RI=[],CI=[];for(let j=0;j<ROWS;j++){DI.push([]);AI.push([]);LI.push([]);FI.push([]);WI.push([]);RI.push([]);CI.push([]);for(let i=0;i<COLS;i++){const v=m[j][i];DI[j].push(isD(i,j));AI[j].push(isA(i,j));LI[j].push(v===8?1:0);FI[j].push(v===2?1:0);WI[j].push(v===3?1:0);RI[j].push(v===9||v===10||(S.scorch&&S.scorch[j][i]===2)?1:0);CI[j].push(v===12?1:0)}}
  computeCover();
+ const WB=WI.map((row,j)=>row.map((_,i)=>{let a=0,n=0;for(let jj=-1;jj<=1;jj++)for(let ii=-1;ii<=1;ii++){const y=j+jj,x=i+ii;if(y<0||x<0||y>=ROWS||x>=COLS)continue;a+=WI[y][x];n++}return a/n}));
  const bil=(G,fx,fy)=>{const x=fx-0.5,y=fy-0.5,i=Math.floor(x),j=Math.floor(y),ax=x-i,ay=y-j;const g=(ii,jj)=>G[clamp(jj,0,ROWS-1)][clamp(ii,0,COLS-1)];return g(i,j)*(1-ax)*(1-ay)+g(i+1,j)*ax*(1-ay)+g(i,j+1)*(1-ax)*ay+g(i+1,j+1)*ax*ay};
- S.lavaPx=[];const pnA=vnoise(S.seed^0x5151),pnB=vnoise(S.seed^0x2b2b);
+ S.lavaPx=[];const pnA=vnoise(S.seed^0x5151),pnB=vnoise(S.seed^0x2b2b),pnC=vnoise(S.seed^0x7777);
+ const WPX=COLS*TT,K=new Uint8Array(WPX*ROWS*TT);
  const anyD=DI.some(r_=>r_.some(v=>v)),anyA=AI.some(r_=>r_.some(v=>v)),anyR=RI.some(r_=>r_.some(v=>v)),anyC=CI.some(r_=>r_.some(v=>v));
  const ground=(tx,ty,px,py,h)=>{
   const fx=tx+(px+0.5)/TT,fy=ty+(py+0.5)/TT,n1=pnA(fx*1.3,fy*1.3)-0.5;
@@ -229,9 +231,10 @@ function renderTerrain(){
   if(anyR){const k=clamp((bil(RI,fx,fy)+n1*0.6-0.36)/0.28,0,1);if(k>0&&r()<k){c=pick(P.ru);kind=5;const gx=fx*2,gy=fy*2+(Math.floor(fx*2)%2)*0.5;if(gx%1<0.09||gy%1<0.09)mul=0.74;else if(r()<0.05)c=MOSS;else if(Math.abs(pnB(fx*3,fy*3)-0.5)<0.01)c=CRACK}}
   if(anyC){const k=clamp((bil(CI,fx,fy)+n1*0.35-0.42)/0.16,0,1);if(k>0&&r()<k){c=pick(P.co);kind=6;if(Math.sin(fx*13.1)*Math.sin(fy*13.1+Math.floor(fx*2))>0.55)mul=0.82}}
   if(S.scorch&&S.scorch[ty][tx]===1&&kind!==3&&r()<0.75){c=r()<0.5?CRACK:hex('#3a3430');kind=7}
+  if(kind===0||kind===4){const q=pnC(fx*0.32,fy*0.32);mul*=0.9+0.2*q;if(kind===0&&q>0.62&&r()<(q-0.62)*1.6)c=pick(h?P.g2:P.g1)}
   if(kind===0){if(h===2&&r()<0.06)c=STONE;if(h===0&&r()<0.04)c=DARKG;if(r()<0.008&&S.biome!=='volcan')c=FL[(r()*3)|0]}
   else if(kind===1){if(Math.sin((fx*1.7+fy*0.9)*6.283+n1*7)>0.86)mul=0.9;if(r()<0.006)c=PEB}
-  else{const q=pnB(fx*2.2,fy*2.2);if(Math.abs(q-0.5)<0.012)c=CRACK;else if(r()<0.004)c=EMBER;}
+  else if(kind===2){const q=pnB(fx*2.2,fy*2.2);if(Math.abs(q-0.5)<0.012)c=CRACK;else if(r()<0.004)c=EMBER;}
   if(m[ty][tx]===8){const lv=bil(LI,fx,fy)+n1*0.5;
    if(lv>0.62){if(r()<0.02)S.lavaPx.push([tx*T+px*2+1,ty*T+py*2+1,r()*6.28]);const q=pnB(fx*2.6+9,fy*2.6+3);c=Math.abs(q-0.5)<0.03?LAVAC:q>0.6?P.lava[3]:q>0.45?P.lava[0]:q>0.3?P.lava[1]:P.lava[2];mul=1;kind=3}
    else if(lv>0.5){c=CRACK;mul=1}}
@@ -245,10 +248,13 @@ function renderTerrain(){
   const southRampUp=hs!==null&&m[ty+1][tx]===4&&hs===h-1&&rampDir(tx,ty+1)[1]===-1;
   const face=southRampUp?0:drop*5;
   const rd=t===4?rampDir(tx,ty):null;
+  // esquinas cóncavas de los ríos: el agua se redondea un poco sobre la casilla vecina (solo dibujo)
+  const isWt=(i,j)=>{const xx=tx+i,yy=ty+j;return xx>=0&&yy>=0&&xx<COLS&&yy<ROWS&&m[yy][xx]===3};
+  const cornerW=t!==3&&h===0&&(t===0||t===6||t===12||t===9)&&((isWt(1,0)||isWt(-1,0))&&(isWt(0,1)||isWt(0,-1)));
   const CL=DI[ty][tx]?P.sandCliff:AI[ty][tx]?P.ashCliff:P.cliff,LIP=DI[ty][tx]?hex('#f2e0a8'):AI[ty][tx]?hex('#7a6e6a'):hex('#d4e090');
   for(let py=0;py<TT;py++)for(let px=0;px<TT;px++){
    const X=tx*TT+px,Y=ty*TT+py;let c,mul=1;
-   if(t===3){const fx=tx+(px+0.5)/TT,fy=ty+(py+0.5)/TT,wv=bil(WI,fx,fy)+(pnA(fx*1.3,fy*1.3)-0.5)*0.45;if(wv>0.47)c=pick(P.w);else if(wv>0.4)c=SAND;else{const gr=ground(tx,ty,px,py,h);c=gr[0];mul=gr[1]}}
+   if(t===3||cornerW){const fx=tx+(px+0.5)/TT,fy=ty+(py+0.5)/TT,wv=0.45*bil(WI,fx,fy)+0.55*bil(WB,fx,fy)*1.25+(pnA(fx*1.3,fy*1.3)-0.5)*0.4-(t===3?0:0.1);if(wv>0.47){c=pick(P.w);const dp=clamp((wv-0.5)/0.35,0,1);mul=1.1-0.24*dp;if(wv<0.51&&r()<0.7){c=FOAM;mul=1}else if(r()<0.012*(1-dp))c=FOAM}else if(wv>0.4){c=SAND;mul=wv>0.45?0.86:1}else{const gr=ground(tx,ty,px,py,h);c=gr[0];mul=gr[1];K[Y*WPX+X]=gr[2]+1}}
    else if(t===4){c=pick(DI[ty][tx]?P.sandCliff:AI[ty][tx]?P.ashCliff:P.ramp);if(AI[ty][tx])mul=1.4;const along=rd[1]!==0?py:px;if(along%4===0)mul=0.8;if(along%4===1)mul=1.08;
     const k=rd[1]===-1?1-py/15:rd[1]===1?py/15:rd[0]===-1?1-px/15:px/15;mul*=0.85+0.3*k;const side=rd[1]!==0?px:py;if(side===0||side===15)c=P.cliff[2];else if(side===1||side===14)mul*=0.8}
    else if(t===10){const isW=(i,j)=>{const xx=tx+i,yy=ty+j;return xx>=0&&yy>=0&&xx<COLS&&yy<ROWS&&m[yy][xx]===10};
@@ -256,8 +262,9 @@ function renderTerrain(){
     if(!inX||!inY){const gr=ground(tx,ty,px,py,h);c=gr[0];mul=gr[1]}
     else if(!So&&py>=11){c=py===15?WD:WF;mul=(px+(py%2)*3)%6===0?0.8:1}
     else{c=pick(WT);const row=Math.floor(py/4);if(py%4===0||(px+row*3)%7===0)mul=0.78;if(r()<0.04)c=MOSS}}
-   else{const gr=ground(tx,ty,px,py,h);c=gr[0];mul=gr[1]}
+   else{const gr=ground(tx,ty,px,py,h);c=gr[0];mul=gr[1];K[Y*WPX+X]=gr[2]+1}
    if(h>0&&t!==4){
+    if(face&&py>=TT-face-1)K[Y*WPX+X]=0;
     if(face&&py>=TT-face){const k=TT-py;c=py===TT-face?CL[2]:(k%4===0?CL[2]:r()<0.5?CL[0]:CL[1]);if(drop===2&&py===TT-5)c=CL[2];if(py===TT-1)c=CL[2];mul=1-0.04*(py-(TT-face))}
     else if(face&&py===TT-face-1)c=LIP;
     else{if(hn!==null&&hn<h&&py===0)mul=1.2;if(hw!==null&&hw<h&&px===0)mul=0.62;else if(hw!==null&&hw<h&&px===1)mul=0.85;if(he!==null&&he<h&&px===15)mul=0.62;else if(he!==null&&he<h&&px===14)mul=0.85}
@@ -265,10 +272,29 @@ function renderTerrain(){
    put(X,Y,c,mul);
   }
  }
+ decorate(d,K,WPX,hg);
  x.putImageData(img,0,0);
- // sombra del acantilado sobre la casilla de abajo
- for(let ty=0;ty<ROWS-1;ty++)for(let tx=0;tx<COLS;tx++){const k=hg[ty][tx]-hg[ty+1][tx];if(k>0&&m[ty+1][tx]!==4){x.fillStyle=`rgba(0,0,0,${0.18+0.08*k})`;x.fillRect(tx*TT,(ty+1)*TT,TT,2+2*k)}}
- for(let ty=0;ty<ROWS;ty++)for(let tx=1;tx<COLS;tx++){const k=hg[ty][tx-1]-hg[ty][tx];if(k>0&&m[ty][tx]!==4){x.fillStyle='rgba(0,0,0,0.2)';x.fillRect(tx*TT,ty*TT,2*k+1,TT)}}
+ // sombra suave al pie de los acantilados (oclusión ambiental)
+ for(let ty=0;ty<ROWS-1;ty++)for(let tx=0;tx<COLS;tx++){const k=hg[ty][tx]-hg[ty+1][tx];if(k>0&&m[ty+1][tx]!==4){const n=3+3*k;for(let i=0;i<n;i++){x.fillStyle=`rgba(10,6,14,${(0.3+0.08*k)*(1-i/n)})`;x.fillRect(tx*TT,(ty+1)*TT+i,TT,1)}}}
+ for(let ty=0;ty<ROWS;ty++)for(let tx=1;tx<COLS;tx++){const k=hg[ty][tx-1]-hg[ty][tx];if(k>0&&m[ty][tx]!==4){const n=2+2*k;for(let i=0;i<n;i++){x.fillStyle=`rgba(10,6,14,${0.24*(1-i/n)})`;x.fillRect(tx*TT+i,ty*TT,1,TT)}}}
+}
+// detalles sobre la hierba: matas, arbustos y piedras (solo donde el suelo es hierba)
+function decorate(d,K,WPX,hg){
+ const r=rng(S.seed^0xdec0),HPX=ROWS*TT,snow=S.weather.id==='snow',volc=S.biome==='volcan';
+ const isG=(x,y)=>x>=0&&y>=0&&x<WPX&&y<HPX&&K[y*WPX+x]===1;
+ const mulPx=(x,y,f)=>{if(!isG(x,y))return;const i=(y*WPX+x)*4;d[i]=Math.min(255,d[i]*f);d[i+1]=Math.min(255,d[i+1]*f);d[i+2]=Math.min(255,d[i+2]*f)};
+ const setPx=(x,y,c)=>{if(!isG(x,y))return;const i=(y*WPX+x)*4;d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2]};
+ const BU=[hex(snow?'#dfe6ee':volc?'#4f5a34':'#3f7a34'),hex(snow?'#f4f8fc':volc?'#66733f':'#5c9a46'),hex(snow?'#b8c2cc':volc?'#343a22':'#2c5a26')],RK=[hex('#9a9488'),hex('#c2bcae'),hex('#5e5850')];
+ for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++){
+  const x0=tx*TT,y0=ty*TT;if(!isG(x0+8,y0+8))continue;
+  // matas de hierba
+  const nt=2+((r()*4)|0);for(let k=0;k<nt;k++){const x=x0+1+((r()*14)|0),y=y0+3+((r()*12)|0);if(!isG(x,y-2))continue;mulPx(x,y,0.62);mulPx(x-1,y-1,0.78);mulPx(x+1,y-1,0.78);mulPx(x,y-1,1.18);mulPx(x,y-2,1.32);mulPx(x-1,y-2,1.12)}
+  // arbusto
+  if(r()<0.05){const x=x0+3+((r()*9)|0),y=y0+4+((r()*8)|0);let ok=true;for(let j=-1;j<=2;j++)for(let i=-1;i<=4;i++)if(!isG(x+i,y+j))ok=false;
+   if(ok){for(let i=0;i<5;i++)mulPx(x+i-0,y+2,0.62);[[1,-1],[2,-1],[0,0],[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[4,1]].forEach(([i,j])=>setPx(x+i,y+j,BU[0]));[[1,-1],[2,-1],[1,0]].forEach(([i,j])=>setPx(x+i,y+j,BU[1]));[[3,1],[4,1],[2,1]].forEach(([i,j])=>setPx(x+i,y+j,BU[2]))}}
+  // piedras
+  if(r()<(hg[ty][tx]===2?0.18:0.04)){const x=x0+2+((r()*11)|0),y=y0+3+((r()*10)|0);if(isG(x+2,y+1)){setPx(x,y,RK[0]);setPx(x+1,y,RK[1]);setPx(x+2,y,RK[0]);setPx(x+1,y-1,RK[1]);setPx(x,y+1,RK[2]);setPx(x+1,y+1,RK[2]);setPx(x+2,y+1,RK[2])}}
+ }
 }
 // cobertura: casillas pegadas a un muro o a una casa
 function computeCover(){S.cover=grid(0);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const v=S.map[y][x];if(v!==10&&v!==11)continue;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=x+i,yy=y+j;if(xx>=0&&yy>=0&&xx<COLS&&yy<ROWS)S.cover[yy][xx]=1}}}

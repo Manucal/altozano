@@ -42,6 +42,15 @@ function drawProj(p){
  else if(p.kind==='axe'){const ph=((p.t*20)|0)%2;ctx.fillStyle='#b8b8b0';ctx.fillRect(Math.round(x)-1,Math.round(y)-(ph?1:0),ph?1:3,ph?3:1);ctx.fillStyle='#8b5a2b';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
  else{const c=p.kind==='heal'?'#7dff8a':(p.col||'#ffe066');ctx.fillStyle=c;ctx.fillRect(Math.round(x)-1,Math.round(y)-1,3,3);ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(x),Math.round(y),1,1);ctx.globalAlpha=0.4;ctx.fillStyle=c;ctx.fillRect(Math.round(x-vx*2)-1,Math.round(y-vy*2),2,2);ctx.globalAlpha=1}
 }
+// sombras de nubes que cruzan el campo con buen tiempo (siguen al viento)
+function drawClouds(now){
+ const wid=S.weather.id;if(!['clear','windE','windW','heat'].includes(wid))return;
+ const dir=wid==='windW'?-1:1,sp=wid==='clear'||wid==='heat'?0.008:0.022,a=wid==='heat'?0.07:0.11,span=W+700;
+ for(let i=0;i<5;i++){let cx=((i*331+(S.seed%997)*3+now*sp*dir)%span+span)%span-350,cy=((i*197+(S.seed%577))%H)+Math.sin(now/9000+i)*30,rr=170+(i%3)*60;
+  const g=ctx.createRadialGradient(cx,cy,10,cx,cy,rr);g.addColorStop(0,`rgba(20,16,40,${a})`);g.addColorStop(0.6,`rgba(20,16,40,${a*0.6})`);g.addColorStop(1,'rgba(20,16,40,0)');ctx.fillStyle=g;ctx.fillRect(cx-rr,cy-rr*0.7,rr*2,rr*1.4)}
+}
+let vigG=null;
+function drawVignette(){if(!vigG){vigG=ctx.createRadialGradient(W/2,H/2,H*0.45,W/2,H/2,W*0.62);vigG.addColorStop(0,'rgba(8,4,12,0)');vigG.addColorStop(1,'rgba(8,4,12,0.32)')}ctx.fillStyle=vigG;ctx.fillRect(0,0,W,H)}
 let last=performance.now();
 function frame(now){
  const dt=Math.min(0.05,(now-last)/1000);last=now;refreshTerrain(now);stepReveal(dt);
@@ -59,6 +68,8 @@ function frame(now){
   for(const side of [0,1]){if(S.state!=='setup'&&side!==S.side)continue;ctx.fillStyle=side?'rgba(255,106,79,0.13)':'rgba(74,163,255,0.15)';ctx.beginPath();if(side){ctx.moveTo(W,H);ctx.lineTo((1-ZV)*W,H);ctx.lineTo(W,(1-ZV)*H)}else{ctx.moveTo(0,0);ctx.lineTo(ZV*W,0);ctx.lineTo(0,ZV*H)}ctx.closePath();ctx.fill();ctx.strokeStyle=side?'rgba(255,106,79,0.6)':'rgba(74,163,255,0.6)';ctx.setLineDash([6,5]);ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([])}
   ctx.fillStyle='rgba(255,240,200,0.5)';for(let i=0;i<=W;i+=7)ctx.fillRect(i,Math.round(H-i*H/W),2,1);
  }
+ // sombras de los árboles sobre el suelo
+ ctx.fillStyle='rgba(12,8,16,0.22)';for(const t of S.trees){ctx.beginPath();ctx.ellipse(t.x+3,t.y-t.lift-1,11,4.5,0,0,6.283);ctx.fill()}
  for(const c of S.corpses)drawCorpse(c);
  if(S.state==='battle')drawSelection();
  if(S.state==='battle'||S.state==='result')drawGen(now);
@@ -79,12 +90,14 @@ function frame(now){
  }
  list.sort((a,b)=>a.y-b.y);for(const d of list)d.f();
  for(const p of S.proj)drawProj(p);
+ drawClouds(now);
  for(const p of S.parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=140*dt;ctx.fillStyle=p.col;ctx.fillRect(Math.round(p.x),Math.round(p.y),1,1)}
  S.parts=S.parts.filter(p=>p.life>0);
  drawMarks(dt);
  // casilla bajo el cursor
  if(S.hover&&(S.state==='deploy'||S.state==='setup'||S.state==='reveal')){const ok=S.state==='setup'||inZone(S.hover,S.side);ctx.strokeStyle=ok?'rgba(255,240,200,0.9)':'rgba(255,120,100,0.6)';ctx.lineWidth=1;ctx.strokeRect(S.hover.c*T+0.5,S.hover.r*T+0.5,T-1,T-1)}
  ctx.setTransform(1,0,0,1,0,0);
+ drawVignette();
  drawWeather(dt,now);
  drawNotes(dt);
  drawMinimap();
