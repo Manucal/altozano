@@ -8,7 +8,7 @@ function autoArmy(side,fi){
  const role=u=>u.heal?'heal':u.fly?'fly':u.rng>1?'ranged':u.big?'big':u.charge?'mount':'melee';
  const by={};pool.forEach(u=>(by[role(u)]=by[role(u)]||[]).push(u));
  const zone=zoneTiles(side),m=S.map,wid=S.weather.id;
- const hills=zone.filter(t=>m[t.r][t.c]===1);
+ const hills=zone.filter(t=>S.hgt[t.r][t.c]>=1);
  const wf=wid==='windE'?(side===0?1:-1):wid==='windW'?(side===1?1:-1):0;
  const isDef=side===S.def;
  const wts={ranged:0.36+(hills.length>=6?0.16:0)+(wid==='fog'||wid==='rain'?-0.16:0)+wf*0.1,heal:0.1,melee:0.3,big:0.12,mount:wid==='snow'?0.03:isDef?0.07:0.12,fly:0.08};
@@ -24,7 +24,7 @@ function autoArmy(side,fi){
  const fl=t=>Math.abs(uOf(t.c,t.r))*9;
  const sil=u=>u.tr.includes('Silvano');
  const key={
-  ranged:(t,u)=>m[t.r][t.c]===1?depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
+  ranged:(t,u)=>S.hgt[t.r][t.c]>=1&&m[t.r][t.c]!==4?(2-S.hgt[t.r][t.c])*1.5+depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
   big:t=>depth(t)+fl(t)*0.1+r()*0.5,
   melee:t=>depth(t)+fl(t)*0.06+r()*0.8,
   mount:t=>depth(t)*0.6-fl(t)*0.3+r()*0.6,

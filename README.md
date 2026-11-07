@@ -2,7 +2,7 @@
 
 Juego de estrategia de batallas de ejércitos en pixel art. Armas un ejército con capacidad limitada (60 de capacidad, máximo 50 unidades), lo despliegas y la batalla se juega sola. El terreno y el clima deciden la estrategia.
 
-Nombre provisional. Prototipo 0.3.
+Nombre provisional. Prototipo 0.4.
 
 ## Jugar
 
@@ -16,8 +16,10 @@ Nombre provisional. Prototipo 0.3.
 - Mecánicas por facción: fuego que quema (y castiga al bosque), resurrección y nigromancia, curación al matar y frenesí, escudo divino y daño sagrado.
 - Campo dividido en diagonal: azul arriba a la izquierda, rojo abajo a la derecha.
 - Atacante y defensor: el mapa no es simétrico; el lado del defensor tiene el mejor terreno. El defensor espera en posición y gana si resiste 120 s; el atacante tiene que eliminarlo.
-- Campos: Fortaleza en la colina, Río fronterizo (con vados), Bosque de la emboscada, Paso estrecho y aleatorio.
-- Terreno: llanura, colina (tiradores +2 alcance y +25% daño), bosque (cobertura contra proyectiles), río (lento, -3 armadura).
+- Mapa de 44x26 casillas. Campos: Fortaleza en la colina, Río fronterizo (con vados), Bosque de la emboscada, Paso estrecho, Cumbre central y aleatorio.
+- Alturas de 2 niveles: colina (altura 1) y montaña (altura 2). Entre alturas hay acantilados que solo se cruzan por rampas; las tropas buscan el camino (A*).
+- Tiradores en altura: colina +2 alcance y +25% daño, montaña +3 y +40%. Cuerpo a cuerpo cuesta arriba: -20% por nivel.
+- Terreno: llanura, colina, montaña, rampa, bosque (cobertura contra proyectiles), río (lento, -3 armadura).
 - 7 climas: despejado, lluvia, niebla, ventisca, viento del oeste, viento del este, sol abrasador.
 - Modos: contra la IA y 2 jugadores en el mismo dispositivo.
 

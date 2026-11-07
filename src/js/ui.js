@@ -4,7 +4,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const ICON={};
 function swatch(t){const c=document.createElement('canvas');c.width=16;c.height=16;c.getContext('2d').drawImage(terrCvSample(t),0,0);return c.toDataURL()}
 const sampleCache={};
-function terrCvSample(t){if(sampleCache[t])return sampleCache[t];const c=document.createElement('canvas');c.width=16;c.height=16;const x=c.getContext('2d'),r=rng(t+5),cols=TER[t].col;for(let j=0;j<16;j++)for(let i=0;i<16;i++){x.fillStyle=r()<0.6?cols[0]:r()<0.5?cols[1]:cols[2];if(t===1&&j>=12)x.fillStyle=j===12?'#5c4027':'#7a5a38';if(t===1&&j===11)x.fillStyle='#c4dc78';x.fillRect(i,j,1,1)}if(t===2){const tr=treeSprite(false,0);x.drawImage(tr,1,2)}return sampleCache[t]=c}
+function terrCvSample(t){if(sampleCache[t])return sampleCache[t];const c=document.createElement('canvas');c.width=16;c.height=16;const x=c.getContext('2d'),r=rng(t+5),cols=TER[t].col;
+ for(let j=0;j<16;j++)for(let i=0;i<16;i++){x.fillStyle=r()<0.6?cols[0]:r()<0.5?cols[1]:cols[2];
+  if((t===1&&j>=12)||(t===5&&j>=8))x.fillStyle=j%4===0?'#5c4027':r()<0.5?'#7a5a38':'#6a4c2e';if((t===1&&j===11)||(t===5&&j===7))x.fillStyle='#d4e090';if(t===4&&j%4===0)x.fillStyle='#8a7048';x.fillRect(i,j,1,1)}
+ if(t===2){const tr=treeSprite(false,0);x.drawImage(tr,1,2)}return sampleCache[t]=c}
 function renderFieldTag(){
  $('fieldtag').innerHTML=`<span class="chip">Campo <b>${esc(S.mapName)}</b></span><span class="chip">Defiende <b>${S.def?'Rojo':'Azul'}</b></span><span class="chip">Clima <b>${esc(S.weather.n)}</b></span>`;
 }
@@ -114,7 +117,7 @@ function toast(msg){const el=$('tileinfo');el.textContent=msg;el.classList.add('
 function updateTileInfo(){
  const el=$('tileinfo');if(el.classList.contains('warn'))return;const t=S.hover;
  if(!t){el.innerHTML='Pasa el cursor por el mapa para ver qué hace cada terreno.';return}
- const ter=TER[S.map[t.r][t.c]];el.innerHTML=`<b>${ter.n}.</b> ${esc(ter.d)}`;
+ const sf=S.map[t.r][t.c],hh=S.hgt[t.r][t.c],ter=TER[sf===3?3:sf===4?4:sf===2?2:hh===2?5:hh===1?1:0];el.innerHTML=`<b>${ter.n}${sf===2&&hh?(hh===2?' en montaña':' en colina'):''}.</b> ${esc(ter.d)}${sf===2&&hh?' '+esc(TER[hh===2?5:1].d):''}`;
 }
 function tileOf(e){const r=cv.getBoundingClientRect();const c=Math.floor((e.clientX-r.left)/r.width*COLS),rr=Math.floor((e.clientY-r.top)/r.height*ROWS);if(c<0||rr<0||c>=COLS||rr>=ROWS)return null;return {c,r:rr}}
 let paint=null,lastPaint=null;

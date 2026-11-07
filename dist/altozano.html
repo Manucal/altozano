@@ -35,7 +35,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-
 .hud .r .bar i{left:auto;right:0;background:var(--p2)}
 .hud .clock{font-size:18px;color:var(--gold);font-variant-numeric:tabular-nums}
 .canvas-wrap{position:relative;border:2px solid var(--line);background:#0c0a10;line-height:0}
-canvas#cv{width:100%;height:auto;aspect-ratio:480/288;image-rendering:pixelated;image-rendering:crisp-edges;display:block;touch-action:none}
+canvas#cv{width:100%;height:auto;aspect-ratio:704/416;image-rendering:pixelated;image-rendering:crisp-edges;display:block;touch-action:none}
 .tileinfo{font-size:14px;color:var(--muted);min-height:40px}
 .tileinfo b{color:var(--ink)}
 .tileinfo.warn{color:var(--bad)}
@@ -92,14 +92,14 @@ select{font:inherit;background:var(--panel-2);color:var(--ink);border:1px solid 
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
 </style>
 <header class="top">
-  <div class="brand"><h1>Altozano</h1><span>prototipo 0.3</span></div>
+  <div class="brand"><h1>Altozano</h1><span>prototipo 0.4</span></div>
   <div class="fieldtag" id="fieldtag"></div>
 </header>
 <main class="layout">
   <section class="stage">
     <div class="hud" id="hud"></div>
     <div class="canvas-wrap">
-      <canvas id="cv" width="480" height="288" aria-label="Campo de batalla"></canvas>
+      <canvas id="cv" width="704" height="416" aria-label="Campo de batalla"></canvas>
       <div class="overlay" id="overlay" hidden></div>
     </div>
     <div class="tileinfo" id="tileinfo">Pasa el cursor por el mapa para ver qué hace cada terreno.</div>
@@ -109,7 +109,7 @@ select{font:inherit;background:var(--panel-2);color:var(--ink);border:1px solid 
 <script>
 (()=>{
 'use strict';
-const T=16,COLS=30,ROWS=18,W=COLS*T,H=ROWS*T,ZV=0.64,CAP=60,CAPB=0,MAXU=50,TLIM=120;
+const T=16,COLS=44,ROWS=26,W=COLS*T,H=ROWS*T,ZV=0.6,CAP=60,CAPB=0,MAXU=50,TLIM=150;
 // Geometría diagonal: v=0 esquina azul (arriba-izquierda), v=2 esquina roja (abajo-derecha); u recorre la línea del frente.
 const vOf=(c,r)=>(c+0.5)/COLS+(r+0.5)/ROWS, uOf=(c,r)=>(c+0.5)/COLS-(r+0.5)/ROWS;
 const dvOf=(side,c,r)=>side===0?vOf(c,r):2-vOf(c,r);
@@ -149,9 +149,9 @@ const TRAITS={
 };
 const UNITS=[
  {id:'lancero',f:0,name:'Lancero',cost:2,hp:110,atk:12,rng:1,as:1.1,spd:1.1,arm:3,tr:['Infanteria','Escudo'],anti:'Montado',desc:'Doble daño contra montados.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['spear','shield']}},
- {id:'arquero',f:0,name:'Arquero',cost:2,hp:60,atk:9,rng:6,as:1.2,spd:1.2,arm:0,tr:['Tirador'],proj:'arrow',desc:'Tirador básico. En colina es otro.',sp:{k:'foot',head:'hood',torso:'leather',legs:'pants',weap:['bow']}},
- {id:'ballestero',f:0,name:'Ballestero',cost:3,hp:75,atk:22,rng:7,as:2.4,spd:1.0,arm:1,tr:['Tirador','Infanteria'],pierce:true,proj:'bolt',desc:'Perforante: ignora la armadura. Recarga lenta.',sp:{k:'foot',head:'helm',torso:'leather',legs:'pants',weap:['crossbow']}},
- {id:'caballero',f:0,name:'Caballero',cost:5,hp:230,atk:20,rng:1,as:1.2,spd:2.2,arm:5,tr:['Montado','Escudo'],charge:true,mount:true,desc:'Carga: tras galopar 3 casillas, el golpe hace doble daño.',sp:{k:'mount',mount:'horse',head:'helm',torso:'armor',weap:['spear'],pal:{k:'#e8e0d0',K:'#9a8f80'}}},
+ {id:'arquero',f:0,name:'Arquero',cost:2,hp:55,atk:9,rng:6,as:1.2,spd:1.2,arm:0,tr:['Tirador'],proj:'arrow',desc:'Tirador básico. En colina es otro.',sp:{k:'foot',head:'hood',torso:'leather',legs:'pants',weap:['bow']}},
+ {id:'ballestero',f:0,name:'Ballestero',cost:3,hp:75,atk:20,rng:7,as:2.4,spd:1.0,arm:1,tr:['Tirador','Infanteria'],pierce:true,proj:'bolt',desc:'Perforante: ignora la armadura. Recarga lenta.',sp:{k:'foot',head:'helm',torso:'leather',legs:'pants',weap:['crossbow']}},
+ {id:'caballero',f:0,name:'Caballero',cost:5,hp:210,atk:20,rng:1,as:1.2,spd:2.2,arm:5,tr:['Montado','Escudo'],charge:true,mount:true,desc:'Carga: tras galopar 3 casillas, el golpe hace doble daño.',sp:{k:'mount',mount:'horse',head:'helm',torso:'armor',weap:['spear'],pal:{k:'#e8e0d0',K:'#9a8f80'}}},
  {id:'clerigo',f:0,name:'Clérigo',cost:4,hp:70,atk:5,rng:4,as:1.6,spd:1.0,arm:1,tr:['Mistico','Infanteria'],heal:14,proj:'orb',desc:'Cura al aliado más herido.',sp:{k:'foot',head:'hood',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#e9e2cf',y:'#ffe066'}}},
  {id:'saqueador',f:1,name:'Saqueador',cost:1,hp:75,atk:10,rng:1,as:0.9,spd:1.5,arm:0,tr:['Bestia','Infanteria'],desc:'Barato y rápido: llena las 50 plazas.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['axe']}},
  {id:'hachero',f:1,name:'Lanzahachas',cost:2,hp:70,atk:13,rng:4,as:1.5,spd:1.3,arm:0,tr:['Bestia','Tirador'],proj:'axe',desc:'Alcance corto, golpe fuerte.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['haxe']}},
@@ -167,15 +167,15 @@ const UNITS=[
  {id:'drakejinete',f:3,name:'Jinete de drake',cost:5,hp:200,atk:18,rng:1,as:1.1,spd:2.3,arm:4,tr:['Draconico','Montado'],charge:true,mount:true,desc:'Carga pesada a lomos de un lagarto de guerra.',sp:{k:'mount',mount:'drake',head:'drac',torso:'armor',weap:['spear'],pal:{k:'#7a8a3a',K:'#4a5a22'}}},
  {id:'draco',f:3,name:'Draco joven',cost:7,hp:300,atk:22,rng:3,as:1.6,spd:1.5,arm:4,tr:['Draconico','Volador'],fly:true,big:true,splash:true,proj:'fire',desc:'Vuela y escupe fuego en área.',sp:{k:'dragon'}},
  {id:'sacerdotisa',f:3,name:'Sacerdotisa de escama',cost:3,hp:75,atk:6,rng:4,as:1.5,spd:1.0,arm:1,tr:['Draconico','Mistico'],heal:10,proj:'orb',desc:'Cura a los aliados.',sp:{k:'foot',head:'drac',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#a83a2a',y:'#ff9a30'}}},
- {id:'esqueleto',f:4,name:'Esqueleto',cost:1,hp:75,atk:11,rng:1,as:1.0,spd:1.2,arm:2,tr:['NoMuerto','Infanteria'],bones:true,desc:'Barato. Las flechas le hacen -30%.',sp:{k:'foot',head:'skull',torso:'ribs',legs:'bones',weap:['sword']}},
+ {id:'esqueleto',f:4,name:'Esqueleto',cost:1,hp:70,atk:10,rng:1,as:1.0,spd:1.2,arm:2,tr:['NoMuerto','Infanteria'],bones:true,desc:'Barato. Las flechas le hacen -30%.',sp:{k:'foot',head:'skull',torso:'ribs',legs:'bones',weap:['sword']}},
  {id:'arqesq',f:4,name:'Arquero esquelético',cost:2,hp:60,atk:11,rng:6,as:1.3,spd:1.1,arm:0,tr:['NoMuerto','Tirador'],bones:true,proj:'arrow',desc:'Las flechas le hacen -30%.',sp:{k:'foot',head:'skull',torso:'ribs',legs:'bones',weap:['bow']}},
  {id:'espectral',f:4,name:'Caballero espectral',cost:5,hp:220,atk:19,rng:1,as:1.1,spd:2.4,arm:3,tr:['NoMuerto','Montado'],charge:true,mount:true,desc:'Carga sobre un caballo fantasma.',sp:{k:'mount',mount:'horse',head:'helm',torso:'armor',weap:['spear'],pal:{k:'#9fc4d8',K:'#5f7f98'}}},
  {id:'abominacion',f:4,name:'Abominación',cost:5,hp:420,atk:24,rng:1,as:1.7,spd:0.75,arm:2,tr:['NoMuerto','Gigante'],splash:true,big:true,desc:'Mucha vida y golpe en área.',sp:{k:'brute',pal:{s:'#8fa08a',a:'#6a4a4a',b:'#a83a3a',d:'#3a2a2a',h:'#5a6a5a'}}},
- {id:'nigromante',f:4,name:'Nigromante',cost:3,hp:65,atk:10,rng:5,as:1.8,spd:1.0,arm:0,tr:['NoMuerto','Mistico'],raise:true,proj:'orb',desc:'Cada 5 s levanta un esqueleto de un cadáver (máximo 4).',sp:{k:'foot',head:'hood',torso:'robe',legs:'robe',weap:['staff'],pal:{y:'#b06aff'}}},
- {id:'diablillo',f:5,name:'Diablillo',cost:1,hp:50,atk:8,rng:3,as:1.1,spd:1.9,arm:0,tr:['Infernal','Volador'],fly:true,proj:'fire',desc:'Volador barato que lanza chispas.',sp:{k:'imp'}},
- {id:'cornudo',f:5,name:'Cornudo',cost:3,hp:145,atk:15,rng:1,as:0.9,spd:1.5,arm:2,tr:['Infernal','Infanteria'],frenzy:true,desc:'Frenesí: con menos de media vida ataca un 50% más rápido.',sp:{k:'foot',head:'demon',torso:'armor',legs:'pants',weap:['axe'],wings:'v'}},
- {id:'hechicera',f:5,name:'Hechicera abisal',cost:3,hp:70,atk:13,rng:5,as:1.5,spd:1.2,arm:0,tr:['Infernal','Tirador'],proj:'fire',desc:'Bolas de fuego que queman.',sp:{k:'foot',head:'demon',torso:'robe',legs:'robe',weap:['flame']}},
- {id:'sabueso',f:5,name:'Sabueso infernal',cost:3,hp:125,atk:13,rng:1,as:0.8,spd:2.8,arm:1,tr:['Infernal','Bestia'],hunter:true,desc:'Rapidísimo. Va a por los tiradores.',sp:{k:'beast',pal:{k:'#5a1a1e',K:'#2a0a0c'}}},
+ {id:'nigromante',f:4,name:'Nigromante',cost:3,hp:65,atk:10,rng:5,as:1.8,spd:1.0,arm:0,tr:['NoMuerto','Mistico'],raise:true,proj:'orb',desc:'Cada 6 s levanta un esqueleto de un cadáver (máximo 3).',sp:{k:'foot',head:'hood',torso:'robe',legs:'robe',weap:['staff'],pal:{y:'#b06aff'}}},
+ {id:'diablillo',f:5,name:'Diablillo',cost:1,hp:50,atk:9,rng:3,as:1.1,spd:1.9,arm:0,tr:['Infernal','Volador'],fly:true,proj:'fire',desc:'Volador barato que lanza chispas.',sp:{k:'imp'}},
+ {id:'cornudo',f:5,name:'Cornudo',cost:3,hp:150,atk:17,rng:1,as:0.9,spd:1.5,arm:2,tr:['Infernal','Infanteria'],frenzy:true,desc:'Frenesí: con menos de media vida ataca un 50% más rápido.',sp:{k:'foot',head:'demon',torso:'armor',legs:'pants',weap:['axe'],wings:'v'}},
+ {id:'hechicera',f:5,name:'Hechicera abisal',cost:3,hp:75,atk:15,rng:5,as:1.5,spd:1.2,arm:0,tr:['Infernal','Tirador'],proj:'fire',desc:'Bolas de fuego que queman.',sp:{k:'foot',head:'demon',torso:'robe',legs:'robe',weap:['flame']}},
+ {id:'sabueso',f:5,name:'Sabueso infernal',cost:2,hp:110,atk:13,rng:1,as:0.8,spd:2.8,arm:1,tr:['Infernal','Bestia'],hunter:true,desc:'Rapidísimo. Va a por los tiradores.',sp:{k:'beast',pal:{k:'#5a1a1e',K:'#2a0a0c'}}},
  {id:'senor',f:5,name:'Señor del abismo',cost:6,hp:460,atk:28,rng:1,as:1.7,spd:0.8,arm:5,tr:['Infernal','Gigante'],splash:true,big:true,desc:'Gigante demoníaco con golpe en área.',sp:{k:'brute',horns:true,wings:'v'}},
  {id:'guardian',f:6,name:'Guardián alado',cost:3,hp:120,atk:13,rng:1,as:1.1,spd:1.2,arm:4,tr:['Celestial','Escudo'],holy:true,desc:'Sagrado: +50% contra no muertos e infernales.',sp:{k:'foot',head:'angel',torso:'armor',legs:'pants',weap:['sword','shield'],wings:'W'}},
  {id:'arqluz',f:6,name:'Arquera de luz',cost:3,hp:65,atk:12,rng:7,as:1.3,spd:1.2,arm:0,tr:['Celestial','Tirador'],holy:true,proj:'light',desc:'Gran alcance. Sagrada.',sp:{k:'foot',head:'angel',torso:'leather',legs:'pants',weap:['bow'],wings:'W'}},
@@ -187,14 +187,16 @@ const UNITS=[
 const UBY=Object.fromEntries(UNITS.map(u=>[u.id,u]));
 const TER=[
  {n:'Llanura',mv:1,col:['#5f9e48','#69aa4f','#578f41'],d:'Sin efectos.'},
- {n:'Colina',mv:0.75,col:['#a3c264','#b0cd70','#96b558'],d:'Elevada. Tiradores: +2 de alcance y +25% de daño contra unidades más bajas. Atacar cuerpo a cuerpo cuesta arriba: -20%.'},
+ {n:'Colina',mv:1,col:['#83b356','#8fbf60','#78a84c'],d:'Altura 1. Tiradores: +2 de alcance y +25% de daño contra unidades más bajas. Cuerpo a cuerpo cuesta arriba: -20%. Solo se sube por una rampa.'},
  {n:'Bosque',mv:0.6,col:['#45793a','#3e7033','#376629'],d:'Cobertura: -40% de daño de proyectiles, pero el fuego hace +25%. Frena el paso (a los Silvanos no).'},
  {n:'Río',mv:0.45,col:['#2f6fa8','#3579b5','#2a6299'],d:'Muy lento de cruzar y -3 de armadura dentro del agua. Los voladores lo ignoran.'},
+ {n:'Rampa',mv:0.75,col:['#b39466','#a68759','#c2a374'],d:'La única forma de subir o bajar un nivel. Es estrecha: un buen sitio para defender.'},
+ {n:'Montaña',mv:1,col:['#a7b97a','#b5c688','#98ab6c'],d:'Altura 2. Tiradores: +3 de alcance y +40% de daño contra unidades más bajas. Cuerpo a cuerpo cuesta arriba: -20% por nivel. Se sube por rampa desde la colina.'},
 ];
 const WEATHERS=[
  {id:'clear',n:'Despejado',d:'Sin efectos.'},
  {id:'rain',n:'Lluvia',d:'Proyectiles -25% de daño. El fuego no quema. El río frena todavía más. Los místicos curan +20% y los Infernales hacen -15%.'},
- {id:'fog',n:'Niebla',d:'Los tiradores no ven más allá de 4 casillas (la colina suma solo +1). Los Silvanos hacen +20% de daño y los Celestiales -15%.'},
+ {id:'fog',n:'Niebla',d:'Los tiradores no ven más allá de 4 casillas (cada nivel de altura suma solo +1). Los Silvanos hacen +20% de daño y los Celestiales -15%.'},
  {id:'snow',n:'Ventisca',d:'Todos se mueven un 30% más lento, salvo Bestias y No muertos. Los montados no pueden cargar. Los Dracónicos atacan un 20% más lento.'},
  {id:'windE',n:'Viento del oeste',d:'Ayuda al azul: proyectiles hacia el este +2 de alcance, hacia el oeste -2.'},
  {id:'windW',n:'Viento del este',d:'Ayuda al rojo: proyectiles hacia el oeste +2 de alcance, hacia el este -2.'},
@@ -206,6 +208,7 @@ const PRESETS=[
  {id:'rio',n:'Río fronterizo'},
  {id:'emboscada',n:'Bosque de la emboscada'},
  {id:'paso',n:'Paso estrecho'},
+ {id:'cumbre',n:'Cumbre central'},
 ];
 
 'use strict';
@@ -316,30 +319,59 @@ const S={state:'setup',mode:'ai',preset:'random',defSel:'random',def:1,seed:1,we
 
 'use strict';
 /* ================= MAPA ================= */
+// S.map: superficie (0 llanura, 2 bosque, 3 río, 4 rampa). S.hgt: altura 0 (llano), 1 (colina) o 2 (montaña).
+// Entre alturas distintas hay acantilado: solo se sube o baja por una rampa (casilla baja marcada como 4).
+const grid=v=>Array.from({length:ROWS},()=>Array(COLS).fill(v));
 function genMap(preset,seed,d){
- const r=rng(seed),m=Array.from({length:ROWS},()=>Array(COLS).fill(0)),A=1-d;
+ const r=rng(seed),m=grid(0),h=grid(0),A=1-d;
  const R=(a,b)=>a+r()*(b-a);
- // centro en coordenadas (dv del bando, u) -> casilla
  const P=(side,dv,u)=>{const v=side===0?dv:2-dv;return {x:(v+u)/2*COLS,y:(v-u)/2*ROWS}};
- const blob=(type,side,dv,u,rad)=>{const c=P(side,dv,u);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(Math.hypot(x+0.5-c.x,(y+0.5-c.y)*1.15)<=rad+(r()-0.5)*0.9)m[y][x]=type}};
- const river=(rv,w,fords)=>{for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const dv=dvOf(d,x,y),u=uOf(x,y);if(Math.abs(dv-rv)<w&&!fords.some(f=>Math.abs(u-f)<0.075))m[y][x]=3}};
- if(preset==='fortaleza'){blob(1,d,R(0.4,0.5),R(-0.2,0.2),R(2.8,3.4));blob(2,d,R(0.55,0.7),R(-0.6,-0.4),R(1.6,2.2));blob(2,d,R(0.55,0.7),R(0.4,0.6),R(1.6,2.2));blob(2,A,R(0.6,0.8),R(-0.3,0.3),R(1.2,1.8))}
- else if(preset==='rio'){blob(1,d,R(0.35,0.5),R(-0.3,0.3),R(1.8,2.4));blob(1,A,R(0.5,0.6),R(-0.4,0.4),R(1.2,1.6));blob(2,d,R(0.5,0.6),R(-0.6,0.6),R(1.4,1.9));river(R(0.78,0.84),0.045,[R(-0.55,-0.15),R(0.15,0.55)])}
- else if(preset==='emboscada'){blob(2,d,R(0.8,0.9),R(-0.45,-0.2),R(2.2,2.8));blob(2,d,R(0.8,0.9),R(0.2,0.45),R(2.2,2.8));blob(1,d,R(0.35,0.5),R(-0.2,0.2),R(1.4,1.9))}
- else if(preset==='paso'){blob(2,d,R(0.9,1.0),-0.6,R(3,3.6));blob(2,d,R(0.9,1.0),0.6,R(3,3.6));blob(1,d,R(0.45,0.55),R(-0.1,0.1),R(1.8,2.3));blob(1,A,R(0.55,0.7),R(-0.2,0.2),R(1,1.5))}
+ // forma redondeada con borde ondulado suave (sin picos de una casilla)
+ const shape=(side,dv,u,rad,fn)=>{const c=P(side,dv,u),p1=r()*6.28,p2=r()*6.28,a1=R(0.08,0.2),a2=R(0.04,0.12),sx=R(0.8,1.25);
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const dx=(x+0.5-c.x)/sx,dy=(y+0.5-c.y)*sx,th=Math.atan2(dy,dx),rr=rad*(1+a1*Math.sin(3*th+p1)+a2*Math.sin(5*th+p2)),dd=Math.hypot(dx,dy);if(dd<=rr)fn(x,y,dd/rr)}};
+ const hill=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y)=>{h[y][x]=Math.max(h[y][x],1)});
+ const mount=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y,k)=>{h[y][x]=Math.max(h[y][x],k<0.55?2:1)});
+ const forest=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y)=>{m[y][x]=2});
+ const river=(rv,w,fords)=>{for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const dv=dvOf(d,x,y),u=uOf(x,y);if(Math.abs(dv-rv)<w){h[y][x]=0;m[y][x]=fords.some(f=>Math.abs(u-f)<0.06)?0:3}}};
+ if(preset==='fortaleza'){mount(d,R(0.36,0.46),R(-0.15,0.15),R(5.5,6.5));forest(d,R(0.6,0.75),R(-0.6,-0.4),R(2.5,3.2));forest(d,R(0.6,0.75),R(0.4,0.6),R(2.5,3.2));hill(A,R(0.6,0.75),R(-0.3,0.3),R(2.6,3.4));forest(A,R(0.85,0.95),R(-0.5,0.5),R(1.8,2.4))}
+ else if(preset==='rio'){hill(d,R(0.35,0.5),R(-0.3,0.3),R(3.4,4.2));mount(d,R(0.3,0.4),r()<0.5?-0.55:0.55,R(4,4.8));hill(A,R(0.5,0.65),R(-0.4,0.4),R(2.6,3.2));forest(d,R(0.55,0.65),R(-0.6,0.6),R(2.2,2.8));river(R(0.8,0.86),0.04,[R(-0.5,-0.2),R(0.2,0.5)])}
+ else if(preset==='emboscada'){forest(d,R(0.82,0.92),R(-0.45,-0.25),R(3.4,4));forest(d,R(0.82,0.92),R(0.25,0.45),R(3.4,4));mount(d,R(0.32,0.42),R(-0.2,0.2),R(4.2,5));hill(A,R(0.55,0.7),R(-0.5,0.5),R(2.4,3))}
+ else if(preset==='paso'){mount(d,R(0.92,1.0),-0.62,R(5.5,6.5));mount(d,R(0.92,1.0),0.62,R(5.5,6.5));hill(d,R(0.45,0.55),R(-0.1,0.1),R(3,3.6));hill(A,R(0.55,0.7),R(-0.2,0.2),R(2.2,2.8))}
+ else if(preset==='cumbre'){mount(d,R(0.88,0.95),R(-0.1,0.1),R(6.5,7.5));forest(A,R(0.7,0.8),R(-0.6,-0.3),R(2.4,3));forest(d,R(0.6,0.7),R(0.3,0.6),R(2.4,3));hill(A,R(0.45,0.55),R(0.2,0.5),R(2.4,3))}
  else{
-  const nh=1+(r()*2|0),nf=1+(r()*2|0);
-  for(let i=0;i<nh;i++)blob(1,d,R(0.3,0.75),R(-0.6,0.6),R(1.5,2.8));
-  for(let i=0;i<nf;i++)blob(2,d,R(0.5,1.05),R(-0.6,0.6),R(1.4,2.6));
-  if(r()<0.6)blob(r()<0.5?1:2,A,R(0.4,0.85),R(-0.6,0.6),R(1.2,2));
-  if(r()<0.4)river(R(0.75,0.95),0.045,[R(-0.6,-0.1),R(0.1,0.6)]);
+  mount(r()<0.7?d:A,R(0.35,0.9),R(-0.5,0.5),R(4.5,6.5));
+  const nh=1+(r()*2|0),nf=1+(r()*3|0);
+  for(let i=0;i<nh;i++)hill(d,R(0.3,0.8),R(-0.6,0.6),R(2.4,4));
+  for(let i=0;i<nf;i++)forest(r()<0.7?d:A,R(0.5,1.05),R(-0.6,0.6),R(2,3.6));
+  if(r()<0.6)hill(A,R(0.4,0.8),R(-0.6,0.6),R(2,3.2));
+  if(r()<0.35)river(R(0.78,0.95),0.04,[R(-0.6,-0.1),R(0.1,0.6)]);
  }
- return m;
+ // limpieza: sin salientes de una casilla; la montaña siempre rodeada de colina
+ const at=(x,y)=>x<0||y<0||x>=COLS||y>=ROWS?-1:h[y][x];
+ for(let it=0;it<2;it++)for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const v=h[y][x];if(!v)continue;const n=[at(x+1,y),at(x-1,y),at(x,y+1),at(x,y-1)].filter(k=>k>=v||k===-1).length;if(n<2)h[y][x]=v-1}
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(h[y][x]===2){for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const k=at(x+i,y+j);if(k===0)h[y][x]=1}}
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(h[y][x]&&m[y][x]===3)m[y][x]=0;
+ // rampas: cada meseta recibe varias, repartidas por su borde
+ for(const L of [1,2]){
+  const seen=grid(0);
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+   if(h[y][x]<L||seen[y][x])continue;
+   const comp=[],st=[[x,y]];seen[y][x]=1;
+   while(st.length){const [cx,cy]=st.pop();comp.push([cx,cy]);for(const [i,j] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=cx+i,ny=cy+j;if(at(nx,ny)>=L&&!seen[ny][nx]){seen[ny][nx]=1;st.push([nx,ny])}}}
+   const cands=[];
+   for(const [cx,cy] of comp){if(h[cy][cx]!==L)continue;for(const [i,j] of [[1,0],[-1,0],[0,1],[0,-1]]){const rx=cx+i,ry=cy+j,bx=rx+i,by=ry+j;if(at(rx,ry)===L-1&&at(bx,by)===L-1&&m[ry][rx]!==3&&m[by][bx]!==3)cands.push([rx,ry])}}
+   const want=Math.min(4,2+Math.floor(comp.length/45)),pick=[];
+   if(cands.length){pick.push(cands[(r()*cands.length)|0]);
+    while(pick.length<want){let best=null,bd=-1;for(const c of cands){const dm=Math.min(...pick.map(p=>Math.hypot(p[0]-c[0],p[1]-c[1])));if(dm>bd){bd=dm;best=c}}if(!best||bd<4)break;pick.push(best)}}
+   for(const [rx,ry] of pick)m[ry][rx]=4;
+  }
+ }
+ return {m,h};
 }
 function newField(keepSeed){
  if(!keepSeed)S.seed=(Math.random()*1e9)|0;
  S.def=S.defSel==='random'?(rng(S.seed^99)()<0.5?0:1):+S.defSel;
- S.map=genMap(S.preset,S.seed,S.def);
+ const g=genMap(S.preset,S.seed,S.def);S.map=g.m;S.hgt=g.h;
  const p=PRESETS.find(p=>p.id===S.preset);
  S.mapName=S.preset==='random'?'Campo n.º '+(S.seed%1000):p.n;
  S.weather=S.weatherSel==='random'?WEATHERS[(rng(S.seed^77)()*WEATHERS.length)|0]:WEATHERS.find(w=>w.id===S.weatherSel);
@@ -348,46 +380,84 @@ function newField(keepSeed){
 }
 const terrAtTile=(c,r)=>S.map[clamp(r,0,ROWS-1)][clamp(c,0,COLS-1)];
 const terrAt=u=>terrAtTile(Math.floor(u.x),Math.floor(u.y));
+const hgtTile=(c,r)=>S.hgt[clamp(r,0,ROWS-1)][clamp(c,0,COLS-1)];
+// ¿se puede pasar de una casilla a otra vecina? (acantilados solo por rampa)
+function stepOK(c1,r1,c2,r2){
+ if(c2<0||r2<0||c2>=COLS||r2>=ROWS)return false;
+ const h1=S.hgt[r1][c1],h2=S.hgt[r2][c2];if(h1===h2)return true;if(Math.abs(h1-h2)>1)return false;
+ const low=h1<h2?S.map[r1][c1]:S.map[r2][c2];return low===4;
+}
+function canMove(c1,r1,c2,r2){
+ if(c1===c2&&r1===r2)return true;
+ if(c1!==c2&&r1!==r2)return stepOK(c1,r1,c2,r1)&&stepOK(c2,r1,c2,r2)&&stepOK(c1,r1,c1,r2)&&stepOK(c1,r2,c2,r2);
+ return stepOK(c1,r1,c2,r2);
+}
+function lineClear(x0,y0,x1,y1){
+ const d=Math.hypot(x1-x0,y1-y0),n=Math.ceil(d/0.2);let pc=Math.floor(x0),pr=Math.floor(y0);
+ for(let i=1;i<=n;i++){const t=i/n,c=Math.floor(x0+(x1-x0)*t),r=Math.floor(y0+(y1-y0)*t);if(c!==pc||r!==pr){if(Math.abs(c-pc)>1||Math.abs(r-pr)>1||!canMove(pc,pr,c,r))return false;pc=c;pr=r}}
+ return true;
+}
+// A* en la cuadrícula (8 direcciones). Si no llega, devuelve el camino a la casilla más cercana al objetivo.
+const NB8=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]];
+let _g=null,_par=null,_cl=null;
+function findPath(sc,sr,tc,tr){
+ const N=COLS*ROWS;if(!_g||_g.length!==N){_g=new Float32Array(N);_par=new Int32Array(N);_cl=new Uint8Array(N)}
+ _g.fill(1e9);_cl.fill(0);const hf=(c,r)=>{const dx=Math.abs(c-tc),dy=Math.abs(r-tr);return Math.max(dx,dy)+0.414*Math.min(dx,dy)};
+ const s=sr*COLS+sc,goal=tr*COLS+tc;_g[s]=0;_par[s]=-1;const heap=[[hf(sc,sr),s]];let best=s,bh=hf(sc,sr),exp=0;
+ const push=e=>{heap.push(e);let i=heap.length-1;while(i>0){const p=(i-1)>>1;if(heap[p][0]<=heap[i][0])break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p}};
+ const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let i=0;for(;;){const l=2*i+1,rr=l+1;let m=i;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(rr<heap.length&&heap[rr][0]<heap[m][0])m=rr;if(m===i)break;[heap[m],heap[i]]=[heap[i],heap[m]];i=m}}return top};
+ while(heap.length&&exp<2500){const [,cur]=pop();if(_cl[cur])continue;_cl[cur]=1;exp++;if(cur===goal){best=cur;break}
+  const c=cur%COLS,r=(cur/COLS)|0,hh=hf(c,r);if(hh<bh){bh=hh;best=cur}
+  for(const [i,j,w] of NB8){const nc=c+i,nr=r+j;if(nc<0||nr<0||nc>=COLS||nr>=ROWS)continue;const k=nr*COLS+nc;if(_cl[k]||!canMove(c,r,nc,nr))continue;
+   const cost=w*(S.map[nr][nc]===3?2:S.map[nr][nc]===2?1.4:1);const g=_g[cur]+cost;if(g<_g[k]){_g[k]=g;_par[k]=cur;push([g+hf(nc,nr),k])}}}
+ const out=[];for(let k=best;k!==s&&k>=0;k=_par[k])out.push({x:k%COLS+0.5,y:((k/COLS)|0)+0.5});
+ return out.reverse();
+}
 
 const terrCv=document.createElement('canvas');terrCv.width=W;terrCv.height=H;
 const hex=c=>[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)];
+function rampDir(c,r){const L=S.hgt[r][c]+1;for(const [i,j] of [[0,-1],[0,1],[-1,0],[1,0]]){const x=c+i,y=r+j;if(x>=0&&y>=0&&x<COLS&&y<ROWS&&S.hgt[y][x]===L)return [i,j]}return [0,-1]}
+const PAL={g0:['#5f9e48','#69aa4f','#578f41'],g1:['#8fc25c','#9bcc66','#84b553'],g2:['#bcc08e','#c8cb9a','#adb281'],f:['#45793a','#3e7033','#376629'],w:['#2f6fa8','#3579b5','#2a6299'],ramp:['#b39466','#a68759','#c2a374'],cliff:['#7a5634','#684828','#4a321c','#8a6a44']};
 function renderTerrain(){
- const x=terrCv.getContext('2d'),img=x.createImageData(W,H),d=img.data,r=rng(S.seed^0x9e37),m=S.map,wid=S.weather.id;
+ const x=terrCv.getContext('2d'),img=x.createImageData(W,H),d=img.data,r=rng(S.seed^0x9e37),m=S.map,hg=S.hgt,wid=S.weather.id;
  const tint=wid==='snow'?[[236,242,250],0.3]:wid==='rain'?[[30,45,80],0.2]:wid==='heat'?[[235,190,90],0.14]:wid==='fog'?[[150,160,170],0.12]:null;
  const put=(px,py,rgb,mul=1)=>{let a=rgb[0]*mul,b=rgb[1]*mul,c=rgb[2]*mul;if(tint){const[t,k]=tint;a=a*(1-k)+t[0]*k;b=b*(1-k)+t[1]*k;c=c*(1-k)+t[2]*k}const i=(py*W+px)*4;d[i]=a;d[i+1]=b;d[i+2]=c;d[i+3]=255};
- const isT=(c,rr,t)=>c>=0&&c<COLS&&rr>=0&&rr<ROWS&&m[rr][c]===t;
- const CL=['#7a5a38','#6a4c2e','#5c4027'].map(hex),HI=hex('#c4dc78'),SAND=hex('#c9b27a'),DARKG=hex('#3c6e2c');
- const FL=['#e8d36a','#e88aa0','#f0f0f0'].map(hex);
+ const H_=(c,rr)=>c<0||rr<0||c>=COLS||rr>=ROWS?null:hg[rr][c];
+ const P={};for(const k in PAL)P[k]=PAL[k].map(hex);
+ const SAND=hex('#c9b27a'),DARKG=hex('#3c6e2c'),STONE=hex('#8e8a78'),FL=['#e8d36a','#e88aa0','#f0f0f0'].map(hex);
+ const pick=a=>r()<0.6?a[0]:r()<0.5?a[1]:a[2];
  for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++){
-  const t=m[ty][tx],cols=TER[t].col.map(hex);
+  const t=m[ty][tx],h=hg[ty][tx];
+  const hs=H_(tx,ty+1),hn=H_(tx,ty-1),hw=H_(tx-1,ty),he=H_(tx+1,ty);
+  const drop=hs===null?0:Math.max(0,h-hs);
+  const southRampUp=hs!==null&&m[ty+1][tx]===4&&hs===h-1&&rampDir(tx,ty+1)[1]===-1;
+  const face=southRampUp?0:drop*5;
+  const rd=t===4?rampDir(tx,ty):null;
   for(let py=0;py<T;py++)for(let px=0;px<T;px++){
-   const X=tx*T+px,Y=ty*T+py;let c=r()<0.6?cols[0]:r()<0.5?cols[1]:cols[2],mul=1;
-   if(t===0){if(r()<0.04)c=DARKG;if(r()<0.01)c=FL[(r()*3)|0]}
-   if(t===1){
-    const south=!isT(tx,ty+1,1);
-    if(south&&py>=12){c=CL[py===12?2:(r()<0.5?0:1)]}
-    else if(south&&py===11)c=HI;
-    else if(!isT(tx,ty-1,1)&&py===0)c=HI;
-    if(!isT(tx-1,ty,1)&&px===0&&!(south&&py>=12))mul=0.82;
-    if(!isT(tx+1,ty,1)&&px===15&&!(south&&py>=12))mul=0.82;
-   }
-   if(t===2&&r()<0.05)c=DARKG;
-   if(t===3){
-    if((py===0&&!isT(tx,ty-1,3))||(py===15&&!isT(tx,ty+1,3))||(px===0&&!isT(tx-1,ty,3))||(px===15&&!isT(tx+1,ty,3)))c=SAND;
+   const X=tx*T+px,Y=ty*T+py;let c,mul=1;
+   if(t===3){c=pick(P.w);if((py===0&&hn!==null&&m[ty-1][tx]!==3)||(py===15&&hs!==null&&m[ty+1][tx]!==3)||(px===0&&hw!==null&&m[ty][tx-1]!==3)||(px===15&&he!==null&&m[ty][tx+1]!==3))c=SAND}
+   else if(t===4){c=pick(P.ramp);const along=rd[1]!==0?py:px;if(along%4===0)mul=0.8;if(along%4===1)mul=1.08;
+    const k=rd[1]===-1?1-py/15:rd[1]===1?py/15:rd[0]===-1?1-px/15:px/15;mul*=0.85+0.3*k;const side=rd[1]!==0?px:py;if(side===0||side===15)c=P.cliff[2];else if(side===1||side===14)mul*=0.8}
+   else if(t===2){c=pick(P.f);mul=h===2?1.25:h===1?1.12:1;if(r()<0.05)c=DARKG}
+   else{c=pick(h===2?P.g2:h===1?P.g1:P.g0);if(h===2&&r()<0.06)c=STONE;if(h===0&&r()<0.04)c=DARKG;if(r()<0.008)c=FL[(r()*3)|0]}
+   if(h>0&&t!==4){
+    if(face&&py>=T-face){const k=T-py;c=py===T-face?P.cliff[2]:(k%4===0?P.cliff[2]:r()<0.5?P.cliff[0]:P.cliff[1]);if(drop===2&&py===T-5)c=P.cliff[2];if(py===T-1)c=P.cliff[2];mul=1-0.04*(py-(T-face))}
+    else if(face&&py===T-face-1)c=hex('#d4e090');
+    else{if(hn!==null&&hn<h&&py===0)mul=1.2;if(hw!==null&&hw<h&&px===0)mul=0.62;else if(hw!==null&&hw<h&&px===1)mul=0.85;if(he!==null&&he<h&&px===15)mul=0.62;else if(he!==null&&he<h&&px===14)mul=0.85}
    }
    put(X,Y,c,mul);
   }
  }
- // sombra de colina sobre la casilla inferior
  x.putImageData(img,0,0);
- x.fillStyle='rgba(0,0,0,0.18)';
- for(let ty=0;ty<ROWS-1;ty++)for(let tx=0;tx<COLS;tx++)if(m[ty][tx]===1&&m[ty+1][tx]!==1)x.fillRect(tx*T,(ty+1)*T,T,3);
+ // sombra del acantilado sobre la casilla de abajo
+ for(let ty=0;ty<ROWS-1;ty++)for(let tx=0;tx<COLS;tx++){const k=hg[ty][tx]-hg[ty+1][tx];if(k>0&&m[ty+1][tx]!==4){x.fillStyle=`rgba(0,0,0,${0.18+0.08*k})`;x.fillRect(tx*T,(ty+1)*T,T,2+2*k)}}
+ for(let ty=0;ty<ROWS;ty++)for(let tx=1;tx<COLS;tx++){const k=hg[ty][tx-1]-hg[ty][tx];if(k>0&&m[ty][tx]!==4){x.fillStyle='rgba(0,0,0,0.2)';x.fillRect(tx*T,ty*T,2*k+1,T)}}
 }
 function buildTrees(){
  const r=rng(S.seed^0x51ed);S.trees=[];
  for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++)if(S.map[ty][tx]===2){
   const rr=rng(S.seed^(ty*97+tx*13));const jx=(rr()-0.5)*5,jy=(rr()-0.5)*3;
-  S.trees.push({x:tx*T+8+jx,y:ty*T+13+jy,v:(rr()*2)|0});
+  S.trees.push({x:tx*T+8+jx,y:ty*T+13+jy,lift:S.hgt[ty][tx]*4,v:(rr()*2)|0});
  }
 }
 
@@ -416,7 +486,7 @@ function autoArmy(side,fi){
  const role=u=>u.heal?'heal':u.fly?'fly':u.rng>1?'ranged':u.big?'big':u.charge?'mount':'melee';
  const by={};pool.forEach(u=>(by[role(u)]=by[role(u)]||[]).push(u));
  const zone=zoneTiles(side),m=S.map,wid=S.weather.id;
- const hills=zone.filter(t=>m[t.r][t.c]===1);
+ const hills=zone.filter(t=>S.hgt[t.r][t.c]>=1);
  const wf=wid==='windE'?(side===0?1:-1):wid==='windW'?(side===1?1:-1):0;
  const isDef=side===S.def;
  const wts={ranged:0.36+(hills.length>=6?0.16:0)+(wid==='fog'||wid==='rain'?-0.16:0)+wf*0.1,heal:0.1,melee:0.3,big:0.12,mount:wid==='snow'?0.03:isDef?0.07:0.12,fly:0.08};
@@ -432,7 +502,7 @@ function autoArmy(side,fi){
  const fl=t=>Math.abs(uOf(t.c,t.r))*9;
  const sil=u=>u.tr.includes('Silvano');
  const key={
-  ranged:(t,u)=>m[t.r][t.c]===1?depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
+  ranged:(t,u)=>S.hgt[t.r][t.c]>=1&&m[t.r][t.c]!==4?(2-S.hgt[t.r][t.c])*1.5+depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
   big:t=>depth(t)+fl(t)*0.1+r()*0.5,
   melee:t=>depth(t)+fl(t)*0.06+r()*0.8,
   mount:t=>depth(t)*0.6-fl(t)*0.3+r()*0.6,
@@ -463,7 +533,7 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function computeSyn(list){const cnt={};for(const it of list)for(const t of UBY[it.id].tr)cnt[t]=(cnt[t]||0)+1;const o={};for(const k in cnt){const tr=TRAITS[k].tiers;o[k]=cnt[k]>=tr[1]?2:cnt[k]>=tr[0]?1:0}return {tier:o,cnt}}
 const tier=(side,t)=>S.syn[side].tier[t]||0;
 function mkUnit(def,side,x,y){
- const u={def,side,x,y,hp:def.hp,max:def.hp,cd:0.3+Math.random()*0.6,tgt:null,ret:0,moved:0,anim:Math.random()*2,lunge:0,flash:0,alive:true,hold:false,dest:null,face:side?-1:1,moving:false,rad:def.big?0.55:def.mount?0.45:0.36,mass:def.big?3:def.mount?2:1,sh:0,shMax:0,burn:0,raiseT:5,raised:0,risen:false};
+ const u={def,side,x,y,hp:def.hp,max:def.hp,cd:0.3+Math.random()*0.6,tgt:null,ret:0,moved:0,anim:Math.random()*2,lunge:0,flash:0,alive:true,hold:false,dest:null,face:side?-1:1,moving:false,rad:def.big?0.55:def.mount?0.45:0.36,mass:def.big?3:def.mount?2:1,sh:0,shMax:0,burn:0,raiseT:6,raised:0,risen:false};
  if(def.tr.includes('Draconico')){const t=tier(side,'Draconico');u.max=u.hp=Math.round(def.hp*(t===2?1.35:t===1?1.2:1))}
  if(def.tr.includes('Celestial')){const t=tier(side,'Celestial');u.sh=u.shMax=u.max*(t===2?0.35:t===1?0.2:0)}
  return u;
@@ -475,22 +545,22 @@ function startBattle(){
   const a=S.armies[side];S.syn[side]=computeSyn(a.units);
   for(const it of a.units)S.units.push(mkUnit(UBY[it.id],side,it.c+0.5,it.r+0.5));
  }
- for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&terrAt(u)===1)u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
+ for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&elev(u)>=1)u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
  S.total=[0,1].map(s=>S.units.filter(u=>u.side===s).reduce((a,u)=>a+u.def.cost,0));
  S.state='battle';S.lastPanel=0;renderPanel();
 }
-const elev=u=>(!u.def.fly&&terrAt(u)===1)?1:0;
+const elev=u=>u.def.fly?0:hgtTile(Math.floor(u.x),Math.floor(u.y));
 function effRange(u,tg){
  let rg=u.def.rng;if(rg<=1)return rg;
- const hill=elev(u)===1,wid=S.weather.id;
- if(wid==='fog')rg=Math.min(rg,4)+(hill?1:0);else if(hill)rg+=2;
+ const hl=elev(u),wid=S.weather.id;
+ if(wid==='fog')rg=Math.min(rg,4)+hl;else rg+=hl===2?3:hl===1?2:0;
  if(tg&&(wid==='windE'||wid==='windW')&&!u.def.heal){const dir=Math.sign(tg.x-u.x),fav=wid==='windE'?1:-1;rg+=dir===fav?2:-2}
  return Math.max(2,rg);
 }
 function speedOf(u){
  let s=u.def.spd;const t=terrAt(u),wid=S.weather.id;
  if(!u.def.fly){
-  if(t===1)s*=TER[1].mv;
+  if(t===4)s*=TER[4].mv;
   else if(t===2&&!u.def.tr.includes('Silvano'))s*=TER[2].mv;
   else if(t===3)s*=wid==='rain'?0.3:wid==='heat'?0.8:TER[3].mv;
  }
@@ -506,19 +576,40 @@ function pickTarget(u){
 }
 function pickHeal(u){let best=null,br=0.92;for(const a of S.units){if(!a.alive||a.side!==u.side||a===u)continue;const r=a.hp/a.max;if(r<br&&dist(u,a)<8){br=r;best=a}}return best}
 function seekHill(u){
- if(elev(u)||u.def.fly||!u.tgt)return;
+ const cur=elev(u);if(cur>=2||u.def.fly||!u.tgt)return;
  if(u.dest&&S.claims.has(u.dest.k))return;
  const dT=dist(u,u.tgt);let best=null,bd=1e9;
  const c0=Math.floor(u.x),r0=Math.floor(u.y);
- for(let r=r0-5;r<=r0+5;r++)for(let c=c0-5;c<=c0+5;c++){
-  if(r<0||c<0||r>=ROWS||c>=COLS||S.map[r][c]!==1)continue;const k=c+','+r;if(S.claims.has(k))continue;
-  const p={x:c+0.5,y:r+0.5};const d=dist(u,p);if(d>5)continue;if(dist(p,u.tgt)>dT+1)continue;if(d<bd){bd=d;best={x:p.x,y:p.y,k}}
+ for(let r=r0-7;r<=r0+7;r++)for(let c=c0-7;c<=c0+7;c++){
+  if(r<0||c<0||r>=ROWS||c>=COLS||S.hgt[r][c]<=cur||S.map[r][c]===4)continue;const k=c+','+r;if(S.claims.has(k))continue;
+  const p={x:c+0.5,y:r+0.5};const d=dist(u,p);if(d>7)continue;if(dist(p,u.tgt)>dT-0.5)continue;const sc=d-2*S.hgt[r][c];if(sc<bd){bd=sc;best={x:p.x,y:p.y,k}}
  }
  if(best){u.dest=best;S.claims.add(best.k)}
 }
+// mueve sin cruzar acantilados (si choca, se desliza por el borde)
+function tryMove(u,nx,ny){
+ if(u.def.fly){u.x=nx;u.y=ny;return true}
+ const c1=Math.floor(u.x),r1=Math.floor(u.y);
+ if(canMove(c1,r1,Math.floor(nx),Math.floor(ny))){u.x=nx;u.y=ny;return true}
+ if(canMove(c1,r1,Math.floor(nx),r1)){u.x=nx;return true}
+ if(canMove(c1,r1,c1,Math.floor(ny))){u.y=ny;return true}
+ return false;
+}
+// camina hacia un punto buscando camino si hay acantilados por medio
+function goTo(u,gx,gy,dt,stop){
+ if(u.def.fly){moveTo(u,gx,gy,dt,stop);return}
+ if(Math.hypot(gx-u.x,gy-u.y)<=stop){u.moving=false;return}
+ u.pt=(u.pt||0)-dt;
+ if(u.pt<=0){u.pt=0.6+Math.random()*0.4;u.path=lineClear(u.x,u.y,gx,gy)?null:findPath(Math.floor(u.x),Math.floor(u.y),Math.floor(gx),Math.floor(gy))}
+ if(u.path&&u.path.length){
+  while(u.path.length>1&&lineClear(u.x,u.y,u.path[1].x,u.path[1].y))u.path.shift();
+  const p=u.path[0];if(Math.hypot(p.x-u.x,p.y-u.y)<0.25){u.path.shift();if(!u.path.length)u.path=null;return}
+  moveTo(u,p.x,p.y,dt,0);
+ }else moveTo(u,gx,gy,dt,stop);
+}
 function moveTo(u,tx,ty,dt,stop){
  const dx=tx-u.x,dy=ty-u.y,d=Math.hypot(dx,dy);if(d<=stop){u.moving=false;return}
- const st=Math.min(speedOf(u)*dt,d-stop);u.x+=dx/d*st;u.y+=dy/d*st;u.moved+=st;u.moving=true;u.anim+=dt*speedOf(u)*2.6;
+ const st=Math.min(speedOf(u)*dt,d-stop);if(!tryMove(u,u.x+dx/d*st,u.y+dy/d*st)){u.pt=0;u.moving=false;return}u.moved+=st;u.moving=true;u.anim+=dt*speedOf(u)*2.6;
  if(Math.abs(dx)>0.05)u.face=Math.sign(dx);
 }
 function attack(u,tg){
@@ -531,12 +622,12 @@ function attack(u,tg){
  if(wid==='fog'&&u.def.tr.includes('Celestial'))base*=0.85;
  if(u.def.holy&&(tg.def.tr.includes('NoMuerto')||tg.def.tr.includes('Infernal')))base*=1.5;
  const eu=elev(u),et=elev(tg);
- if(ranged&&eu>et)base*=1.25;
- if(!ranged&&!u.def.fly&&eu<et)base*=0.8;
+ if(ranged&&eu>et)base*=eu-et>=2?1.4:1.25;
+ if(!ranged&&!u.def.fly&&eu<et)base*=1-0.2*(et-eu);
  if(u.def.anti&&tg.def.tr.includes(u.def.anti))base*=2;
  if(u.def.charge&&u.moved>=3&&wid!=='snow'){base*=tier(u.side,'Montado')>=2?2.5:2;burst(tg.x*T,tg.y*T,'#ffe066',8)}
  u.moved=0;
- if(ranged){S.proj.push({x0:u.x*T,y0:(u.y*T)-6-(eu?3:0),t:0,dur:Math.max(0.15,dist(u,tg)/11),kind:u.def.proj,tgt:tg,att:u,base,lx:u.x*T,ly:u.y*T,col:u.def.sp.pal&&u.def.sp.pal.y})}
+ if(ranged){S.proj.push({x0:u.x*T,y0:(u.y*T)-6-eu*4,t:0,dur:Math.max(0.15,dist(u,tg)/11),kind:u.def.proj,tgt:tg,att:u,base,lx:u.x*T,ly:u.y*T,col:u.def.sp.pal&&u.def.sp.pal.y})}
  else{u.lunge=0.15;deal(u,tg,base,false);if(u.def.splash){const t=tier(u.side,'Gigante'),f=t===2?1:t===1?0.75:0.5;for(const e of S.units)if(e.alive&&e.side!==u.side&&e!==tg&&dist(e,tg)<1.15)deal(u,e,base*f,false);burst(tg.x*T,tg.y*T,'#c9b27a',6)}}
 }
 function deal(att,tg,base,ranged){
@@ -580,27 +671,28 @@ function step(dt){
   if(!u.alive)continue;
   u.flash=Math.max(0,u.flash-dt);u.lunge=Math.max(0,u.lunge-dt);u.cd-=dt;u.ret-=dt;
   if(u.burn>0){u.burn-=dt;u.hp-=4*dt;if(Math.random()<dt*6)S.parts.push({x:u.x*T+(Math.random()-0.5)*6,y:u.y*T-4,vx:0,vy:-25,life:0.35,col:'#ff9a30'});if(u.hp<=0){kill(u,null);continue}}
-  if(u.def.raise){u.raiseT-=dt;if(u.raiseT<=0){u.raiseT=1;if(u.raised<4){const c=S.corpses.find(c=>!c.used&&!c.def.big&&Math.hypot(c.x-u.x,c.y-u.y)<5);if(c){c.used=true;u.raised++;u.raiseT=5;const z=mkUnit(UBY.esqueleto,u.side,c.x,c.y);z.risen=true;S.units.push(z);burst(c.x*T,c.y*T-4,'#b06aff',12)}}}}
+  if(u.def.raise){u.raiseT-=dt;if(u.raiseT<=0){u.raiseT=1;if(u.raised<3){const c=S.corpses.find(c=>!c.used&&!c.def.big&&Math.hypot(c.x-u.x,c.y-u.y)<5);if(c){c.used=true;u.raised++;u.raiseT=6;const z=mkUnit(UBY.esqueleto,u.side,c.x,c.y);z.risen=true;S.units.push(z);burst(c.x*T,c.y*T-4,'#b06aff',12)}}}}
   if(u.def.tr.includes('Silvano')){const t=tier(u.side,'Silvano');if((t>=1&&terrAt(u)===2)||t>=2)u.hp=Math.min(u.max,u.hp+3*dt)}
-  if(u.ret<=0||!u.tgt||!u.tgt.alive){u.tgt=pickTarget(u);u.ret=0.4+Math.random()*0.2;if(u.def.rng>1&&!u.def.heal&&!u.hold)seekHill(u)}
+  if(u.ret<=0||!u.tgt||!u.tgt.alive){u.tgt=pickTarget(u);u.ret=0.4+Math.random()*0.2;if(u.def.rng>1&&!u.def.heal&&!u.hold&&!(u.seekCD>S.time))seekHill(u)}
   if(u.def.heal){
    const ally=pickHeal(u);
-   if(ally){const d=dist(u,ally),hr=effRange(u,null);if(d<=hr){u.moving=false;u.face=Math.sign(ally.x-u.x)||u.face;if(u.cd<=0){doHeal(u,ally);u.cd=cool(u)}continue}else if(d<8){moveTo(u,ally.x,ally.y,dt,hr*0.8);continue}}
+   if(ally){const d=dist(u,ally),hr=effRange(u,null);if(d<=hr){u.moving=false;u.face=Math.sign(ally.x-u.x)||u.face;if(u.cd<=0){doHeal(u,ally);u.cd=cool(u)}continue}else if(d<8){goTo(u,ally.x,ally.y,dt,hr*0.8);continue}}
   }
   const tg=u.tgt;if(!tg){u.moving=false;continue}
   const d=dist(u,tg),rg=effRange(u,tg);
   const reach=u.def.rng<=1?0.78+(tg.def.big?0.22:0)+(u.def.big?0.22:0):rg;
-  if(d<=reach){u.idle=0;u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;if(u.cd<=0){attack(u,tg);u.cd=cool(u)}}
+  const blocked=u.def.rng<=1&&!u.def.fly&&!tg.def.fly&&d<=reach&&!lineClear(u.x,u.y,tg.x,tg.y);
+  if(d<=reach&&!blocked){u.idle=0;u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;if(u.cd<=0){attack(u,tg);u.cd=cool(u)}}
   else{
    if(u.guard){if(d<rg+5||S.time>60||u.hp<u.max)u.guard=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
-   if(u.hold){u.idle=(u.idle||0)+dt;if(u.side!==S.def&&((S.time>20&&d>rg+6)||u.idle>6))u.hold=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
-   if(u.dest){moveTo(u,u.dest.x,u.dest.y,dt,0.05);if(dist(u,u.dest)<0.2){S.claims.delete(u.dest.k);u.dest=null;if(elev(u))u.hold=true}}
-   else moveTo(u,tg.x,tg.y,dt,reach*0.9);
+   if(u.hold){u.idle=(u.idle||0)+dt;if(u.side!==S.def&&((S.time>20&&d>rg+6)||u.idle>6)){u.hold=false;u.seekCD=S.time+25}else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
+   if(u.dest){goTo(u,u.dest.x,u.dest.y,dt,0.05);if(dist(u,u.dest)<0.2){S.claims.delete(u.dest.k);u.dest=null;if(elev(u))u.hold=true}}
+   else goTo(u,tg.x,tg.y,dt,blocked?0:reach*0.9);
   }
  }
  // separación
  const al=S.units.filter(u=>u.alive);
- for(let i=0;i<al.length;i++){const a=al[i];for(let j=i+1;j<al.length;j++){const b=al[j];if(!!a.def.fly!==!!b.def.fly)continue;const dx=b.x-a.x,dy=b.y-a.y,rr=a.rad+b.rad,d2=dx*dx+dy*dy;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2),p=(rr-d),nx=dx/d,ny=dy/d,tm=a.mass+b.mass;const fa=(a.hold?0.15:1)*b.mass/tm,fb=(b.hold?0.15:1)*a.mass/tm;a.x-=nx*p*fa;a.y-=ny*p*fa;b.x+=nx*p*fb;b.y+=ny*p*fb}}}
+ for(let i=0;i<al.length;i++){const a=al[i];for(let j=i+1;j<al.length;j++){const b=al[j];if(!!a.def.fly!==!!b.def.fly)continue;const dx=b.x-a.x,dy=b.y-a.y,rr=a.rad+b.rad,d2=dx*dx+dy*dy;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2),p=(rr-d),nx=dx/d,ny=dy/d,tm=a.mass+b.mass;const fa=(a.hold?0.15:1)*b.mass/tm,fb=(b.hold?0.15:1)*a.mass/tm;tryMove(a,a.x-nx*p*fa,a.y-ny*p*fa);tryMove(b,b.x+nx*p*fb,b.y+ny*p*fb)}}}
  for(const u of al){u.x=clamp(u.x,0.3,COLS-0.3);u.y=clamp(u.y,0.3,ROWS-0.3)}
  // proyectiles
  for(const p of S.proj){p.t+=dt;if(p.t>=p.dur){p.done=true;if(p.tgt.alive){if(p.kind==='heal'){p.tgt.hp=Math.min(p.tgt.max,p.tgt.hp+p.base);for(let i=0;i<4;i++)S.parts.push({x:p.tgt.x*T+(Math.random()-0.5)*8,y:p.tgt.y*T-6,vx:0,vy:-20,life:0.5,col:'#7dff8a'})}else{deal(p.att,p.tgt,p.base,true);if(p.att.def.splash){const t=tier(p.att.side,'Gigante'),f=t===2?1:t===1?0.75:0.5;for(const e of S.units)if(e.alive&&e.side!==p.att.side&&e!==p.tgt&&dist(e,p.tgt)<1.2)deal(p.att,e,p.base*f,true);burst(p.tgt.x*T,p.tgt.y*T-4,'#ff9a30',6)}}}}}
@@ -623,7 +715,7 @@ function drawSprite(img,x,y,flip){
 }
 function shadow(px,py,col,big){ctx.fillStyle=col;const w=big?6:4;ctx.fillRect(px-w,py,w*2+1,1);ctx.fillRect(px-w+1,py-1,w*2-1,1);ctx.fillRect(px-w+1,py+1,w*2-1,1)}
 function drawUnitAt(def,side,x,y,opts={}){
- const s=SPR[def.id],fr=opts.frame||0,img=s.f[fr],px=x*T,el=opts.el?3:0,fly=def.fly;
+ const s=SPR[def.id],fr=opts.frame||0,img=s.f[fr],px=x*T,el=(opts.el||0)*4,fly=def.fly;
  let py=y*T+5-el;
  const lx=opts.lunge?opts.face*2:0;
  const col=side===0?'rgba(74,163,255,0.85)':'rgba(255,106,79,0.85)';
@@ -636,15 +728,15 @@ function drawUnitAt(def,side,x,y,opts={}){
  if(opts.sh>0){const bw=def.big?14:10,bx=Math.round(px-bw/2),by=Math.round(dy)-6;ctx.fillStyle='#120c14';ctx.fillRect(bx-1,by-1,bw+2,3);ctx.fillStyle='#ffe066';ctx.fillRect(bx,by,Math.max(1,Math.round(bw*opts.sh)),1)}
  if(opts.hp!==undefined&&opts.hp<1){const bw=def.big?14:10,bx=Math.round(px-bw/2),by=Math.round(dy)-3;ctx.fillStyle='#120c14';ctx.fillRect(bx-1,by-1,bw+2,4);ctx.fillStyle='#3a2a2a';ctx.fillRect(bx,by,bw,2);ctx.fillStyle=side?'#ff6a4f':'#4aa3ff';ctx.fillRect(bx,by,Math.max(1,Math.round(bw*opts.hp)),2)}
 }
-function drawTree(t){const img=treeSprite(S.weather.id==='snow',t.v);ctx.drawImage(img,Math.round(t.x-img.width/2),Math.round(t.y-img.height+2))}
+function drawTree(t){const img=treeSprite(S.weather.id==='snow',t.v);ctx.drawImage(img,Math.round(t.x-img.width/2),Math.round(t.y-t.lift-img.height+2))}
 function drawCorpse(c){
  if(c.used)return;
  const img=SPR[c.def.id].f[0];ctx.save();ctx.globalAlpha=c.t<0.4?1-c.t*1.2:0.45;
- const px=Math.round(c.x*T),py=Math.round(c.y*T+3-(c.el?3:0));
+ const px=Math.round(c.x*T),py=Math.round(c.y*T+3-(c.el||0)*4);
  ctx.translate(px,py);if(c.face<0)ctx.scale(-1,1);ctx.rotate(Math.PI/2);ctx.drawImage(img,-img.width/2-2,-img.height/2);ctx.restore();
 }
 function drawProj(p){
- const k=p.t/p.dur,tx=p.tgt.x*T,ty=p.tgt.y*T-6-(elev(p.tgt)?3:0)-(p.tgt.def.fly?10:0);
+ const k=p.t/p.dur,tx=p.tgt.x*T,ty=p.tgt.y*T-6-elev(p.tgt)*4-(p.tgt.def.fly?10:0);
  const x=p.x0+(tx-p.x0)*k,arc=(p.kind==='arrow'||p.kind==='axe')?Math.sin(k*Math.PI)*Math.min(18,Math.abs(tx-p.x0)*0.15):0,y=p.y0+(ty-p.y0)*k-arc;
  const vx=x-p.lx,vy=y-p.ly;p.lx=x;p.ly=y;
  if(p.kind==='arrow'||p.kind==='bolt'){const l=Math.hypot(vx,vy)||1,ux=vx/l,uy=vy/l;ctx.fillStyle=p.kind==='bolt'?'#cfd8e3':'#efe0bf';for(let i=0;i<(p.kind==='bolt'?3:4);i++)ctx.fillRect(Math.round(x-ux*i),Math.round(y-uy*i),1,1);ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
@@ -674,7 +766,7 @@ function frame(now){
   for(const side of [0,1]){
    if(S.mode==='ai'&&side===1)continue;
    if(S.mode==='pvp'&&side!==S.side)continue;
-   for(const it of S.armies[side].units){const def=UBY[it.id];list.push({y:(it.r+0.5)*T+5+(def.fly?30:0),f:()=>drawUnitAt(def,side,it.c+0.5,it.r+0.5,{el:terrAtTile(it.c,it.r)===1&&!def.fly,t:now/1000,frame:def.fly?Math.floor(now/180)%2:0})})}
+   for(const it of S.armies[side].units){const def=UBY[it.id];list.push({y:(it.r+0.5)*T+5+(def.fly?30:0),f:()=>drawUnitAt(def,side,it.c+0.5,it.r+0.5,{el:def.fly?0:hgtTile(it.c,it.r),t:now/1000,frame:def.fly?Math.floor(now/180)%2:0})})}
   }
  }
  list.sort((a,b)=>a.y-b.y);for(const d of list)d.f();
@@ -694,7 +786,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const ICON={};
 function swatch(t){const c=document.createElement('canvas');c.width=16;c.height=16;c.getContext('2d').drawImage(terrCvSample(t),0,0);return c.toDataURL()}
 const sampleCache={};
-function terrCvSample(t){if(sampleCache[t])return sampleCache[t];const c=document.createElement('canvas');c.width=16;c.height=16;const x=c.getContext('2d'),r=rng(t+5),cols=TER[t].col;for(let j=0;j<16;j++)for(let i=0;i<16;i++){x.fillStyle=r()<0.6?cols[0]:r()<0.5?cols[1]:cols[2];if(t===1&&j>=12)x.fillStyle=j===12?'#5c4027':'#7a5a38';if(t===1&&j===11)x.fillStyle='#c4dc78';x.fillRect(i,j,1,1)}if(t===2){const tr=treeSprite(false,0);x.drawImage(tr,1,2)}return sampleCache[t]=c}
+function terrCvSample(t){if(sampleCache[t])return sampleCache[t];const c=document.createElement('canvas');c.width=16;c.height=16;const x=c.getContext('2d'),r=rng(t+5),cols=TER[t].col;
+ for(let j=0;j<16;j++)for(let i=0;i<16;i++){x.fillStyle=r()<0.6?cols[0]:r()<0.5?cols[1]:cols[2];
+  if((t===1&&j>=12)||(t===5&&j>=8))x.fillStyle=j%4===0?'#5c4027':r()<0.5?'#7a5a38':'#6a4c2e';if((t===1&&j===11)||(t===5&&j===7))x.fillStyle='#d4e090';if(t===4&&j%4===0)x.fillStyle='#8a7048';x.fillRect(i,j,1,1)}
+ if(t===2){const tr=treeSprite(false,0);x.drawImage(tr,1,2)}return sampleCache[t]=c}
 function renderFieldTag(){
  $('fieldtag').innerHTML=`<span class="chip">Campo <b>${esc(S.mapName)}</b></span><span class="chip">Defiende <b>${S.def?'Rojo':'Azul'}</b></span><span class="chip">Clima <b>${esc(S.weather.n)}</b></span>`;
 }
@@ -804,7 +899,7 @@ function toast(msg){const el=$('tileinfo');el.textContent=msg;el.classList.add('
 function updateTileInfo(){
  const el=$('tileinfo');if(el.classList.contains('warn'))return;const t=S.hover;
  if(!t){el.innerHTML='Pasa el cursor por el mapa para ver qué hace cada terreno.';return}
- const ter=TER[S.map[t.r][t.c]];el.innerHTML=`<b>${ter.n}.</b> ${esc(ter.d)}`;
+ const sf=S.map[t.r][t.c],hh=S.hgt[t.r][t.c],ter=TER[sf===3?3:sf===4?4:sf===2?2:hh===2?5:hh===1?1:0];el.innerHTML=`<b>${ter.n}${sf===2&&hh?(hh===2?' en montaña':' en colina'):''}.</b> ${esc(ter.d)}${sf===2&&hh?' '+esc(TER[hh===2?5:1].d):''}`;
 }
 function tileOf(e){const r=cv.getBoundingClientRect();const c=Math.floor((e.clientX-r.left)/r.width*COLS),rr=Math.floor((e.clientY-r.top)/r.height*ROWS);if(c<0||rr<0||c>=COLS||rr>=ROWS)return null;return {c,r:rr}}
 let paint=null,lastPaint=null;

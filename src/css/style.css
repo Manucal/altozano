@@ -30,7 +30,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-
 .hud .r .bar i{left:auto;right:0;background:var(--p2)}
 .hud .clock{font-size:18px;color:var(--gold);font-variant-numeric:tabular-nums}
 .canvas-wrap{position:relative;border:2px solid var(--line);background:#0c0a10;line-height:0}
-canvas#cv{width:100%;height:auto;aspect-ratio:480/288;image-rendering:pixelated;image-rendering:crisp-edges;display:block;touch-action:none}
+canvas#cv{width:100%;height:auto;aspect-ratio:704/416;image-rendering:pixelated;image-rendering:crisp-edges;display:block;touch-action:none}
 .tileinfo{font-size:14px;color:var(--muted);min-height:40px}
 .tileinfo b{color:var(--ink)}
 .tileinfo.warn{color:var(--bad)}
