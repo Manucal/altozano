@@ -15,6 +15,7 @@ const HEADS={
  drac:['.....t.sss','.....ssssss','.....sssesss','.....ssssssb','......sss'],
  skull:['......ssss','.....ssssss','.....sesses','.....sssss','......s.s'],
  demon:['....t....t','.....tssst','.....sssses','.....sssss','......sss'],
+ goblin:['......hhhh','...ssssssss','....ssssess','.....sssst','......sss'],
  lich:['.....y.y.y','.....yyyyyy','.....sesses','.....sssss','......s.s'],
  angel:['.....yyyy','......hhhh','.....hhsses','.....hssss','......sss'],
 };
@@ -41,6 +42,12 @@ const WEAP={
  axe:[...vline(12,4,12,'w'),[13,3,'m'],[13,4,'m'],[14,4,'m'],[13,5,'m'],[14,5,'m'],[14,6,'m'],[14,3,'m']],
  banner:[...vline(13,0,14,'w'),[13,0,'b'],[14,1,'c'],[15,1,'c'],[14,2,'c'],[15,2,'b'],[14,3,'c'],[15,3,'c'],[14,4,'b'],[15,4,'c'],[14,5,'c']],
  scythe:[...vline(12,0,14,'w'),[11,0,'m'],[10,0,'m'],[9,0,'m'],[8,1,'m'],[7,1,'m'],[13,0,'m'],[10,1,'t']],
+ halberd:[...vline(12,0,14,'w'),[13,1,'m'],[14,1,'m'],[13,2,'m'],[14,2,'m'],[14,3,'m'],[11,1,'m'],[12,0,'m']],
+ mace:[...vline(12,5,11,'w'),[11,3,'m'],[12,3,'m'],[13,3,'m'],[11,4,'m'],[12,4,'m'],[13,4,'m'],[12,2,'m']],
+ hammer:[...vline(12,4,13,'w'),[10,2,'m'],[11,2,'m'],[12,2,'m'],[13,2,'m'],[14,2,'m'],[10,3,'m'],[11,3,'m'],[12,3,'m'],[13,3,'m'],[14,3,'m']],
+ dagger:[[12,7,'m'],[12,8,'m'],[12,9,'b'],[3,8,'m'],[3,9,'m'],[3,10,'b']],
+ sling:[...vline(12,6,9,'w'),[13,5,'t'],[14,5,'t'],[14,6,'d']],
+ gun:[[8,9,'w'],[9,9,'w'],[10,9,'w'],[11,9,'w'],[12,9,'m'],[13,9,'m'],[14,9,'m'],[15,9,'m'],[9,10,'w'],[8,10,'w']],
  haxe:[...vline(12,6,11,'w'),[13,5,'m'],[13,6,'m'],[14,6,'m'],[13,7,'m'],[3,10,'w'],[3,11,'w'],[2,10,'m'],[2,9,'m']],
 };
 const MBODY=['..............kk..','...k.........kkkK.','..kkccccccccckkk..','.k.kccccccccckk...','...kkkkkkkkkkk....'];
@@ -55,6 +62,9 @@ const BIRD=[['a..........a','aa........aa','.aaa.bb.aaa.','..aaabbbaa..','....bb
 const WING16=[[3,3],[4,3],[2,4],[3,4],[4,4],[1,5],[2,5],[3,5],[4,5],[1,6],[2,6],[3,6],[4,6],[0,7],[1,7],[2,7],[3,7],[4,7],[1,8],[2,8],[3,8],[1,9],[2,9]];
 const WING20=[[4,2],[5,2],[3,3],[4,3],[5,3],[2,4],[3,4],[4,4],[5,4],[1,5],[2,5],[3,5],[4,5],[5,5],[1,6],[2,6],[3,6],[4,6],[5,6],[0,7],[1,7],[2,7],[3,7],[4,7],[5,7],[0,8],[1,8],[2,8],[3,8],[4,8],[1,9],[2,9],[3,9],[4,9],[1,10],[2,10],[3,10],[2,11]];
 const wing=(list,ch,dy=0)=>list.map(([x,y])=>[x,y+dy,ch]);
+const CATA=['................tt..','...............tmmt.','..............tw....','.............w......','............w.......','...........w........','..........w.........','....kkkkkkwkkkkk....','....kKkkkkkkkkKk....','...kk.........kk....','..KKK.........KKK...','..KKK.........KKK...'];
+const BIGBEAST=['..................kk..','................kkkkk.','..kkkkkkkkkkkkkkkkekkt','.kkkkkkkkkkkkkkkkkkkK.','kkkkkkkkkkkkkkkkkkkk..','k.kkkkkkkkkkkkkkkk....','..kkkkkkkkkkkkkkk.....','..kKkkkkkkkkkKkk......'];
+const BIGLEGS=[['...kk.kk.....kk.kk....','...kk.kk.....kk.kk....','...KK.KK.....KK.KK....'],['..kk...kk...kk...kk...','..kk...kk...kk...kk...','..KK...KK...KK...KK...']];
 const DBODY=['...............kk.','.............kkkek','k.kkkbbbbbbbbkkk..','.kkkkcccccccckk...','...kkkkkkkkkkk....'];
 const IMP=[['..t....t..','..ssssss..','..sssses..','...ssss...','aa.sbbs.aa','aaasbbsaaa','.aassssaa.','...s..s...','..ss..ss..'],['..t....t..','..ssssss..','..sssses..','...ssss...','...sbbs...','aaasbbsaaa','aa.ssss.aa','a..s..s..a','..ss..ss..']];
 const DRAGON=[['........aa..............','.......aaaa.............','......aaaaaa............','.....aaabaaaa......kk...','....aaabbbaaa....kkkkk..','..k.aabbbbaa....kkekkkt.','.kk.kkkkkkkkkkkkkkkK....','kk..kkkbbbbbbbkkkk......','k....kkbbbbbbkkk........','.....kk.....kk..........','.....K......K...........'],['........................','........................','........................','..................kk....','.................kkkkk..','..k.............kkekkkt.','.kk.kkkkkkkkkkkkkkkK....','kk..kkkaaaabbbkkkk......','k....kaaaaaabkkk........','.....aaaaaaa.k..........','....aaaaaa..K...........']];
@@ -62,12 +72,15 @@ const TREE=['.....gggg.....','...gggLLggg...','..ggLLLgggGg..','.ggLLgggggGGg.',
 
 const PALM=['..gg.....gg...','.gLLg..gLLgg..','gLg.ggLggg.Lg.','g...gLLLg...g.','...gg.k.gg....','..g...k...g...','......k.......','.......k......','.......k......','.......K......','......kK......','......kK......','.....KKKK.....'];
 const BURNT=['..............','...k.....k....','....k...k..k..','..k.k..k..k...','...kkk.k.k....','.....kkkk.....','......kk......','......kk......','......kK......','......kK......','......ko......','......kK......','.....KKKK.....'];
-function buildGrids(sp){
+function buildGrids(sp){const g0=buildGrids0(sp);if(sp.ops)for(const g of g0)ops(g,sp.ops);return g0}
+function buildGrids0(sp){
  if(sp.k==='foot')return [0,1].map(f=>{const g=blank(16,16);if(sp.wings)ops(g,wing(WING16,sp.wings,f));stamp(g,LEGS[sp.legs][f],0,12);stamp(g,TORSO[sp.torso],0,7);stamp(g,HEADS[sp.head],0,2);for(const w of sp.weap)ops(g,WEAP[w]);return g});
- if(sp.k==='mount')return [0,1].map(f=>{const g=blank(18,16);const body=sp.mount==='wolf'?WBODY:sp.mount==='drake'?DBODY:MBODY;stamp(g,[...body,...MLEGS[f]],0,8);stamp(g,TORSO[sp.torso].slice(0,4),1,5);stamp(g,HEADS[sp.head],1,0);for(const w of sp.weap)ops(g,WEAP[w],1,-2);return g});
+ if(sp.k==='mount')return [0,1].map(f=>{const g=blank(18,16);const body=sp.mount==='wolf'?WBODY:sp.mount==='drake'?DBODY:MBODY;if(sp.wings)ops(g,wing(WING16,sp.wings,f),4,0);stamp(g,[...body,...MLEGS[f]],0,8);stamp(g,TORSO[sp.torso].slice(0,4),1,5);stamp(g,HEADS[sp.head],1,0);for(const w of sp.weap)ops(g,WEAP[w],1,-2);return g});
  if(sp.k==='brute')return [0,1].map(f=>{const g=blank(20,16);if(sp.wings)ops(g,wing(WING20,sp.wings,f));stamp(g,[...BRUTE_TOP,...BRUTE_LEGS[f]],0,1);ops(g,CLUB,0,1);
   if(sp.horns)ops(g,[[6,1,'t'],[5,0,'t'],[13,1,'t'],[14,0,'t']]);if(sp.halo)ops(g,[[8,0,'y'],[9,0,'y'],[10,0,'y'],[11,0,'y']]);if(sp.spikes)ops(g,[[3,5,'m'],[4,5,'m'],[15,5,'m'],[16,5,'m'],[3,4,'t'],[16,4,'t']]);return g});
  if(sp.k==='beast')return [0,1].map(f=>{const g=blank(18,9);stamp(g,[...WBODY,...MLEGS[f]],0,1);ops(g,[[16,2,'y']]);return g});
+ if(sp.k==='siege')return [0,1].map(()=>{const g=blank(20,12);stamp(g,CATA,0,0);return g});
+ if(sp.k==='bigbeast')return [0,1].map(f=>{const g=blank(22,11);stamp(g,[...BIGBEAST,...BIGLEGS[f]],0,0);return g});
  if(sp.k==='imp')return [0,1].map(f=>{const g=blank(10,9);stamp(g,IMP[f],0,0);return g});
  if(sp.k==='dragon')return [0,1].map(f=>{const g=blank(24,11);stamp(g,DRAGON[f],0,0);return g});
  if(sp.k==='treant')return [0,1].map(f=>{const g=blank(20,16);stamp(g,[...TREANT_TOP,...TREANT_LEGS[f]],0,0);return g});
@@ -90,8 +103,7 @@ function spritePal(u){
  if(u.sp.k==='bird')pal={...pal,a:'#7fd0ff',b:'#d8f4ff',t:'#ffd34a'};
  if(u.sp.k==='imp')pal={...pal,a:'#5a1a2a',b:'#ffb040'};
  if(u.sp.k==='dragon')pal={...pal,k:'#b8452a',K:'#6a2214',a:'#d87a3a',b:'#f0c060',t:'#fff0d0'};
- if(u.sp.k==='beast')pal={...pal,...(u.sp.pal||{})};
- return pal;
+ return {...pal,...(u.sp.pal||{})};
 }
 function buildSprites(){
  for(const u of UNITS){const grids=buildGrids(u.sp),pal=spritePal(u);SPR[u.id]={f:grids.map(g=>raster(g,pal)),w:grids.map(g=>raster(g,pal,true))}}

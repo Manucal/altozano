@@ -30,10 +30,11 @@ function drawCorpse(c){
 }
 function drawProj(p){
  const k=p.t/p.dur,tx=p.tgt.x*T,ty=p.tgt.y*T-6-elev(p.tgt)*8-(p.tgt.def.fly?10:0);
- const x=p.x0+(tx-p.x0)*k,arc=(p.kind==='arrow'||p.kind==='axe')?Math.sin(k*Math.PI)*Math.min(18,Math.abs(tx-p.x0)*0.15):0,y=p.y0+(ty-p.y0)*k-arc;
+ const x=p.x0+(tx-p.x0)*k,arc=(p.kind==='arrow'||p.kind==='axe'||p.kind==='stone'||p.kind==='rock')?Math.sin(k*Math.PI)*Math.min(18,Math.abs(tx-p.x0)*0.15):0,y=p.y0+(ty-p.y0)*k-arc;
  const vx=x-p.lx,vy=y-p.ly;p.lx=x;p.ly=y;
  if(p.kind==='arrow'||p.kind==='bolt'){const l=Math.hypot(vx,vy)||1,ux=vx/l,uy=vy/l;ctx.fillStyle=p.kind==='bolt'?'#cfd8e3':'#efe0bf';for(let i=0;i<(p.kind==='bolt'?3:4);i++)ctx.fillRect(Math.round(x-ux*i),Math.round(y-uy*i),1,1);ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
  else if(p.kind==='fire'){const f=((p.t*24)|0)%2;ctx.fillStyle='#ff7a2a';ctx.fillRect(Math.round(x)-1,Math.round(y)-1,3,3);ctx.fillStyle=f?'#ffe066':'#ffb040';ctx.fillRect(Math.round(x),Math.round(y)-1,1,2);ctx.globalAlpha=0.5;ctx.fillStyle='#ff5a2a';ctx.fillRect(Math.round(x-vx*1.5),Math.round(y-vy*1.5),2,2);ctx.globalAlpha=1}
+ else if(p.kind==='rock'||p.kind==='stone'){const rr=p.kind==='rock'?2:1;ctx.fillStyle='#120c14';ctx.fillRect(Math.round(x)-rr,Math.round(y)-rr,rr*2+1,rr*2+1);ctx.fillStyle='#9a9488';ctx.fillRect(Math.round(x)-rr+1,Math.round(y)-rr+1,rr*2-1,rr*2-1)}
  else if(p.kind==='magma'){ctx.fillStyle='#3a1610';ctx.fillRect(Math.round(x)-2,Math.round(y)-2,5,5);ctx.fillStyle='#ff7a1a';ctx.fillRect(Math.round(x)-1,Math.round(y)-1,3,3);ctx.fillStyle='#ffe066';ctx.fillRect(Math.round(x),Math.round(y),1,1);ctx.globalAlpha=0.5;ctx.fillStyle='#ff5a1a';ctx.fillRect(Math.round(x-vx*2)-1,Math.round(y-vy*2),3,2);ctx.globalAlpha=1}
  else if(p.kind==='light'){const l=Math.hypot(vx,vy)||1,ux=vx/l,uy=vy/l;ctx.fillStyle='#fff6c0';for(let i=0;i<5;i++)ctx.fillRect(Math.round(x-ux*i),Math.round(y-uy*i),1,1);ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
  else if(p.kind==='axe'){const ph=((p.t*20)|0)%2;ctx.fillStyle='#b8b8b0';ctx.fillRect(Math.round(x)-1,Math.round(y)-(ph?1:0),ph?1:3,ph?3:1);ctx.fillStyle='#8b5a2b';ctx.fillRect(Math.round(x),Math.round(y),1,1)}

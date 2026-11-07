@@ -18,12 +18,21 @@ function genMap(preset,seed,d,theme){
  // forma redondeada con borde ondulado suave (sin picos de una casilla)
  const shape=(side,dv,u,rad,fn)=>{const c=P(side,dv,u),p1=r()*6.28,p2=r()*6.28,a1=R(0.08,0.2),a2=R(0.04,0.12),sx=R(0.8,1.25);
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const dx=(x+0.5-c.x)/sx,dy=(y+0.5-c.y)*sx,th=Math.atan2(dy,dx),rr=rad*(1+a1*Math.sin(3*th+p1)+a2*Math.sin(5*th+p2)),dd=Math.hypot(dx,dy);if(dd<=rr)fn(x,y,dd/rr)}};
- const hill=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y)=>{h[y][x]=Math.max(h[y][x],1)});
- const mount=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y,k)=>{h[y][x]=Math.max(h[y][x],k<0.55?2:1)});
- const forest=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y)=>{m[y][x]=2});
+ const hill=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y)=>{if(m[y][x]!==3)h[y][x]=Math.max(h[y][x],1)});
+ const mount=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y,k)=>{if(m[y][x]!==3)h[y][x]=Math.max(h[y][x],k<0.55?2:1)});
+ const forest=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y)=>{if(m[y][x]!==3)m[y][x]=2});
  const pond=(side,dv,u,rad)=>shape(side,dv,u,rad,(x,y)=>{h[y][x]=0;m[y][x]=3});
+ // río que serpentea en cualquier dirección, con vados cada 7-10 casillas
+ const meander=()=>{const nzm=vnoise((seed^0x77)+(r()*1e6|0));const c0={x:R(COLS*0.25,COLS*0.75),y:R(ROWS*0.25,ROWS*0.75)},th0=r()*6.283,wid=R(0.95,1.3);const pts=[];
+  for(const dir of [1,-1]){let x=c0.x,y=c0.y;const tb=th0+(dir<0?Math.PI:0);for(let i=0;i<300;i++){const th=tb+(nzm(i*0.05,dir*7)-0.5)*2.2*dir;x+=Math.cos(th)*0.5;y+=Math.sin(th)*0.5;if(x<-1||y<-1||x>COLS+1||y>ROWS+1)break;if(dir>0)pts.push([x,y]);else pts.unshift([x,y])}}
+  const fords=[];for(let i=6+((r()*10)|0);i<pts.length-4;i+=20+((r()*8)|0))fords.push(pts[i]);
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){let dm=9;for(const p of pts){const d=Math.hypot(x+0.5-p[0],y+0.5-p[1]);if(d<dm)dm=d}if(dm<wid&&h[y][x]===0){m[y][x]=fords.some(f=>Math.hypot(x+0.5-f[0],y+0.5-f[1])<1.3)?0:3}}};
+ // colinas repartidas: de varios candidatos, la más alejada de las alturas que ya hay
+ const extraHills=n=>{for(let i=0;i<n;i++){let best=null,bs=-1;for(let k=0;k<12;k++){const side=r()<0.55?d:A,dv=R(0.3,1.0),u=R(-1,1)*Math.min(dv,2-dv)*0.8,c=P(side,dv,u);let dm=99;for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(h[y][x]){const dd=Math.hypot(x+0.5-c.x,(y+0.5-c.y)*1.3);if(dd<dm)dm=dd}if(dm>bs){bs=dm;best=[side,dv,u]}}hill(best[0],best[1],best[2],R(2.3,3.4))}};
  const river=(rv,w,fords)=>{for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const dv=dvOf(d,x,y),u=uOf(x,y);if(Math.abs(dv-rv)<w){h[y][x]=0;m[y][x]=fords.some(f=>Math.abs(u-f)<0.06)?0:3}}};
- if(preset==='fortaleza'){mount(d,R(0.36,0.46),R(-0.15,0.15),R(5.5,6.5));forest(d,R(0.6,0.75),R(-0.6,-0.4),R(2.5,3.2));forest(d,R(0.6,0.75),R(0.4,0.6),R(2.5,3.2));hill(A,R(0.6,0.75),R(-0.3,0.3),R(2.6,3.4));forest(A,R(0.85,0.95),R(-0.5,0.5),R(1.8,2.4))}
+ if(preset==='valle'){meander();meander();if(r()<0.5)meander();extraHills(4);mount(r()<0.6?d:A,R(0.4,0.8),R(-0.5,0.5),R(4,5));forest(d,R(0.5,0.9),R(-0.5,0.5),R(2,3));forest(A,R(0.5,0.9),R(-0.5,0.5),R(2,3))}
+ else if(preset==='altiplano'){mount(d,R(0.4,0.6),R(-0.3,0.3),R(4.5,5.5));extraHills(5);forest(r()<0.5?d:A,R(0.6,0.9),R(-0.5,0.5),R(2,2.8));if(r()<0.7)meander()}
+ else if(preset==='fortaleza'){mount(d,R(0.36,0.46),R(-0.15,0.15),R(5.5,6.5));forest(d,R(0.6,0.75),R(-0.6,-0.4),R(2.5,3.2));forest(d,R(0.6,0.75),R(0.4,0.6),R(2.5,3.2));hill(A,R(0.6,0.75),R(-0.3,0.3),R(2.6,3.4));forest(A,R(0.85,0.95),R(-0.5,0.5),R(1.8,2.4))}
  else if(preset==='rio'){hill(d,R(0.35,0.5),R(-0.3,0.3),R(3.4,4.2));mount(d,R(0.3,0.4),r()<0.5?-0.55:0.55,R(4,4.8));hill(A,R(0.5,0.65),R(-0.4,0.4),R(2.6,3.2));forest(d,R(0.55,0.65),R(-0.6,0.6),R(2.2,2.8));river(R(0.8,0.86),0.04,[R(-0.5,-0.2),R(0.2,0.5)])}
  else if(preset==='emboscada'){forest(d,R(0.82,0.92),R(-0.45,-0.25),R(3.4,4));forest(d,R(0.82,0.92),R(0.25,0.45),R(3.4,4));mount(d,R(0.32,0.42),R(-0.2,0.2),R(4.2,5));hill(A,R(0.55,0.7),R(-0.5,0.5),R(2.4,3))}
  else if(preset==='paso'){mount(d,R(0.92,1.0),-0.62,R(5.5,6.5));mount(d,R(0.92,1.0),0.62,R(5.5,6.5));hill(d,R(0.45,0.55),R(-0.1,0.1),R(3,3.6));hill(A,R(0.55,0.7),R(-0.2,0.2),R(2.2,2.8))}
@@ -31,13 +40,16 @@ function genMap(preset,seed,d,theme){
  else if(preset==='caldera'){mount(d,R(0.5,0.62),R(-0.15,0.15),R(6,7));hill(A,R(0.45,0.6),R(-0.5,0.5),R(2.6,3.4));forest(A,R(0.75,0.9),R(-0.6,0.6),R(2,2.6));river(R(0.95,1.02),0.035,[R(-0.55,-0.25),R(0.05,0.2),R(0.35,0.6)])}
  else if(preset==='cumbre'){mount(d,R(0.88,0.95),R(-0.1,0.1),R(6.5,7.5));forest(A,R(0.7,0.8),R(-0.6,-0.3),R(2.4,3));forest(d,R(0.6,0.7),R(0.3,0.6),R(2.4,3));hill(A,R(0.45,0.55),R(0.2,0.5),R(2.4,3))}
  else{
+  const nr=r()<0.35?0:r()<0.77?1:2;for(let i=0;i<nr;i++)meander();
   mount(r()<0.7?d:A,R(0.35,0.9),R(-0.5,0.5),R(4.5,6.5));
-  const nh=1+(r()*2|0),nf=1+(r()*3|0);
-  for(let i=0;i<nh;i++)hill(d,R(0.3,0.8),R(-0.6,0.6),R(2.4,4));
+  const nh=2+(r()*3|0),nf=1+(r()*3|0);
+  extraHills(nh);
   for(let i=0;i<nf;i++)forest(r()<0.7?d:A,R(0.5,1.05),R(-0.6,0.6),R(2,3.6));
   if(r()<0.6)hill(A,R(0.4,0.8),R(-0.6,0.6),R(2,3.2));
-  if(r()<0.35)river(R(0.78,0.95),0.04,[R(-0.6,-0.1),R(0.1,0.6)]);
+  if(r()<0.25)river(R(0.78,0.95),0.04,[R(-0.6,-0.1),R(0.1,0.6)]);
+
  }
+ if(preset!=='random'&&preset!=='valle'&&preset!=='altiplano'){extraHills(1+(r()*2|0));if(preset==='rio'||preset==='oasis'||(preset!=='paso'&&r()<0.35))meander()}
  // limpieza: sin salientes de una casilla; la montaña siempre rodeada de colina
  const at=(x,y)=>x<0||y<0||x>=COLS||y>=ROWS?-1:h[y][x];
  for(let it=0;it<2;it++)for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const v=h[y][x];if(!v)continue;const n=[at(x+1,y),at(x-1,y),at(x,y+1),at(x,y-1)].filter(k=>k>=v||k===-1).length;if(n<2)h[y][x]=v-1}
