@@ -137,3 +137,25 @@ body{padding:0;margin:0}
   .game .tileinfo{left:12px;right:12px;transform:none;max-width:none;bottom:auto;top:calc(96px + 100vw * 832 / 1408 + 6px)}
   .game .zoombar{bottom:auto;top:calc(96px + 100vw * 832 / 1408 - 40px)}
 }
+/* objetivos, general, progresión */
+.hud .objs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;font-size:13px}
+.hud .obj{padding:1px 7px;border:1px solid var(--line);background:#2a2233;color:var(--muted)}
+.hud .obj.p1{border-color:var(--p1);color:var(--p1)}
+.hud .obj.p2{border-color:var(--p2);color:var(--p2)}
+.hud .obj.cont{animation:objblink .6s steps(2) infinite}
+@keyframes objblink{50%{background:#4a3a2a}}
+.hud .objt{color:var(--gold)}
+.objic{width:14px;height:14px;margin-top:2px;border:2px solid #120c14;background:#9a9384}
+.objic.estandarte{background:linear-gradient(90deg,#8b5a2b 30%,var(--gold) 30%)}
+.objic.pozo{background:radial-gradient(#3a8ad0 45%,#8e8a78 46%)}
+.objic.atalaya{background:linear-gradient(#6e685c 30%,#a8a192 30%)}
+.gens{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.gpick{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--panel-2);border:1px solid var(--line);padding:6px 8px;color:var(--ink);font-size:12px;line-height:1.3}
+.gpick b{font-size:14px}
+.gpick span{color:var(--muted)}
+.gpick[aria-pressed="true"]{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.btn.gen kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);padding:0 4px;color:var(--muted)}
+.btn.gen[aria-pressed="true"]{background:var(--gold);color:var(--gold-ink)}
+.badge.lv{background:#2c4a2a;color:#bff0b0}
+.prog{display:flex;flex-direction:column;gap:8px}
+.lvlup{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);padding:6px 8px;font-size:14px}

@@ -1,6 +1,7 @@
 'use strict';
 /* ================= MAPA ================= */
-// S.map: superficie (0 llanura, 2 bosque, 3 río, 4 rampa, 6 desierto, 7 ceniza volcánica, 8 lava). S.hgt: altura 0 (llano), 1 (colina) o 2 (montaña).
+// S.map: superficie (0 llanura, 2 bosque, 3 río, 4 rampa, 6 desierto, 7 ceniza volcánica, 8 lava, 9 ruinas, 10 muro, 11 casa, 12 camino).
+const BLOCK=v=>v===8||v===10||v===11; // infranqueables a pie S.hgt: altura 0 (llano), 1 (colina) o 2 (montaña).
 // Entre alturas distintas hay acantilado: solo se sube o baja por una rampa (casilla baja marcada como 4).
 const grid=v=>Array.from({length:ROWS},()=>Array(COLS).fill(v));
 // ruido suave (value noise + fbm) para que las regiones de bioma tengan formas orgánicas
@@ -10,7 +11,7 @@ function vnoise(seed){
  const n=(x,y)=>{const i=Math.floor(x),j=Math.floor(y),fx=sm(x-i),fy=sm(y-j);const a=hs(i,j),b=hs(i+1,j),c=hs(i,j+1),d=hs(i+1,j+1);return a+(b-a)*fx+(c-a)*fy+(a-b-c+d)*fx*fy};
  return (x,y)=>(n(x,y)*0.57+n(x*2.03+17.1,y*2.03+5.3)*0.29+n(x*4.1+3.7,y*4.1+29.9)*0.14);
 }
-const BIOMES=[{id:'random',n:'Bioma aleatorio'},{id:'templado',n:'Templado'},{id:'mixto',n:'Mixto (desierto y volcán)'},{id:'desierto',n:'Desierto'},{id:'volcan',n:'Volcánico'}];
+const BIOMES=[{id:'random',n:'Bioma aleatorio'},{id:'templado',n:'Templado'},{id:'mixto',n:'Mixto (desierto y volcán)'},{id:'desierto',n:'Desierto'},{id:'volcan',n:'Volcánico'},{id:'ruinas',n:'Ruinas antiguas'},{id:'pueblo',n:'Pueblo'}];
 function genMap(preset,seed,d,theme){
  const r=rng(seed),m=grid(0),h=grid(0),A=1-d;
  const R=(a,b)=>a+r()*(b-a);
@@ -71,6 +72,18 @@ function genMap(preset,seed,d,theme){
   }
  }
  if(theme==='volcan'||theme==='mixto')for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(m[y][x]===3)m[y][x]=theme==='volcan'?8:3;
+ // ruinas: suelo de losas en una o dos zonas (los muros se ponen después de las rampas)
+ if(theme==='ruinas'){const nr=vnoise(seed^0x9a1);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if((m[y][x]===0)&&nr(x/7,y/7)>0.56)m[y][x]=9}
+ // pueblo: caminos que cruzan el mapa pasando por los pueblos
+ const villages=[];
+ if(theme==='pueblo'){
+  const nv=1+(r()<0.6?1:0);
+  for(let i=0;i<nv;i++){let best=null,bs=-1;for(let k=0;k<30;k++){const side=i===0?d:(r()<0.5?d:A),dv=R(0.55,1.05),u=R(-1,1)*Math.min(dv,2-dv)*0.6,c=P(side,dv,u),cx=Math.floor(c.x),cy=Math.floor(c.y);if(cx<3||cy<3||cx>COLS-4||cy>ROWS-4)continue;let flat=0;for(let j=-3;j<=3;j++)for(let q=-3;q<=3;q++){if(h[cy+j]&&h[cy+j][cx+q]===0&&m[cy+j][cx+q]!==3)flat++}const sp=Math.min(99,...villages.map(v=>Math.hypot(v.x-cx,v.y-cy)));const sc=flat+Math.min(sp,14);if(sc>bs){bs=sc;best={x:cx,y:cy}}}if(best)villages.push(best)}
+  const road=(x0,y0,x1,y1)=>{let x=x0,y=y0;for(let i=0;i<200;i++){if(x>=0&&y>=0&&x<COLS&&y<ROWS&&h[y][x]===0)m[y][x]=12;if(x===x1&&y===y1)break;const dx=x1-x,dy=y1-y;if(Math.abs(dx)>Math.abs(dy)||(Math.abs(dx)===Math.abs(dy)&&r()<0.5))x+=Math.sign(dx);else y+=Math.sign(dy);if(r()<0.12){if(dx)y+=r()<0.5?1:-1;else x+=r()<0.5?1:-1;y=clamp(y,0,ROWS-1);x=clamp(x,0,COLS-1)}}};
+  const pts=[{x:0,y:Math.floor(R(4,ROWS-4))},...sortBy(villages,v=>v.x),{x:COLS-1,y:Math.floor(R(4,ROWS-4))}];
+  for(let i=0;i<pts.length-1;i++)road(pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y);
+  if(r()<0.6){const v=villages[0];road(v.x,v.y,v.x+(r()<0.5?-1:1)*4,r()<0.5?0:ROWS-1)}
+ }
  // rampas: cada meseta recibe varias, repartidas por su borde
  for(const L of [1,2]){
   const seen=grid(0);
@@ -103,19 +116,51 @@ function genMap(preset,seed,d,theme){
   // la lava siempre queda rodeada de ceniza
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(m[y][x]===0||m[y][x]===6){if(near(x,y,8,1))m[y][x]=7}
  }
+ // muros en ruinas y casas del pueblo (solo si no cortan el paso)
+ if(theme==='ruinas'||theme==='pueblo'){
+  const pass=(x1,y1,x2,y2)=>{if(BLOCK(m[y2][x2]))return false;const a=h[y1][x1],b=h[y2][x2];if(a===b)return true;if(Math.abs(a-b)>1)return false;return (a<b?m[y1][x1]:m[y2][x2])===4};
+  const reach=()=>{let s0=null;for(let y=0;y<ROWS&&!s0;y++)for(let x=0;x<COLS&&!s0;x++)if(!BLOCK(m[y][x])&&dvOf(1-d,x,y)<0.3)s0=[x,y];if(!s0)return 0;const sn=grid(0),st=[s0];sn[s0[1]][s0[0]]=1;let n=1;
+   while(st.length){const [x,y]=st.pop();for(const [i,j] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+i,yy=y+j;if(xx<0||yy<0||xx>=COLS||yy>=ROWS||sn[yy][xx]||!pass(x,y,xx,yy))continue;sn[yy][xx]=1;n++;st.push([xx,yy])}}return n};
+  const ok=(x,y)=>x>=0&&y>=0&&x<COLS&&y<ROWS&&Math.min(dvOf(0,x,y),dvOf(1,x,y))>=0.22&&m[y][x]!==4&&m[y][x]!==3&&m[y][x]!==12&&!BLOCK(m[y][x])&&![[1,0],[-1,0],[0,1],[0,-1]].some(([i,j])=>at(x+i,y+j)>=0&&m[y+j][x+i]===4);
+  const place=(cells,v)=>{cells=cells.filter(([x,y])=>ok(x,y));if(!cells.length)return;const before=reach(),old=cells.map(([x,y])=>m[y][x]);for(const [x,y] of cells)m[y][x]=v;if(reach()<before-cells.length)cells.forEach(([x,y],i)=>m[y][x]=old[i])};
+  if(theme==='ruinas'){
+   const floor=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(m[y][x]===9)floor.push([x,y]);
+   const nw=Math.min(14,Math.floor(floor.length/9));
+   for(let i=0;i<nw;i++){const [x,y]=floor[(r()*floor.length)|0],hz=r()<0.5,len=2+((r()*4)|0),cells=[];for(let k=0;k<len;k++){const cx=hz?x+k:x,cy=hz?y:y+k;if(at(cx,cy)!==h[y][x])break;if(r()<0.15&&k>0&&k<len-1)continue;cells.push([cx,cy])}
+    // esquina: a veces el muro gira
+    if(r()<0.4&&cells.length>1){const [ex,ey]=cells[cells.length-1];for(let k=1;k<3;k++)cells.push(hz?[ex,ey+k]:[ex+k,ey])}
+    place(cells,10)}
+  }
+  if(theme==='pueblo'){
+   for(const v of villages){const cand=[];for(let j=-4;j<=4;j++)for(let i=-5;i<=5;i++){const x=v.x+i,y=v.y+j;if(!ok(x,y)||h[y][x]!==0)continue;const nearRoad=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>at(x+a,y+b)>=0&&m[y+b][x+a]===12);if(nearRoad||r()<0.25)cand.push([x,y,Math.hypot(i,j*1.3)])}
+    for(const [x,y] of sortBy(cand,c=>c[2]+r()*2).slice(0,9+((r()*5)|0))){if([[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]].filter(([a,b])=>at(x+a,y+b)>=0&&m[y+b][x+a]===11).length>=2)continue;place([[x,y]],11)}
+    // plaza empedrada en el centro
+    for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const x=v.x+i,y=v.y+j;if(at(x,y)===0&&m[y][x]===0)m[y][x]=12}
+   }
+  }
+ }
  return {m,h};
 }
 function newField(keepSeed){
  if(!keepSeed)S.seed=(Math.random()*1e9)|0;
  S.def=S.defSel==='random'?(rng(S.seed^99)()<0.5?0:1):+S.defSel;
  const p0=S.preset==='oasis'?'desierto':S.preset==='caldera'?'volcan':null;
- S.biome=p0||(S.biomeSel!=='random'?S.biomeSel:(()=>{const x=rng(S.seed^55)();return x<0.35?'templado':x<0.65?'mixto':x<0.83?'desierto':'volcan'})());
+ S.biome=p0||(S.biomeSel!=='random'?S.biomeSel:(()=>{const x=rng(S.seed^55)();return x<0.25?'templado':x<0.45?'mixto':x<0.58?'desierto':x<0.71?'volcan':x<0.85?'ruinas':'pueblo'})());
  const g=genMap(S.preset,S.seed,S.def,S.biome);S.map=g.m;S.hgt=g.h;
  const p=PRESETS.find(p=>p.id===S.preset);
  S.mapName=S.preset==='random'?'Campo n.º '+(S.seed%1000):p.n;
  S.weather=S.weatherSel==='random'?WEATHERS[(rng(S.seed^77)()*WEATHERS.length)|0]:WEATHERS.find(w=>w.id===S.weatherSel);
  S.armies=[{fac:S.armies[0].fac,units:[]},{fac:S.armies[1].fac,units:[]}];
+ S.map0=S.map.map(r=>r.slice());S.weather0=S.weather;S.scorch=null;S.fires=[];
+ placeObjectives();planWeather();
  renderTerrain();buildTrees();initWeatherFx();renderFieldTag();
+}
+// deja el campo como estaba antes de la batalla (por si ardió o avanzó la lava)
+function resetField(){
+ const changed=S.scorch||S.weather!==S.weather0||S.map.some((r,y)=>r.some((v,x)=>v!==S.map0[y][x]));
+ S.map=S.map0.map(r=>r.slice());S.weather=S.weather0;S.scorch=null;S.fires=[];S.wxDone=false;S.lavaNext=30;S.objT=0;S.objWin=false;S.notes=[];
+ for(const o of S.objs||[]){o.owner=S.def;o.prog=S.def===0?-1:1;o.contested=false}
+ if(changed){renderTerrain();buildTrees();initWeatherFx();renderFieldTag()}
 }
 const terrAtTile=(c,r)=>S.map[clamp(r,0,ROWS-1)][clamp(c,0,COLS-1)];
 const terrAt=u=>terrAtTile(Math.floor(u.x),Math.floor(u.y));
@@ -123,7 +168,7 @@ const hgtTile=(c,r)=>S.hgt[clamp(r,0,ROWS-1)][clamp(c,0,COLS-1)];
 // ¿se puede pasar de una casilla a otra vecina? (acantilados solo por rampa)
 function stepOK(c1,r1,c2,r2){
  if(c2<0||r2<0||c2>=COLS||r2>=ROWS)return false;
- if(S.map[r2][c2]===8)return false;
+ if(BLOCK(S.map[r2][c2]))return false;
  const h1=S.hgt[r1][c1],h2=S.hgt[r2][c2];if(h1===h2)return true;if(Math.abs(h1-h2)>1)return false;
  const low=h1<h2?S.map[r1][c1]:S.map[r2][c2];return low===4;
 }
@@ -149,7 +194,7 @@ function findPath(sc,sr,tc,tr){
  while(heap.length&&exp<2500){const [,cur]=pop();if(_cl[cur])continue;_cl[cur]=1;exp++;if(cur===goal){best=cur;break}
   const c=cur%COLS,r=(cur/COLS)|0,hh=hf(c,r);if(hh<bh){bh=hh;best=cur}
   for(const [i,j,w] of NB8){const nc=c+i,nr=r+j;if(nc<0||nr<0||nc>=COLS||nr>=ROWS)continue;const k=nr*COLS+nc;if(_cl[k]||!canMove(c,r,nc,nr))continue;
-   const sf=S.map[nr][nc],cost=w*(sf===3?2:sf===2?1.4:sf===6?1.15:1);const g=_g[cur]+cost;if(g<_g[k]){_g[k]=g;_par[k]=cur;push([g+hf(nc,nr),k])}}}
+   const sf=S.map[nr][nc],cost=w*(sf===3?2:sf===2?1.4:sf===6?1.15:sf===9?1.2:sf===12?0.85:1);const g=_g[cur]+cost;if(g<_g[k]){_g[k]=g;_par[k]=cur;push([g+hf(nc,nr),k])}}}
  const out=[];for(let k=best;k!==s&&k>=0;k=_par[k])out.push({x:k%COLS+0.5,y:((k/COLS)|0)+0.5});
  return out.reverse();
 }
@@ -157,28 +202,33 @@ function findPath(sc,sr,tc,tr){
 const terrCv=document.createElement('canvas');terrCv.width=COLS*TT;terrCv.height=ROWS*TT;
 const hex=c=>[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)];
 function rampDir(c,r){const L=S.hgt[r][c]+1;for(const [i,j] of [[0,-1],[0,1],[-1,0],[1,0]]){const x=c+i,y=r+j;if(x>=0&&y>=0&&x<COLS&&y<ROWS&&S.hgt[y][x]===L)return [i,j]}return [0,-1]}
-const PAL={gv:['#5d7a3c','#668444','#55703a'],fv:['#4a4f36','#42472f','#3a3f2a'],s0:['#d8c07a','#e0c988','#cdb46c'],s1:['#e2cc8a','#e9d597','#d6be7a'],s2:['#ecd9a2','#f2e2b0','#e2cd92'],a0:['#4e4646','#575050','#463e3e'],a1:['#5a5150','#635a58','#524948'],a2:['#675d5a','#706562','#5e5552'],lava:['#ffb040','#ff7a1a','#e0501a','#ffe070'],sandCliff:['#b8834e','#a5703e','#6e4626','#c99660'],ashCliff:['#3a3333','#302a2a','#1c1818','#4a4242'],g0:['#5f9e48','#69aa4f','#578f41'],g1:['#8fc25c','#9bcc66','#84b553'],g2:['#bcc08e','#c8cb9a','#adb281'],f:['#45793a','#3e7033','#376629'],w:['#2f6fa8','#3579b5','#2a6299'],ramp:['#b39466','#a68759','#c2a374'],cliff:['#7a5634','#684828','#4a321c','#8a6a44']};
+const PAL={ru:['#8f887a','#857e70','#9a9384'],co:['#a3916e','#968563','#b09e7a'],gv:['#5d7a3c','#668444','#55703a'],fv:['#4a4f36','#42472f','#3a3f2a'],s0:['#d8c07a','#e0c988','#cdb46c'],s1:['#e2cc8a','#e9d597','#d6be7a'],s2:['#ecd9a2','#f2e2b0','#e2cd92'],a0:['#4e4646','#575050','#463e3e'],a1:['#5a5150','#635a58','#524948'],a2:['#675d5a','#706562','#5e5552'],lava:['#ffb040','#ff7a1a','#e0501a','#ffe070'],sandCliff:['#b8834e','#a5703e','#6e4626','#c99660'],ashCliff:['#3a3333','#302a2a','#1c1818','#4a4242'],g0:['#5f9e48','#69aa4f','#578f41'],g1:['#8fc25c','#9bcc66','#84b553'],g2:['#bcc08e','#c8cb9a','#adb281'],f:['#45793a','#3e7033','#376629'],w:['#2f6fa8','#3579b5','#2a6299'],ramp:['#b39466','#a68759','#c2a374'],cliff:['#7a5634','#684828','#4a321c','#8a6a44']};
 function renderTerrain(){
- const x=terrCv.getContext('2d'),img=x.createImageData(COLS*TT,ROWS*TT),d=img.data,r=rng(S.seed^0x9e37),m=S.map,hg=S.hgt,wid=S.weather.id;
+ const x=terrCv.getContext('2d'),img=x.createImageData(COLS*TT,ROWS*TT),d=img.data,m=S.map,hg=S.hgt,wid=S.weather.id;
+ let r=rng(S.seed^0x9e37);
  const tint=wid==='snow'?[[236,242,250],0.3]:wid==='rain'?[[30,45,80],0.2]:wid==='heat'?[[235,190,90],0.14]:wid==='fog'?[[150,160,170],0.12]:null;
  const put=(px,py,rgb,mul=1)=>{let a=rgb[0]*mul,b=rgb[1]*mul,c=rgb[2]*mul;if(tint){const[t,k]=tint;a=a*(1-k)+t[0]*k;b=b*(1-k)+t[1]*k;c=c*(1-k)+t[2]*k}const i=(py*COLS*TT+px)*4;d[i]=a;d[i+1]=b;d[i+2]=c;d[i+3]=255};
  const H_=(c,rr)=>c<0||rr<0||c>=COLS||rr>=ROWS?null:hg[rr][c];
  const P={};for(const k in PAL)P[k]=PAL[k].map(hex);
- const SAND=hex('#c9b27a'),DARKG=hex('#3c6e2c'),STONE=hex('#8e8a78'),FL=['#e8d36a','#e88aa0','#f0f0f0'].map(hex),PEB=hex('#a08860'),CRACK=hex('#2a2222'),EMBER=hex('#ff7a2a'),LAVAC=hex('#7a2410');
+ const SAND=hex('#c9b27a'),DARKG=hex('#3c6e2c'),STONE=hex('#8e8a78'),FL=['#e8d36a','#e88aa0','#f0f0f0'].map(hex),PEB=hex('#a08860'),CRACK=hex('#2a2222'),EMBER=hex('#ff7a2a'),LAVAC=hex('#7a2410'),MOSS=hex('#6a8a4a'),WT=['#b4ad9e','#a8a192','#bdb7a8'].map(hex),WF=hex('#6e685c'),WD=hex('#4a463e');
  const pick=a=>r()<0.6?a[0]:r()<0.5?a[1]:a[2];
  // indicadores de bioma por casilla, interpolados por píxel con ruido: bordes orgánicos, sin cuadros
  const isD=(c,rr)=>{const v=m[rr][c];if(v===6)return 1;if(v===4){for(const [i,j] of [[1,0],[-1,0],[0,1],[0,-1]]){const x2=c+i,y2=rr+j;if(x2>=0&&y2>=0&&x2<COLS&&y2<ROWS&&m[y2][x2]===6)return 1}}return 0};
  const isA=(c,rr)=>{const v=m[rr][c];if(v===7||v===8)return 1;if(v===4){for(const [i,j] of [[1,0],[-1,0],[0,1],[0,-1]]){const x2=c+i,y2=rr+j;if(x2>=0&&y2>=0&&x2<COLS&&y2<ROWS&&(m[y2][x2]===7||m[y2][x2]===8))return 1}}return 0};
- const DI=[],AI=[],LI=[],FI=[],WI=[];for(let j=0;j<ROWS;j++){DI.push([]);AI.push([]);LI.push([]);FI.push([]);WI.push([]);for(let i=0;i<COLS;i++){DI[j].push(isD(i,j));AI[j].push(isA(i,j));LI[j].push(m[j][i]===8?1:0);FI[j].push(m[j][i]===2?1:0);WI[j].push(m[j][i]===3?1:0)}}
+ const DI=[],AI=[],LI=[],FI=[],WI=[],RI=[],CI=[];for(let j=0;j<ROWS;j++){DI.push([]);AI.push([]);LI.push([]);FI.push([]);WI.push([]);RI.push([]);CI.push([]);for(let i=0;i<COLS;i++){const v=m[j][i];DI[j].push(isD(i,j));AI[j].push(isA(i,j));LI[j].push(v===8?1:0);FI[j].push(v===2?1:0);WI[j].push(v===3?1:0);RI[j].push(v===9||v===10||(S.scorch&&S.scorch[j][i]===2)?1:0);CI[j].push(v===12?1:0)}}
+ computeCover();
  const bil=(G,fx,fy)=>{const x=fx-0.5,y=fy-0.5,i=Math.floor(x),j=Math.floor(y),ax=x-i,ay=y-j;const g=(ii,jj)=>G[clamp(jj,0,ROWS-1)][clamp(ii,0,COLS-1)];return g(i,j)*(1-ax)*(1-ay)+g(i+1,j)*ax*(1-ay)+g(i,j+1)*(1-ax)*ay+g(i+1,j+1)*ax*ay};
  S.lavaPx=[];const pnA=vnoise(S.seed^0x5151),pnB=vnoise(S.seed^0x2b2b);
- const anyD=DI.some(r_=>r_.some(v=>v)),anyA=AI.some(r_=>r_.some(v=>v));
+ const anyD=DI.some(r_=>r_.some(v=>v)),anyA=AI.some(r_=>r_.some(v=>v)),anyR=RI.some(r_=>r_.some(v=>v)),anyC=CI.some(r_=>r_.some(v=>v));
  const ground=(tx,ty,px,py,h)=>{
   const fx=tx+(px+0.5)/TT,fy=ty+(py+0.5)/TT,n1=pnA(fx*1.3,fy*1.3)-0.5;
   let c=pick(h===2?P.g2:h===1?P.g1:S.biome==='volcan'?P.gv:P.g0),kind=0,mul=1;
   {const k=clamp((bil(FI,fx,fy)+n1*0.6-0.34)/0.26,0,1);if(k>0&&r()<k){c=pick(S.biome==='volcan'?P.fv:P.f);mul=h===2?1.25:h===1?1.12:1;if(r()<0.05)c=DARKG;kind=4}}
   if(anyD){const k=clamp((bil(DI,fx,fy)+n1*0.6-0.36)/0.28,0,1);if(k>0&&r()<k){c=pick(h===2?P.s2:h===1?P.s1:P.s0);kind=1}}
   if(anyA){const k=clamp((bil(AI,fx,fy)+n1*0.6-0.36)/0.28,0,1);if(k>0&&r()<k){c=pick(h===2?P.a2:h===1?P.a1:P.a0);kind=2}}
+  if(anyR){const k=clamp((bil(RI,fx,fy)+n1*0.6-0.36)/0.28,0,1);if(k>0&&r()<k){c=pick(P.ru);kind=5;const gx=fx*2,gy=fy*2+(Math.floor(fx*2)%2)*0.5;if(gx%1<0.09||gy%1<0.09)mul=0.74;else if(r()<0.05)c=MOSS;else if(Math.abs(pnB(fx*3,fy*3)-0.5)<0.01)c=CRACK}}
+  if(anyC){const k=clamp((bil(CI,fx,fy)+n1*0.35-0.42)/0.16,0,1);if(k>0&&r()<k){c=pick(P.co);kind=6;if(Math.sin(fx*13.1)*Math.sin(fy*13.1+Math.floor(fx*2))>0.55)mul=0.82}}
+  if(S.scorch&&S.scorch[ty][tx]===1&&kind!==3&&r()<0.75){c=r()<0.5?CRACK:hex('#3a3430');kind=7}
   if(kind===0){if(h===2&&r()<0.06)c=STONE;if(h===0&&r()<0.04)c=DARKG;if(r()<0.008&&S.biome!=='volcan')c=FL[(r()*3)|0]}
   else if(kind===1){if(Math.sin((fx*1.7+fy*0.9)*6.283+n1*7)>0.86)mul=0.9;if(r()<0.006)c=PEB}
   else{const q=pnB(fx*2.2,fy*2.2);if(Math.abs(q-0.5)<0.012)c=CRACK;else if(r()<0.004)c=EMBER;}
@@ -188,6 +238,7 @@ function renderTerrain(){
   return [c,mul,kind];
  };
  for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++){
+  r=rng((S.seed^0x9e37)+ty*7919+tx*104729);
   const t=m[ty][tx],h=hg[ty][tx];
   const hs=H_(tx,ty+1),hn=H_(tx,ty-1),hw=H_(tx-1,ty),he=H_(tx+1,ty);
   const drop=hs===null?0:Math.max(0,h-hs);
@@ -200,6 +251,11 @@ function renderTerrain(){
    if(t===3){const fx=tx+(px+0.5)/TT,fy=ty+(py+0.5)/TT,wv=bil(WI,fx,fy)+(pnA(fx*1.3,fy*1.3)-0.5)*0.45;if(wv>0.47)c=pick(P.w);else if(wv>0.4)c=SAND;else{const gr=ground(tx,ty,px,py,h);c=gr[0];mul=gr[1]}}
    else if(t===4){c=pick(DI[ty][tx]?P.sandCliff:AI[ty][tx]?P.ashCliff:P.ramp);if(AI[ty][tx])mul=1.4;const along=rd[1]!==0?py:px;if(along%4===0)mul=0.8;if(along%4===1)mul=1.08;
     const k=rd[1]===-1?1-py/15:rd[1]===1?py/15:rd[0]===-1?1-px/15:px/15;mul*=0.85+0.3*k;const side=rd[1]!==0?px:py;if(side===0||side===15)c=P.cliff[2];else if(side===1||side===14)mul*=0.8}
+   else if(t===10){const isW=(i,j)=>{const xx=tx+i,yy=ty+j;return xx>=0&&yy>=0&&xx<COLS&&yy<ROWS&&m[yy][xx]===10};
+    const L=isW(-1,0),Rr=isW(1,0),N=isW(0,-1),So=isW(0,1),inX=(L||px>=3)&&(Rr||px<=12),inY=(N||py>=3);
+    if(!inX||!inY){const gr=ground(tx,ty,px,py,h);c=gr[0];mul=gr[1]}
+    else if(!So&&py>=11){c=py===15?WD:WF;mul=(px+(py%2)*3)%6===0?0.8:1}
+    else{c=pick(WT);const row=Math.floor(py/4);if(py%4===0||(px+row*3)%7===0)mul=0.78;if(r()<0.04)c=MOSS}}
    else{const gr=ground(tx,ty,px,py,h);c=gr[0];mul=gr[1]}
    if(h>0&&t!==4){
     if(face&&py>=TT-face){const k=TT-py;c=py===TT-face?CL[2]:(k%4===0?CL[2]:r()<0.5?CL[0]:CL[1]);if(drop===2&&py===TT-5)c=CL[2];if(py===TT-1)c=CL[2];mul=1-0.04*(py-(TT-face))}
@@ -214,8 +270,11 @@ function renderTerrain(){
  for(let ty=0;ty<ROWS-1;ty++)for(let tx=0;tx<COLS;tx++){const k=hg[ty][tx]-hg[ty+1][tx];if(k>0&&m[ty+1][tx]!==4){x.fillStyle=`rgba(0,0,0,${0.18+0.08*k})`;x.fillRect(tx*TT,(ty+1)*TT,TT,2+2*k)}}
  for(let ty=0;ty<ROWS;ty++)for(let tx=1;tx<COLS;tx++){const k=hg[ty][tx-1]-hg[ty][tx];if(k>0&&m[ty][tx]!==4){x.fillStyle='rgba(0,0,0,0.2)';x.fillRect(tx*TT,ty*TT,2*k+1,TT)}}
 }
+// cobertura: casillas pegadas a un muro o a una casa
+function computeCover(){S.cover=grid(0);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const v=S.map[y][x];if(v!==10&&v!==11)continue;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=x+i,yy=y+j;if(xx>=0&&yy>=0&&xx<COLS&&yy<ROWS)S.cover[yy][xx]=1}}}
 function buildTrees(){
- const r=rng(S.seed^0x51ed);S.trees=[];
+ const r=rng(S.seed^0x51ed);S.trees=[];S.houses=[];
+ for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++)if(S.map[ty][tx]===11)S.houses.push({c:tx,r:ty,x:tx*T,y:ty*T+T,lift:S.hgt[ty][tx]*8,v:(tx*7+ty*3)%3});
  for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++)if(S.map[ty][tx]===2){
   const rr=rng(S.seed^(ty*97+tx*13));const jx=(rr()-0.5)*5,jy=(rr()-0.5)*3;
   let v=(rr()*2)|0,dz=0,az=0;for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const x=tx+i,y=ty+j;if(x<0||y<0||x>=COLS||y>=ROWS)continue;const k=S.map[y][x];if(k===6)dz++;if(k===7||k===8)az++}

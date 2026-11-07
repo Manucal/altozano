@@ -38,17 +38,19 @@ function renderPanel(){
    <select id="sel-bio" aria-label="Bioma" ${S.preset==='oasis'||S.preset==='caldera'?'disabled':''}>${BIOMES.map(b=>`<option value="${b.id}" ${b.id===S.biomeSel?'selected':''}>${b.n}</option>`).join('')}</select>
    <select id="sel-def" aria-label="Quién defiende"><option value="random" ${S.defSel==='random'?'selected':''}>Defensor aleatorio</option><option value="0" ${S.defSel==='0'?'selected':''}>Defiende el azul</option><option value="1" ${S.defSel==='1'?'selected':''}>Defiende el rojo</option></select>
    <button class="btn" id="b-reroll">Generar otro campo</button></div>
-  <div class="sec"><h2>Atacante y defensor</h2><p class="note" style="color:var(--ink)">Defiende el <b>${S.def?'rojo':'azul'}</b>: tiene el terreno a favor y gana si resiste ${TLIM} s. El atacante debe eliminar a todo el ejército defensor antes de que acabe el tiempo.</p></div>
-  <div class="sec"><h2>Clima: ${esc(S.weather.n)}</h2><p class="note" style="color:var(--ink)">${esc(S.weather.d)}</p></div>
+  <div class="sec"><h2>Atacante y defensor</h2><p class="note" style="color:var(--ink)">Defiende el <b>${S.def?'rojo':'azul'}</b>: tiene el terreno a favor y gana si resiste ${TLIM} s. El atacante gana si elimina al ejército defensor o si mantiene ${2} de los 3 objetivos durante ${OBJWIN} s.</p>${objSetupHTML()}</div>
+  <div class="sec"><h2>Clima: ${esc(S.weather.n)}</h2><p class="note" style="color:var(--ink)">${esc(S.weather.d)}</p>${S.wx2?`<p class="note"><b>Pronóstico:</b> hacia el segundo ${S.wxT} cambiará a <b>${esc(S.wx2.n)}</b>. ${esc(S.wx2.d)}</p>`:'<p class="note"><b>Pronóstico:</b> estable toda la batalla.</p>'}</div>
   <div class="sec"><h2>Terreno</h2>${legendHTML()}<p class="note">El campo se divide en diagonal: azul arriba, rojo abajo. El mapa no es simétrico: el lado del defensor tiene mejor terreno.</p></div>
+  ${progSetupHTML()}
   <button class="btn primary" id="b-go">Armar ejército</button>`;
+  if($('b-resetprog'))$('b-resetprog').onclick=()=>{resetProg();renderPanel()};
   $('m-ai').onclick=()=>{S.mode='ai';renderPanel()};$('m-pvp').onclick=()=>{S.mode='pvp';renderPanel()};
   $('sel-map').onchange=e=>{S.preset=e.target.value;newField();renderPanel()};
   $('sel-wx').onchange=e=>{S.weatherSel=e.target.value;newField(true);renderPanel()};
   $('sel-bio').onchange=e=>{S.biomeSel=e.target.value;newField(true);renderPanel()};
   $('sel-def').onchange=e=>{S.defSel=e.target.value;newField(true);renderPanel()};
   $('b-reroll').onclick=()=>{newField();renderPanel()};
-  $('b-go').onclick=()=>{S.side=0;S.sel=null;S.state='deploy';renderPanel();renderHud()};
+  $('b-go').onclick=()=>{S.side=0;S.sel=null;S.state='deploy';for(const a of S.armies)if(!a.gen)a.gen=['flechas','cura'];renderPanel();renderHud()};
  }
  else if(S.state==='deploy'){
   const a=S.armies[S.side],cost=armyCost(a),n=a.units.length,fac=a.fac;
@@ -63,43 +65,56 @@ function renderPanel(){
    <p class="note">${a.units.reduce((s,u)=>s+UBY[u.id].n,0)} soldados en total · Élites ${a.units.filter(u=>UBY[u.id].elite).length}/${ELITEMAX}</p>
   </div>
   <div class="sec"><h2>Tropas</h2><div class="cards">${fu.map(u=>`<button class="card${u.elite?' elite':''}" data-u="${u.id}" aria-pressed="${S.sel===u.id}">
-   <img alt="" src="${ICON[u.id]}"><span><span class="nm">${u.elite?'<span class="badge">Élite</span> ':''}${esc(u.name)}${u.n>1?' x'+u.n:''}</span>
+   <img alt="" src="${ICON[u.id]}"><span><span class="nm">${u.elite?'<span class="badge">Élite</span> ':''}${esc(u.name)}${u.n>1?' x'+u.n:''}${progOn(S.side)&&lvlOf(u.id)>1?` <span class="badge lv" title="${esc(upsText(u.id))}">Nv ${lvlOf(u.id)}</span>`:''}</span>
    <span class="st"> · ${u.n>1?'Grupo de '+u.n+' · Vida '+Math.round(u.hp/u.n)+' c/u':'Vida '+u.hp} · Ataque ${u.atk}${u.heal?' · Cura '+u.heal:''} · Alcance ${u.rng} · Armadura ${u.arm}</span>
    <span class="trs">${u.tr.map(t=>`<span class="tr">${TRAITS[t].n}</span>`).join('')}</span><span class="ds">${esc(u.desc)}</span></span>
    <span class="cost">${u.cost}<small>cap.</small></span></button>`).join('')}</div></div>
   <div class="sec"><h2>Sinergias</h2>${synHTML(a.units,fac)}</div>
+  <div class="sec"><h2>Habilidades del general (${(a.gen||[]).length}/${GENMAX})</h2><div class="gens">${GEN.map(g=>`<button class="gpick" data-g="${g.id}" aria-pressed="${(a.gen||[]).includes(g.id)}"><b>${esc(g.n)}</b><span>${esc(g.d)}</span></button>`).join('')}</div><p class="note">Cada una se usa una vez por batalla. Si no eliges, se reparten al azar.</p></div>
   <div class="row"><button class="btn" id="b-auto">Desplegar automático</button><button class="btn" id="b-clear">Vaciar</button></div>
   <div class="row"><button class="btn" id="b-back">Volver al campo</button><button class="btn primary" id="b-ready" ${n?'':'disabled'}>${S.mode==='pvp'&&S.side===0?'Listo, turno del J2':'¡A la batalla!'}</button></div>`;
   P.querySelectorAll('[data-fac]').forEach(b=>b.onclick=()=>{const i=+b.dataset.fac;if(i===a.fac)return;a.fac=i;S.sel=null;renderPanel()});
   P.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.u;P.querySelectorAll('[data-u]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.u===S.sel))});
-  $('b-auto').onclick=()=>{S.armies[S.side]=autoArmy(S.side,a.fac);renderPanel()};
+  P.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const id=b.dataset.g;a.gen=a.gen||[];if(a.gen.includes(id))a.gen=a.gen.filter(x=>x!==id);else{a.gen.push(id);if(a.gen.length>GENMAX)a.gen.shift()}renderPanel()});
+  $('b-auto').onclick=()=>{const g=a.gen;S.armies[S.side]=autoArmy(S.side,a.fac);S.armies[S.side].gen=g;renderPanel()};
   $('b-clear').onclick=()=>{a.units=[];renderPanel()};
   $('b-back').onclick=()=>{S.state='setup';renderPanel();renderHud()};
   $('b-ready').onclick=ready;
  }
+ else if(S.state==='reveal'){P.innerHTML=revHTML();bindRev()}
  else if(S.state==='battle'||S.state==='result'){
   P.innerHTML=`
   <div class="sec"><h2>Velocidad</h2><div class="seg" role="group">${[1,2,4].map(s=>`<button data-sp="${s}" aria-pressed="${S.speed===s}">x${s}</button>`).join('')}</div></div>
-  ${S.state==='battle'?ordersHTML():''}
+  ${S.state==='battle'?ordersHTML()+genHTML():''}
   ${[0,1].map(side=>`<div class="sec"><div class="who"><span class="dot ${side?'p2':'p1'}"></span><h3>${playerLabel(side)} · ${esc(armyFacName(S.armies[side]))}</h3></div>${synHTML(S.armies[side].units,null)}</div>`).join('')}
   <button class="btn" id="b-end">${S.state==='battle'?'Terminar ya (gana el defensor)':'Ver resultado'}</button>`;
-  if(S.state==='battle')renderOrders();else{S.gMode=false;updCursor()}
+  if(S.state==='battle'){renderOrders();renderGenBox()}else{S.gMode=false;updCursor()}
   P.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{S.speed=+b.dataset.sp;P.querySelectorAll('[data-sp]').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.sp===S.speed))});
   $('b-end').onclick=()=>{if(S.state==='battle'){S.time=TLIM;const al=S.units.filter(u=>u.alive);endBattle(al.filter(u=>!u.side).length,al.filter(u=>u.side).length)}else showResult()};
  }
 }
+function objSetupHTML(){
+ if(!S.objs||!S.objs.length)return '';
+ return `<ul class="legend">${S.objs.map(o=>`<li><span class="objic ${o.type}"></span><span><b>${esc(OBJTYPES[o.type].n)}.</b> ${esc(OBJTYPES[o.type].d)}</span></li>`).join('')}</ul><p class="note">Los objetivos empiezan en manos del defensor. Se toman quedándose cerca sin enemigos al lado; si hay tropas de los dos bandos, se disputan.</p>`;
+}
+function progSetupHTML(){
+ if(S.mode!=='ai')return '<div class="sec"><h2>Progresión</h2><p class="note">A 2 jugadores no cuentan las mejoras de las tropas: el duelo es parejo.</p></div>';
+ const ups=Object.entries(PROG).filter(([,p])=>p.lvl>1);
+ return `<div class="sec"><h2>Progresión</h2><p class="note">Contra la IA, cada tipo de tropa gana experiencia y sube hasta el nivel 5; en cada nivel eliges una mejora.${ups.length?' Tropas con nivel: '+ups.slice(0,8).map(([id,p])=>esc(UBY[id].name)+' '+p.lvl).join(', ')+(ups.length>8?'…':'')+'.':''}</p>${Object.keys(PROG).length?'<button class="btn" id="b-resetprog">Borrar progreso</button>':''}</div>`;
+}
 function ready(){
  if(S.mode==='pvp'&&S.side===0){S.state='handoff';S.sel=null;showOverlay(`<h2>Turno del Jugador 2</h2><p>Pásale el dispositivo. El ejército del Jugador 1 queda oculto hasta la batalla.</p><button class="btn primary" id="ov-go">Soy el Jugador 2</button>`);$('ov-go').onclick=()=>{hideOverlay();S.side=1;S.state='deploy';renderPanel();renderHud()};return}
  if(S.mode==='ai')S.armies[1]=aiArmy();
- hideOverlay();startBattle();renderHud();
+ hideOverlay();startReveal();
 }
 function showOverlay(html){const o=$('overlay');o.innerHTML=`<div class="box">${html}</div>`;o.hidden=false}
 function hideOverlay(){$('overlay').hidden=true}
 function showResult(){
  const R_=S.result;const lbl=s=>playerLabel(s);
  let title=R_.win===-1?'Empate':S.mode==='ai'?(R_.win===0?'Victoria':'Derrota'):`Gana ${lbl(R_.win)}`;
- const best=s=>{const b=S.stats[s].byType;const k=Object.keys(b).sort((x,y)=>b[y]-b[x])[0];return k?UBY[k].name:'—'};
- showOverlay(`<h2>${title}</h2>${R_.timeout?'<p class="muted">Se acabó el tiempo: el defensor resistió.</p>':''}
+ const best=s=>{const b=S.stats[s].byType;const k=Object.keys(b).sort((x,y)=>b[y]-b[x])[0];return k?(UBY[k]?UBY[k].name:'General'):'—'};
+ const gains=grantXP();
+ showOverlay(`<h2>${title}</h2>${R_.obj?`<p class="muted">${esc(playerLabel(R_.win))} tomó 2 de los 3 objetivos y los mantuvo ${OBJWIN} s.</p>`:R_.timeout?'<p class="muted">Se acabó el tiempo: el defensor resistió.</p>':''}
  <div class="res-table"><span class="h"></span><span class="h">${esc(lbl(0))}</span><span class="h">${esc(lbl(1))}</span>
  <span>Soldados vivos</span><b>${R_.n[0]}/${S.count0[0]}</b><b>${R_.n[1]}/${S.count0[1]}</b>
  <span>Daño causado</span><b>${Math.round(S.stats[0].dmg)}</b><b>${Math.round(S.stats[1].dmg)}</b>
@@ -107,8 +122,9 @@ function showResult(){
  <span>Tropa más dañina</span><b>${esc(best(0))}</b><b>${esc(best(1))}</b></div>
  <div class="row"><button class="btn primary" id="ov-re">Revancha</button></div>
  <div class="row"><button class="btn" id="ov-army">Cambiar ejército</button><button class="btn" id="ov-new">Nuevo campo</button></div>
- <button class="btn" id="ov-look">Ver el campo</button>`);
- $('ov-re').onclick=()=>{hideOverlay();if(S.mode==='ai'){const f=S.armies[1].fac;S.armies[1]=autoArmy(1,f)}startBattle();renderHud()};
+ ${progHTML(gains)}
+ <button class="btn" id="ov-look">Ver el campo</button>`);bindProg(gains);
+ $('ov-re').onclick=()=>{hideOverlay();if(S.mode==='ai'){const f=S.armies[1].fac;S.armies[1]=autoArmy(1,f)}resetField();startReveal()};
  $('ov-army').onclick=()=>{hideOverlay();S.units=[];S.corpses=[];S.proj=[];S.side=0;S.state='deploy';renderPanel();renderHud()};
  $('ov-new').onclick=()=>{hideOverlay();S.units=[];S.corpses=[];S.proj=[];S.state='setup';newField();renderPanel();renderHud()};
  $('ov-look').onclick=()=>hideOverlay();
@@ -117,7 +133,9 @@ function renderHud(){
  const h=$('hud');
  if(S.state==='battle'||S.state==='result'){
   const v=[0,1].map(s=>valueLeft(s)/Math.max(1,S.total[s])*100),n=[0,1].map(s=>S.units.filter(u=>u.alive&&u.side===s).length);
-  h.innerHTML=`<div class="side"><span>${esc(playerLabel(0))} · ${n[0]}</span><div class="bar"><i style="width:${v[0]}%"></i></div></div><div class="clock">${Math.max(0,Math.ceil(TLIM-S.time))}s</div><div class="side r"><span>${n[1]} · ${esc(playerLabel(1))}</span><div class="bar"><i style="width:${v[1]}%"></i></div></div>`;
+  h.innerHTML=`<div class="side"><span>${esc(playerLabel(0))} · ${n[0]}</span><div class="bar"><i style="width:${v[0]}%"></i></div></div><div class="clock">${Math.max(0,Math.ceil(TLIM-S.time))}s</div><div class="side r"><span>${n[1]} · ${esc(playerLabel(1))}</span><div class="bar"><i style="width:${v[1]}%"></i></div></div>${objHUD()}`;
+ }else if(S.state==='reveal'){
+  h.innerHTML=`<div class="side"><span>Revelación · ${esc(playerLabel(S.side))} · ${REVMOVES-S.revMoves} movimientos</span></div><div class="clock">${Math.max(0,Math.ceil(S.revT))}s</div><div></div>`;
  }else if(S.state==='deploy'){
   h.innerHTML=`<div class="side"><span>${esc(playerLabel(S.side))}: ${S.side===S.def?'defiende':'ataca'} desde el triángulo ${S.side?'rojo':'azul'}</span></div><div></div><div></div>`;
  }else h.innerHTML=`<div class="side"><span>Estudia el campo antes de elegir tropas</span></div><div></div><div></div>`;
@@ -128,7 +146,7 @@ function toast(msg){const el=$('tileinfo');el.textContent=msg;el.classList.add('
 function updateTileInfo(){
  const el=$('tileinfo');if(el.classList.contains('warn'))return;const t=S.hover;
  if(!t){el.innerHTML=HINT;return}
- const sf=S.map[t.r][t.c],hh=S.hgt[t.r][t.c],own=sf===2||sf===6||sf===7||sf===8,ter=TER[own||sf===3||sf===4?sf:hh===2?5:hh===1?1:0],up=own&&hh;el.innerHTML=`<b>${ter.n}${up?(hh===2?' en montaña':' en colina'):''}.</b> ${esc(ter.d)}${up?' '+esc(TER[hh===2?5:1].d):''}`;
+ const sf=S.map[t.r][t.c],hh=S.hgt[t.r][t.c],own=sf===2||sf>=6,ter=TER[own||sf===3||sf===4?sf:hh===2?5:hh===1?1:0],up=own&&hh;el.innerHTML=`<b>${ter.n}${up?(hh===2?' en montaña':' en colina'):''}.</b> ${esc(ter.d)}${up?' '+esc(TER[hh===2?5:1].d):''}`;
 }
 function tileOf(e){const w=toWorld(scr(e));const c=Math.floor(w.x/T),rr=Math.floor(w.y/T);if(c<0||rr<0||c>=COLS||rr>=ROWS)return null;return {c,r:rr}}
 let paint=null,lastPaint=null;

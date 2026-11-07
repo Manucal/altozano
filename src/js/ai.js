@@ -1,7 +1,7 @@
 'use strict';
 /* ================= EJÉRCITO AUTOMÁTICO / IA ================= */
-function zoneTiles(side){const o=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(dvOf(side,c,r)<ZV&&S.map[r][c]!==8)o.push({c,r});return o}
-const inZone=(t,side)=>!!t&&dvOf(side,t.c,t.r)<ZV&&S.map[t.r][t.c]!==8;
+function zoneTiles(side){const o=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(dvOf(side,c,r)<ZV&&!BLOCK(S.map[r][c]))o.push({c,r});return o}
+const inZone=(t,side)=>!!t&&dvOf(side,t.c,t.r)<ZV&&!BLOCK(S.map[t.r][t.c]);
 const capFor=side=>side===S.def?CAP:CAP+CAPB;
 function autoArmy(side,fi){
  const pool=UNITS.filter(u=>u.f===fi),r=Math.random;

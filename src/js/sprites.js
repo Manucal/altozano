@@ -109,6 +109,10 @@ function buildSprites(){
  for(const u of UNITS){const grids=buildGrids(u.sp),pal=spritePal(u);SPR[u.id]={f:grids.map(g=>raster(g,pal)),w:grids.map(g=>raster(g,pal,true))}}
  SPR.tree=[TREE,PALM,BURNT].map(t=>{const g=blank(14,13);stamp(g,t,0,0);return g});
 }
+const HOUSE=['.......rr.......','.....rrrrrr.....','...rrrrrrrrrr...','.rrrrrrrrrrrrrr.','RRRRRRRRRRRRRRRR','.wwwwwwwwwwwwww.','.wwkkwwwwwwkkww.','.wwkkwwwwwwkkww.','.wwwwwwddwwwwww.','.wwwwwwddwwwwww.','.WWWWWWddWWWWWW.'];
+const HOUSE_PAL=[{r:'#a8452a',R:'#6a2a1a'},{r:'#6a5a8a',R:'#3a2e52'},{r:'#8a6a3a',R:'#5a4024'}];
+function houseSprite(v,snow){const key='house'+v+(snow?'s':'');if(SPR[key])return SPR[key];const g=blank(16,11);stamp(g,HOUSE,0,0);
+ const pal={...COMMON,w:'#e0cfa8',W:'#b8a682',k:'#3a2a2a',d:'#6a4424',...HOUSE_PAL[v]};if(snow){pal.r='#eef2f8';pal.R='#a9bccb'}return SPR[key]=raster(g,pal)}
 function treeSprite(snow,variant){
  const key='tree'+(snow?'s':'')+variant;if(SPR[key])return SPR[key];
  if(variant==='palm'){const pal=snow?{...COMMON,g:'#e8eef4',L:'#ffffff',G:'#a9bccb'}:{...COMMON,g:'#5a9a3a',L:'#a8d860',G:'#3a6a2a',k:'#9a6a3a',K:'#6a4424'};return SPR[key]=raster(SPR.tree[1],pal)}

@@ -5,7 +5,7 @@ const WIN={el:$('win'),drag:null,lastState:null};
 const narrow=()=>matchMedia('(max-width:760px)').matches;
 function setWinMin(on){WIN.el.classList.toggle('min',on);const b=$('win-min');b.textContent=on?'+':'−';b.setAttribute('aria-expanded',String(!on));b.setAttribute('aria-label',on?'Desplegar ventana':'Plegar ventana')}
 function syncWin(){
- const t={setup:'Campo de batalla',deploy:'Tu ejército',handoff:'Tu ejército',battle:'Batalla',result:'Batalla'}[S.state]||'Altozano';
+ const t={setup:'Campo de batalla',deploy:'Tu ejército',handoff:'Tu ejército',battle:'Batalla',result:'Batalla',reveal:'Revelación'}[S.state]||'Altozano';
  $('win-title').textContent=S.state==='deploy'?playerLabel(S.side):t;
  // al cambiar de fase se vuelve a abrir (salvo en batalla en pantallas pequeñas, para ver el mapa)
  if(S.state!==WIN.lastState){WIN.lastState=S.state;setWinMin(S.state==='battle'&&narrow())}

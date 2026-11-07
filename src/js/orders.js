@@ -24,7 +24,7 @@ function orderPoint(w,type){
  const byG={};for(const u of us)(byG[u.gid]=byG[u.gid]||[]).push(u);
  const c=centroid(us),gs=Object.values(byG),spread=Math.max(...gs.map(g=>{const k=centroid(g);return Math.hypot(k.x-c.x,k.y-c.y)}),0.01),sc=Math.min(1,(1+Math.sqrt(gs.length)*0.9)/spread);
  for(const g of gs){const k=centroid(g);for(const u of g){prepOrder(u);let tx=clamp(w.x+(k.x-c.x)*sc+(u.x-k.x),0.4,COLS-0.4),ty=clamp(w.y+(k.y-c.y)*sc+(u.y-k.y),0.4,ROWS-0.4);
-  if(!u.def.fly&&S.map[Math.floor(ty)][Math.floor(tx)]===8){tx=w.x;ty=w.y}
+  if(!u.def.fly&&BLOCK(S.map[Math.floor(ty)][Math.floor(tx)])){tx=w.x;ty=w.y}
   const d=Math.hypot(tx-u.x,ty-u.y);u.order={type,x:tx,y:ty,until:S.time+d/Math.max(0.3,speedOf(u))*2+4}}}
  mark(w.x,w.y,type==='amove'?'#ff6a4f':'#7ddc7a');
 }
@@ -43,7 +43,7 @@ function giveOrder(w){
 // cursores dibujados a mano
 const CUR_TARGET=`url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="10" fill="none" stroke="#120c14" stroke-width="5"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ff4a3a" stroke-width="2.5"/><path d="M16 1v9M16 22v9M1 16h9M22 16h9" stroke="#120c14" stroke-width="4"/><path d="M16 2v8M16 22v8M2 16h8M22 16h8" stroke="#ffe066" stroke-width="2"/></svg>')}") 16 16, crosshair`;
 const CUR_SWORD=`url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><path d="M3 3l16 16M19 19l-3 3M19 19l3-3M20 20l7 7" stroke="#120c14" stroke-width="6" stroke-linecap="round"/><path d="M3 3l16 16" stroke="#e8ecf2" stroke-width="3" stroke-linecap="round"/><path d="M15 23l8-8" stroke="#d4a52a" stroke-width="3" stroke-linecap="round"/><path d="M21 21l6 6" stroke="#8b5a2b" stroke-width="3" stroke-linecap="round"/></svg>')}") 3 3, pointer`;
-function updCursor(){cv.style.cursor=S.state!=='battle'?'':S.gMode?CUR_TARGET:ORD.hoverEnemy?CUR_SWORD:''}
+function updCursor(){cv.style.cursor=S.state!=='battle'?'':S.gMode||S.aim?CUR_TARGET:ORD.hoverEnemy?CUR_SWORD:''}
 
 cv.addEventListener('pointerdown',e=>{
  if(!canOrder())return;const p=scr(e);if(inMinimap(p))return;const w=wT(p);

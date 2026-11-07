@@ -10,17 +10,17 @@ const FACTIONS=[
  {name:'Ángeles',blurb:'Caros y protegidos por un escudo divino. Su luz castiga a muertos y demonios.',pal:{s:'#f1d8bc',a:'#e8e4f4',b:'#e0b84a',d:'#8a8aa8',m:'#ffffff',h:'#f0dc8a',c:'#d8d4f0'}},
 ];
 const TRAITS={
- Infanteria:{n:'Infantería',tiers:[4,8],fx:['+2 armadura','+4 armadura']},
+ Infanteria:{n:'Infantería',tiers:[4,8],fx:['+2 armadura','+3 armadura']},
  Escudo:{n:'Escudo',tiers:[3,6],fx:['-25% daño de proyectiles','-45% daño de proyectiles']},
  Tirador:{n:'Tirador',tiers:[4,8],fx:['+15% daño a distancia','+30% daño a distancia']},
  Montado:{n:'Montado',tiers:[2,4],fx:['+20% velocidad','+20% vel. y carga x2,5']},
  Bestia:{n:'Bestia',tiers:[5,10],fx:['+15% daño','+30% daño']},
  Mistico:{n:'Místico',tiers:[2,4],fx:['+30% curación','+60% curación']},
- Silvano:{n:'Silvano',tiers:[3,6],fx:['En bosque: +25% daño y regeneran','En bosque +40%; regeneran siempre']},
+ Silvano:{n:'Silvano',tiers:[3,6],fx:['En bosque: +30% daño y regeneran','En bosque +45% (fuera +10%); regeneran siempre']},
  Gigante:{n:'Gigante',tiers:[2,3],fx:['Golpe en área al 50%','Golpe en área al 70%']},
  Volador:{n:'Volador',tiers:[3,6],fx:['+25% vel. de ataque','+50% vel. de ataque']},
  Draconico:{n:'Dracónico',tiers:[3,6],fx:['+20% de vida','+35% de vida']},
- NoMuerto:{n:'No muerto',tiers:[3,6],fx:['30% de levantarse al morir','50% de levantarse al morir']},
+ NoMuerto:{n:'No muerto',tiers:[3,6],fx:['35% de levantarse al morir','55% de levantarse al morir']},
  Infernal:{n:'Infernal',tiers:[3,6],fx:['Al matar recuperan 15% de vida','Al matar recuperan 25% de vida']},
  Celestial:{n:'Celestial',tiers:[3,6],fx:['Escudo divino del 25% de vida','Escudo divino del 40% de vida']},
 };
@@ -161,6 +161,10 @@ const TER=[
  {n:'Desierto',mv:0.85,col:['#d8c07a','#e0c988','#cdb46c'],d:'Arena: las tropas de a pie van un 15% más lentas y la armadura pesada (4 o más) ataca un 15% más lenta. Con sol abrasador, el doble. Dracónicos, Infernales y voladores no lo notan.'},
  {n:'Ceniza volcánica',mv:1,col:['#4e4646','#575050','#463e3e'],d:'Suelo ardiente: las tropas de a pie pierden un 0,5% de vida por segundo (la lluvia lo apaga). Dracónicos e Infernales no sufren y hacen +10% de daño sobre ella.'},
  {n:'Lava',mv:0,col:['#ff7a1a','#ffb040','#d8401a'],d:'Infranqueable para las tropas de a pie. Los voladores pasan por encima.'},
+ {n:'Ruinas',mv:0.9,col:['#8f887a','#857e70','#9a9384'],d:'Escombros: quien está dentro recibe -25% de daño de proyectiles. Montados y gigantes van un 30% más lentos (el resto, un 10%). Los Místicos curan un 25% más desde las ruinas.'},
+ {n:'Muro en ruinas',mv:0,col:['#b4ad9e','#a8a192','#6e685c'],d:'Infranqueable a pie. Quien está pegado a un muro o a una casa recibe -20% de daño de proyectiles.'},
+ {n:'Casa',mv:0,col:['#e0cfa8','#a8452a','#6a2a1a'],d:'Infranqueable a pie y da cobertura a quien está pegado (-20% de proyectiles). El fuego la incendia: arde unos segundos y queda en ruinas.'},
+ {n:'Camino',mv:1.2,col:['#a3916e','#968563','#b09e7a'],d:'Empedrado: las tropas de a pie van un 20% más rápido. Sin cobertura.'},
 ];
 const WEATHERS=[
  {id:'clear',n:'Despejado',d:'Sin efectos.'},

@@ -18,7 +18,7 @@ function drawMinimap(){
  ctx.fillStyle='#120c14';ctx.fillRect(r.x-3,r.y-3,r.w+6,r.h+6);ctx.drawImage(terrCv,r.x,r.y,r.w,r.h);
  const sx=r.w/W,sy=r.h/H;
  if(S.state==='battle'||S.state==='result'){for(const u of S.units)if(u.alive){ctx.fillStyle=u.side?'#ff6a4f':'#4aa3ff';ctx.fillRect(Math.round(r.x+u.x*T*sx)-1,Math.round(r.y+u.y*T*sy)-1,u.def.big?4:2,u.def.big?4:2)}}
- else for(const side of [0,1]){if(S.mode==='ai'&&side===1)continue;if(S.mode==='pvp'&&side!==S.side&&S.state!=='setup')continue;for(const it of S.armies[side].units){ctx.fillStyle=side?'#ff6a4f':'#4aa3ff';ctx.fillRect(Math.round(r.x+(it.c+0.5)*T*sx)-1,Math.round(r.y+(it.r+0.5)*T*sy)-1,3,3)}}
+ else for(const side of [0,1]){if(S.mode==='ai'&&side===1&&S.state!=='reveal')continue;if(S.mode==='pvp'&&side!==S.side&&S.state!=='setup'&&S.state!=='reveal')continue;for(const it of S.armies[side].units){ctx.fillStyle=side?'#ff6a4f':'#4aa3ff';ctx.fillRect(Math.round(r.x+(it.c+0.5)*T*sx)-1,Math.round(r.y+(it.r+0.5)*T*sy)-1,3,3)}}
  const c=S.cam;ctx.strokeStyle='#ffe9b0';ctx.lineWidth=2;ctx.strokeRect(r.x+c.x*sx,r.y+c.y*sy,W/c.z*sx,H/c.z*sy);
 }
 function inMinimap(p){if(S.cam.z<=1.02)return false;const r=mmRect();return p.x>=r.x&&p.y>=r.y&&p.x<=r.x+r.w&&p.y<=r.y+r.h}
