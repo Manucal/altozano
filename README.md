@@ -1,8 +1,8 @@
 # Altozano
 
-Juego de estrategia de batallas de ejércitos en pixel art. Armas un ejército con capacidad limitada (60 de capacidad, máximo 50 unidades), lo despliegas y la batalla se juega sola. El terreno y el clima deciden la estrategia.
+Juego de estrategia de batallas de ejércitos en pixel art. Armas un ejército con capacidad limitada (60 de capacidad, máximo 30 grupos), lo despliegas y la batalla se juega sola. El terreno y el clima deciden la estrategia.
 
-Nombre provisional. Prototipo 0.4.
+Nombre provisional. Prototipo 0.5.
 
 ## Jugar
 
@@ -11,6 +11,7 @@ Nombre provisional. Prototipo 0.4.
 
 ## Contenido actual
 
+- Cada tropa se coloca como un grupo de soldados (lanceros x4, caballería x3, sacerdotes x2, gigantes x1; ver `SQUAD` en `src/js/core.js`). La vida y la cadencia del grupo se reparten entre sus soldados.
 - 7 facciones x 5 tropas: Legión de Hierro, Clan Colmillo, Círculo del Bosque, Draconianos, Muertos vivientes, Demonios y Ángeles. Los ejércitos se pueden mezclar.
 - 13 rasgos con sinergias por número de tropas.
 - Mecánicas por facción: fuego que quema (y castiga al bosque), resurrección y nigromancia, curación al matar y frenesí, escudo divino y daño sagrado.

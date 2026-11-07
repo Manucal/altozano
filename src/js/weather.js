@@ -1,7 +1,7 @@
 'use strict';
 /* ================= CLIMA (efectos visuales) ================= */
 function initWeatherFx(){
- const id=S.weather.id,n=id==='rain'?150:id==='snow'?130:id==='fog'?8:(id==='windE'||id==='windW')?26:id==='heat'?0:0;
+ const id=S.weather.id,n=id==='rain'?320:id==='snow'?260:id==='fog'?14:(id==='windE'||id==='windW')?50:id==='heat'?0:0;
  S.wx=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H,s:0.5+Math.random(),p:Math.random()*6.28}));
 }
 function drawWeather(dt,now){

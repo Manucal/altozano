@@ -6,7 +6,7 @@ function drawSprite(img,x,y,flip){
 }
 function shadow(px,py,col,big){ctx.fillStyle=col;const w=big?6:4;ctx.fillRect(px-w,py,w*2+1,1);ctx.fillRect(px-w+1,py-1,w*2-1,1);ctx.fillRect(px-w+1,py+1,w*2-1,1)}
 function drawUnitAt(def,side,x,y,opts={}){
- const s=SPR[def.id],fr=opts.frame||0,img=s.f[fr],px=x*T,el=(opts.el||0)*4,fly=def.fly;
+ const s=SPR[def.id],fr=opts.frame||0,img=s.f[fr],px=x*T,el=(opts.el||0)*8,fly=def.fly;
  let py=y*T+5-el;
  const lx=opts.lunge?opts.face*2:0;
  const col=side===0?'rgba(74,163,255,0.85)':'rgba(255,106,79,0.85)';
@@ -19,15 +19,15 @@ function drawUnitAt(def,side,x,y,opts={}){
  if(opts.sh>0){const bw=def.big?14:10,bx=Math.round(px-bw/2),by=Math.round(dy)-6;ctx.fillStyle='#120c14';ctx.fillRect(bx-1,by-1,bw+2,3);ctx.fillStyle='#ffe066';ctx.fillRect(bx,by,Math.max(1,Math.round(bw*opts.sh)),1)}
  if(opts.hp!==undefined&&opts.hp<1){const bw=def.big?14:10,bx=Math.round(px-bw/2),by=Math.round(dy)-3;ctx.fillStyle='#120c14';ctx.fillRect(bx-1,by-1,bw+2,4);ctx.fillStyle='#3a2a2a';ctx.fillRect(bx,by,bw,2);ctx.fillStyle=side?'#ff6a4f':'#4aa3ff';ctx.fillRect(bx,by,Math.max(1,Math.round(bw*opts.hp)),2)}
 }
-function drawTree(t){const img=treeSprite(S.weather.id==='snow',t.v);ctx.drawImage(img,Math.round(t.x-img.width/2),Math.round(t.y-t.lift-img.height+2))}
+function drawTree(t){const img=treeSprite(S.weather.id==='snow',t.v);ctx.drawImage(img,Math.round(t.x-img.width),Math.round(t.y-t.lift-img.height*2+4),img.width*2,img.height*2)}
 function drawCorpse(c){
  if(c.used)return;
  const img=SPR[c.def.id].f[0];ctx.save();ctx.globalAlpha=c.t<0.4?1-c.t*1.2:0.45;
- const px=Math.round(c.x*T),py=Math.round(c.y*T+3-(c.el||0)*4);
+ const px=Math.round(c.x*T),py=Math.round(c.y*T+3-(c.el||0)*8);
  ctx.translate(px,py);if(c.face<0)ctx.scale(-1,1);ctx.rotate(Math.PI/2);ctx.drawImage(img,-img.width/2-2,-img.height/2);ctx.restore();
 }
 function drawProj(p){
- const k=p.t/p.dur,tx=p.tgt.x*T,ty=p.tgt.y*T-6-elev(p.tgt)*4-(p.tgt.def.fly?10:0);
+ const k=p.t/p.dur,tx=p.tgt.x*T,ty=p.tgt.y*T-6-elev(p.tgt)*8-(p.tgt.def.fly?10:0);
  const x=p.x0+(tx-p.x0)*k,arc=(p.kind==='arrow'||p.kind==='axe')?Math.sin(k*Math.PI)*Math.min(18,Math.abs(tx-p.x0)*0.15):0,y=p.y0+(ty-p.y0)*k-arc;
  const vx=x-p.lx,vy=y-p.ly;p.lx=x;p.ly=y;
  if(p.kind==='arrow'||p.kind==='bolt'){const l=Math.hypot(vx,vy)||1,ux=vx/l,uy=vy/l;ctx.fillStyle=p.kind==='bolt'?'#cfd8e3':'#efe0bf';for(let i=0;i<(p.kind==='bolt'?3:4);i++)ctx.fillRect(Math.round(x-ux*i),Math.round(y-uy*i),1,1);ctx.fillStyle='#ffffff';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
@@ -40,10 +40,10 @@ let last=performance.now();
 function frame(now){
  const dt=Math.min(0.05,(now-last)/1000);last=now;
  if(S.state==='battle'){let acc=dt*S.speed;while(acc>0&&S.state==='battle'){const h=Math.min(1/30,acc);step(h);acc-=h}}
- ctx.drawImage(terrCv,0,0);
+ ctx.drawImage(terrCv,0,0,W,H);
  // agua animada
  ctx.fillStyle='rgba(170,215,255,0.55)';
- for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(S.map[r][c]===3){const ph=Math.floor(now/260+c*1.7+r*2.3)%8;ctx.fillRect(c*T+((ph*5)%12)+2,r*T+4+(ph%3)*4,3,1)}
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(S.map[r][c]===3){const ph=Math.floor(now/260+c*1.7+r*2.3)%8;ctx.fillRect(c*T+((ph*10)%24)+4,r*T+8+(ph%3)*8,6,2)}
  // zonas de despliegue
  if(S.state==='deploy'||S.state==='setup'){
   for(const side of [0,1]){if(S.state==='deploy'&&side!==S.side)continue;ctx.fillStyle=side?'rgba(255,106,79,0.13)':'rgba(74,163,255,0.15)';for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(dvOf(side,c,r)<ZV)ctx.fillRect(c*T,r*T,T,T)}
@@ -57,7 +57,7 @@ function frame(now){
   for(const side of [0,1]){
    if(S.mode==='ai'&&side===1)continue;
    if(S.mode==='pvp'&&side!==S.side)continue;
-   for(const it of S.armies[side].units){const def=UBY[it.id];list.push({y:(it.r+0.5)*T+5+(def.fly?30:0),f:()=>drawUnitAt(def,side,it.c+0.5,it.r+0.5,{el:def.fly?0:hgtTile(it.c,it.r),t:now/1000,frame:def.fly?Math.floor(now/180)%2:0})})}
+   for(const it of S.armies[side].units){const def=UBY[it.id];for(const [ox,oy] of FORM[def.n])list.push({y:(it.r+0.5+oy)*T+5+(def.fly?30:0),f:()=>drawUnitAt(def,side,it.c+0.5+ox,it.r+0.5+oy,{el:def.fly?0:hgtTile(it.c,it.r),t:now/1000,frame:def.fly?Math.floor(now/180)%2:0})})}
   }
  }
  list.sort((a,b)=>a.y-b.y);for(const d of list)d.f();

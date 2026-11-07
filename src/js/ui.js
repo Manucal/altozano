@@ -52,11 +52,12 @@ function renderPanel(){
   <div class="sec"><h2>Facción</h2><div class="seg" role="group">${FACTIONS.map((f,i)=>`<button data-fac="${i}" aria-pressed="${i===fac}">${esc(f.name)}</button>`).join('')}</div><p class="note">${esc(FACTIONS[fac].blurb)} Puedes mezclar tropas de varias facciones: los rasgos se suman entre todas.</p></div>
   <div class="sec">
    <div class="meter"><span>Capacidad</span><div class="bar"><i style="width:${cost/capFor(S.side)*100}%"></i></div><b>${cost}/${capFor(S.side)}</b></div>
-   <div class="meter"><span>Unidades</span><div class="bar"><i style="width:${n/MAXU*100}%"></i></div><b>${n}/${MAXU}</b></div>
+   <div class="meter"><span>Grupos</span><div class="bar"><i style="width:${n/MAXU*100}%"></i></div><b>${n}/${MAXU}</b></div>
+   <p class="note">${a.units.reduce((s,u)=>s+UBY[u.id].n,0)} soldados en total.</p>
   </div>
   <div class="sec"><h2>Tropas</h2><div class="cards">${fu.map(u=>`<button class="card" data-u="${u.id}" aria-pressed="${S.sel===u.id}">
-   <img alt="" src="${ICON[u.id]}"><span><span class="nm">${esc(u.name)}</span>
-   <span class="st"> · Vida ${u.hp} · Ataque ${u.atk}${u.heal?' · Cura '+u.heal:''} · Alcance ${u.rng} · Armadura ${u.arm}</span>
+   <img alt="" src="${ICON[u.id]}"><span><span class="nm">${esc(u.name)}${u.n>1?' x'+u.n:''}</span>
+   <span class="st"> · ${u.n>1?'Grupo de '+u.n+' · Vida '+Math.round(u.hp/u.n)+' c/u':'Vida '+u.hp} · Ataque ${u.atk}${u.heal?' · Cura '+u.heal:''} · Alcance ${u.rng} · Armadura ${u.arm}</span>
    <span class="trs">${u.tr.map(t=>`<span class="tr">${TRAITS[t].n}</span>`).join('')}</span><span class="ds">${esc(u.desc)}</span></span>
    <span class="cost">${u.cost}<small>cap.</small></span></button>`).join('')}</div></div>
   <div class="sec"><h2>Sinergias</h2>${synHTML(a.units,fac)}</div>
@@ -91,7 +92,7 @@ function showResult(){
  const best=s=>{const b=S.stats[s].byType;const k=Object.keys(b).sort((x,y)=>b[y]-b[x])[0];return k?UBY[k].name:'—'};
  showOverlay(`<h2>${title}</h2>${R_.timeout?'<p class="muted">Se acabó el tiempo: el defensor resistió.</p>':''}
  <div class="res-table"><span class="h"></span><span class="h">${esc(lbl(0))}</span><span class="h">${esc(lbl(1))}</span>
- <span>Supervivientes</span><b>${R_.n[0]}/${S.armies[0].units.length}</b><b>${R_.n[1]}/${S.armies[1].units.length}</b>
+ <span>Soldados vivos</span><b>${R_.n[0]}/${S.count0[0]}</b><b>${R_.n[1]}/${S.count0[1]}</b>
  <span>Daño causado</span><b>${Math.round(S.stats[0].dmg)}</b><b>${Math.round(S.stats[1].dmg)}</b>
  <span>Bajas causadas</span><b>${S.stats[0].kills}</b><b>${S.stats[1].kills}</b>
  <span>Tropa más dañina</span><b>${esc(best(0))}</b><b>${esc(best(1))}</b></div>
@@ -128,7 +129,7 @@ function applyPaint(t){
  if(idx>=0)return;
  if(!S.sel){toast('Primero elige una tropa en el panel.');return}
  const def=UBY[S.sel];
- if(a.units.length>=MAXU){toast('Límite de '+MAXU+' unidades.');return}
+ if(a.units.length>=MAXU){toast('Límite de '+MAXU+' grupos.');return}
  if(armyCost(a)+def.cost>capFor(S.side)){toast('No queda capacidad: '+def.name+' cuesta '+def.cost+'.');return}
  a.units.push({id:def.id,c:t.c,r:t.r});renderPanel();
 }

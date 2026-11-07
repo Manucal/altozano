@@ -4,9 +4,9 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function computeSyn(list){const cnt={};for(const it of list)for(const t of UBY[it.id].tr)cnt[t]=(cnt[t]||0)+1;const o={};for(const k in cnt){const tr=TRAITS[k].tiers;o[k]=cnt[k]>=tr[1]?2:cnt[k]>=tr[0]?1:0}return {tier:o,cnt}}
 const tier=(side,t)=>S.syn[side].tier[t]||0;
 function mkUnit(def,side,x,y){
- const u={def,side,x,y,hp:def.hp,max:def.hp,cd:0.3+Math.random()*0.6,tgt:null,ret:0,moved:0,anim:Math.random()*2,lunge:0,flash:0,alive:true,hold:false,dest:null,face:side?-1:1,moving:false,rad:def.big?0.55:def.mount?0.45:0.36,mass:def.big?3:def.mount?2:1,sh:0,shMax:0,burn:0,raiseT:6,raised:0,risen:false};
- if(def.tr.includes('Draconico')){const t=tier(side,'Draconico');u.max=u.hp=Math.round(def.hp*(t===2?1.35:t===1?1.2:1))}
- if(def.tr.includes('Celestial')){const t=tier(side,'Celestial');u.sh=u.shMax=u.max*(t===2?0.35:t===1?0.2:0)}
+ const u={def,side,x,y,hp:def.hp/def.n,max:def.hp/def.n,cd:0.3+Math.random()*0.6,tgt:null,ret:0,moved:0,anim:Math.random()*2,lunge:0,flash:0,alive:true,hold:false,dest:null,face:side?-1:1,moving:false,rad:def.big?0.34:def.mount?0.24:0.17,mass:def.big?3:def.mount?2:1,sh:0,shMax:0,burn:0,raiseT:4,raised:0,risen:false};
+ if(def.tr.includes('Draconico')){const t=tier(side,'Draconico');u.max=u.hp=def.hp/def.n*(t===2?1.35:t===1?1.2:1)}
+ if(def.tr.includes('Celestial')){const t=tier(side,'Celestial');u.sh=u.shMax=u.max*(t===2?0.4:t===1?0.25:0)}
  return u;
 }
 function startBattle(){
@@ -14,10 +14,10 @@ function startBattle(){
  S.stats=[{dmg:0,kills:0,byType:{}},{dmg:0,kills:0,byType:{}}];
  for(const side of [0,1]){
   const a=S.armies[side];S.syn[side]=computeSyn(a.units);
-  for(const it of a.units)S.units.push(mkUnit(UBY[it.id],side,it.c+0.5,it.r+0.5));
+  for(const it of a.units){const def=UBY[it.id];for(const [ox,oy] of FORM[def.n])S.units.push(mkUnit(def,side,it.c+0.5+ox,it.r+0.5+oy))}
  }
  for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&elev(u)>=1)u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
- S.total=[0,1].map(s=>S.units.filter(u=>u.side===s).reduce((a,u)=>a+u.def.cost,0));
+ S.total=[0,1].map(s=>S.units.filter(u=>u.side===s).reduce((a,u)=>a+u.def.cost/u.def.n,0));S.count0=[0,1].map(s=>S.units.filter(u=>u.side===s).length);
  S.state='battle';S.lastPanel=0;renderPanel();
 }
 const elev=u=>u.def.fly?0:hgtTile(Math.floor(u.x),Math.floor(u.y));
@@ -39,7 +39,7 @@ function speedOf(u){
  if(u.def.tr.includes('Montado')&&tier(u.side,'Montado')>=1)s*=1.2;
  return s;
 }
-function cool(u){let c=u.def.as;if(S.weather.id==='heat'&&u.def.arm>=4)c*=1.25;if(S.weather.id==='snow'&&u.def.tr.includes('Draconico'))c*=1.2;if(u.def.frenzy&&u.hp<u.max*0.5)c*=0.67;if(u.def.fly){const t=tier(u.side,'Volador');c/=t===2?1.5:t===1?1.25:1}return c*(0.92+Math.random()*0.16)}
+function cool(u){let c=u.def.as*u.def.n;if(S.weather.id==='heat'&&u.def.arm>=4)c*=1.25;if(S.weather.id==='snow'&&u.def.tr.includes('Draconico'))c*=1.2;if(u.def.frenzy&&u.hp<u.max*0.5)c*=0.67;if(u.def.fly){const t=tier(u.side,'Volador');c/=t===2?1.5:t===1?1.25:1}return c*(0.92+Math.random()*0.16)}
 function pickTarget(u){
  let best=null,bd=1e9;const ranged=u.def.fly||u.def.hunter;
  for(const e of S.units){if(!e.alive||e.side===u.side)continue;let d=dist(u,e);if(ranged&&e.def.rng>1)d*=0.45;if(d<bd){bd=d;best=e}}
@@ -71,7 +71,7 @@ function goTo(u,gx,gy,dt,stop){
  if(u.def.fly){moveTo(u,gx,gy,dt,stop);return}
  if(Math.hypot(gx-u.x,gy-u.y)<=stop){u.moving=false;return}
  u.pt=(u.pt||0)-dt;
- if(u.pt<=0){u.pt=0.6+Math.random()*0.4;u.path=lineClear(u.x,u.y,gx,gy)?null:findPath(Math.floor(u.x),Math.floor(u.y),Math.floor(gx),Math.floor(gy))}
+ if(u.pt<=0){u.pt=1+Math.random()*0.6;u.path=lineClear(u.x,u.y,gx,gy)?null:findPath(Math.floor(u.x),Math.floor(u.y),Math.floor(gx),Math.floor(gy))}
  if(u.path&&u.path.length){
   while(u.path.length>1&&lineClear(u.x,u.y,u.path[1].x,u.path[1].y))u.path.shift();
   const p=u.path[0];if(Math.hypot(p.x-u.x,p.y-u.y)<0.25){u.path.shift();if(!u.path.length)u.path=null;return}
@@ -98,8 +98,8 @@ function attack(u,tg){
  if(u.def.anti&&tg.def.tr.includes(u.def.anti))base*=2;
  if(u.def.charge&&u.moved>=3&&wid!=='snow'){base*=tier(u.side,'Montado')>=2?2.5:2;burst(tg.x*T,tg.y*T,'#ffe066',8)}
  u.moved=0;
- if(ranged){S.proj.push({x0:u.x*T,y0:(u.y*T)-6-eu*4,t:0,dur:Math.max(0.15,dist(u,tg)/11),kind:u.def.proj,tgt:tg,att:u,base,lx:u.x*T,ly:u.y*T,col:u.def.sp.pal&&u.def.sp.pal.y})}
- else{u.lunge=0.15;deal(u,tg,base,false);if(u.def.splash){const t=tier(u.side,'Gigante'),f=t===2?1:t===1?0.75:0.5;for(const e of S.units)if(e.alive&&e.side!==u.side&&e!==tg&&dist(e,tg)<1.15)deal(u,e,base*f,false);burst(tg.x*T,tg.y*T,'#c9b27a',6)}}
+ if(ranged){S.proj.push({x0:u.x*T,y0:(u.y*T)-6-eu*8,t:0,dur:Math.max(0.15,dist(u,tg)/11),kind:u.def.proj,tgt:tg,att:u,base,lx:u.x*T,ly:u.y*T,col:u.def.sp.pal&&u.def.sp.pal.y})}
+ else{u.lunge=0.15;deal(u,tg,base,false);if(u.def.splash){const t=tier(u.side,'Gigante'),f=t===2?0.7:t===1?0.5:0.35;for(const e of S.units)if(e.alive&&e.side!==u.side&&e!==tg&&dist(e,tg)<1.15)deal(u,e,base*f,false);burst(tg.x*T,tg.y*T,'#c9b27a',6)}}
 }
 function deal(att,tg,base,ranged){
  if(!tg.alive)return;
@@ -108,7 +108,7 @@ function deal(att,tg,base,ranged){
   const fire=att.def.proj==='fire';
   if(!tg.def.fly&&terrAt(tg)===2)d*=fire?1.25:0.6;
   if(tg.def.bones)d*=0.7;
-  if(fire&&wid!=='rain'&&!tg.def.tr.includes('Infernal'))tg.burn=3;
+  if(fire&&wid!=='rain'&&!tg.def.tr.includes('Infernal')){tg.burn=3;tg.burnDps=Math.max(tg.burnDps&&tg.burn>0?tg.burnDps:0,base*0.12)}
   if(tg.def.tr.includes('Escudo')){const t=tier(tg.side,'Escudo');d*=t===2?0.55:t===1?0.75:1}
   if(wid==='rain')d*=0.75;
  }
@@ -141,9 +141,9 @@ function step(dt){
  for(const u of alive){
   if(!u.alive)continue;
   u.flash=Math.max(0,u.flash-dt);u.lunge=Math.max(0,u.lunge-dt);u.cd-=dt;u.ret-=dt;
-  if(u.burn>0){u.burn-=dt;u.hp-=4*dt;if(Math.random()<dt*6)S.parts.push({x:u.x*T+(Math.random()-0.5)*6,y:u.y*T-4,vx:0,vy:-25,life:0.35,col:'#ff9a30'});if(u.hp<=0){kill(u,null);continue}}
-  if(u.def.raise){u.raiseT-=dt;if(u.raiseT<=0){u.raiseT=1;if(u.raised<3){const c=S.corpses.find(c=>!c.used&&!c.def.big&&Math.hypot(c.x-u.x,c.y-u.y)<5);if(c){c.used=true;u.raised++;u.raiseT=6;const z=mkUnit(UBY.esqueleto,u.side,c.x,c.y);z.risen=true;S.units.push(z);burst(c.x*T,c.y*T-4,'#b06aff',12)}}}}
-  if(u.def.tr.includes('Silvano')){const t=tier(u.side,'Silvano');if((t>=1&&terrAt(u)===2)||t>=2)u.hp=Math.min(u.max,u.hp+3*dt)}
+  if(u.burn>0){u.burn-=dt;u.hp-=(u.burnDps||2)*dt;if(Math.random()<dt*6)S.parts.push({x:u.x*T+(Math.random()-0.5)*6,y:u.y*T-4,vx:0,vy:-25,life:0.35,col:'#ff9a30'});if(u.hp<=0){kill(u,null);continue}}
+  if(u.def.raise){u.raiseT-=dt;if(u.raiseT<=0){u.raiseT=1;for(let q=0;q<2&&u.raised<8;q++){const c=S.corpses.find(c=>!c.used&&!c.def.big&&Math.hypot(c.x-u.x,c.y-u.y)<5);if(c){c.used=true;u.raised++;u.raiseT=4;const z=mkUnit(UBY.esqueleto,u.side,c.x,c.y);z.risen=true;S.units.push(z);burst(c.x*T,c.y*T-4,'#b06aff',12)}}}}
+  if(u.def.tr.includes('Silvano')){const t=tier(u.side,'Silvano');if((t>=1&&terrAt(u)===2)||t>=2)u.hp=Math.min(u.max,u.hp+u.max*0.03*dt)}
   if(u.ret<=0||!u.tgt||!u.tgt.alive){u.tgt=pickTarget(u);u.ret=0.4+Math.random()*0.2;if(u.def.rng>1&&!u.def.heal&&!u.hold&&!(u.seekCD>S.time))seekHill(u)}
   if(u.def.heal){
    const ally=pickHeal(u);
@@ -151,7 +151,7 @@ function step(dt){
   }
   const tg=u.tgt;if(!tg){u.moving=false;continue}
   const d=dist(u,tg),rg=effRange(u,tg);
-  const reach=u.def.rng<=1?0.78+(tg.def.big?0.22:0)+(u.def.big?0.22:0):rg;
+  const reach=u.def.rng<=1?0.42+(tg.def.big?0.2:0)+(u.def.big?0.2:0)+(tg.def.mount?0.06:0)+(u.def.mount?0.06:0):rg;
   const blocked=u.def.rng<=1&&!u.def.fly&&!tg.def.fly&&d<=reach&&!lineClear(u.x,u.y,tg.x,tg.y);
   if(d<=reach&&!blocked){u.idle=0;u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;if(u.cd<=0){attack(u,tg);u.cd=cool(u)}}
   else{
@@ -166,13 +166,13 @@ function step(dt){
  for(let i=0;i<al.length;i++){const a=al[i];for(let j=i+1;j<al.length;j++){const b=al[j];if(!!a.def.fly!==!!b.def.fly)continue;const dx=b.x-a.x,dy=b.y-a.y,rr=a.rad+b.rad,d2=dx*dx+dy*dy;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2),p=(rr-d),nx=dx/d,ny=dy/d,tm=a.mass+b.mass;const fa=(a.hold?0.15:1)*b.mass/tm,fb=(b.hold?0.15:1)*a.mass/tm;tryMove(a,a.x-nx*p*fa,a.y-ny*p*fa);tryMove(b,b.x+nx*p*fb,b.y+ny*p*fb)}}}
  for(const u of al){u.x=clamp(u.x,0.3,COLS-0.3);u.y=clamp(u.y,0.3,ROWS-0.3)}
  // proyectiles
- for(const p of S.proj){p.t+=dt;if(p.t>=p.dur){p.done=true;if(p.tgt.alive){if(p.kind==='heal'){p.tgt.hp=Math.min(p.tgt.max,p.tgt.hp+p.base);for(let i=0;i<4;i++)S.parts.push({x:p.tgt.x*T+(Math.random()-0.5)*8,y:p.tgt.y*T-6,vx:0,vy:-20,life:0.5,col:'#7dff8a'})}else{deal(p.att,p.tgt,p.base,true);if(p.att.def.splash){const t=tier(p.att.side,'Gigante'),f=t===2?1:t===1?0.75:0.5;for(const e of S.units)if(e.alive&&e.side!==p.att.side&&e!==p.tgt&&dist(e,p.tgt)<1.2)deal(p.att,e,p.base*f,true);burst(p.tgt.x*T,p.tgt.y*T-4,'#ff9a30',6)}}}}}
+ for(const p of S.proj){p.t+=dt;if(p.t>=p.dur){p.done=true;if(p.tgt.alive){if(p.kind==='heal'){p.tgt.hp=Math.min(p.tgt.max,p.tgt.hp+p.base);for(let i=0;i<4;i++)S.parts.push({x:p.tgt.x*T+(Math.random()-0.5)*8,y:p.tgt.y*T-6,vx:0,vy:-20,life:0.5,col:'#7dff8a'})}else{deal(p.att,p.tgt,p.base,true);if(p.att.def.splash){const t=tier(p.att.side,'Gigante'),f=t===2?0.7:t===1?0.5:0.35;for(const e of S.units)if(e.alive&&e.side!==p.att.side&&e!==p.tgt&&dist(e,p.tgt)<1.2)deal(p.att,e,p.base*f,true);burst(p.tgt.x*T,p.tgt.y*T-4,'#ff9a30',6)}}}}}
  S.proj=S.proj.filter(p=>!p.done);
  for(const c of S.corpses)c.t+=dt;
  const n0=al.filter(u=>u.side===0).length,n1=al.filter(u=>u.side===1).length;
  if(n0===0||n1===0||S.time>=TLIM)endBattle(n0,n1);
 }
-function valueLeft(side){return S.units.filter(u=>u.alive&&u.side===side).reduce((a,u)=>a+u.def.cost*u.hp/u.max,0)}
+function valueLeft(side){return S.units.filter(u=>u.alive&&u.side===side).reduce((a,u)=>a+u.def.cost/u.def.n*u.hp/u.max,0)}
 function endBattle(n0,n1){
  let win;if(n0===0&&n1===0)win=-1;else if(n1===0)win=0;else if(n0===0)win=1;else win=S.def;
  S.result={win,n:[n0,n1],timeout:S.time>=TLIM};S.state='result';renderPanel();showResult();

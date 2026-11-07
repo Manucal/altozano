@@ -95,14 +95,14 @@ function findPath(sc,sr,tc,tr){
  return out.reverse();
 }
 
-const terrCv=document.createElement('canvas');terrCv.width=W;terrCv.height=H;
+const terrCv=document.createElement('canvas');terrCv.width=COLS*TT;terrCv.height=ROWS*TT;
 const hex=c=>[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)];
 function rampDir(c,r){const L=S.hgt[r][c]+1;for(const [i,j] of [[0,-1],[0,1],[-1,0],[1,0]]){const x=c+i,y=r+j;if(x>=0&&y>=0&&x<COLS&&y<ROWS&&S.hgt[y][x]===L)return [i,j]}return [0,-1]}
 const PAL={g0:['#5f9e48','#69aa4f','#578f41'],g1:['#8fc25c','#9bcc66','#84b553'],g2:['#bcc08e','#c8cb9a','#adb281'],f:['#45793a','#3e7033','#376629'],w:['#2f6fa8','#3579b5','#2a6299'],ramp:['#b39466','#a68759','#c2a374'],cliff:['#7a5634','#684828','#4a321c','#8a6a44']};
 function renderTerrain(){
- const x=terrCv.getContext('2d'),img=x.createImageData(W,H),d=img.data,r=rng(S.seed^0x9e37),m=S.map,hg=S.hgt,wid=S.weather.id;
+ const x=terrCv.getContext('2d'),img=x.createImageData(COLS*TT,ROWS*TT),d=img.data,r=rng(S.seed^0x9e37),m=S.map,hg=S.hgt,wid=S.weather.id;
  const tint=wid==='snow'?[[236,242,250],0.3]:wid==='rain'?[[30,45,80],0.2]:wid==='heat'?[[235,190,90],0.14]:wid==='fog'?[[150,160,170],0.12]:null;
- const put=(px,py,rgb,mul=1)=>{let a=rgb[0]*mul,b=rgb[1]*mul,c=rgb[2]*mul;if(tint){const[t,k]=tint;a=a*(1-k)+t[0]*k;b=b*(1-k)+t[1]*k;c=c*(1-k)+t[2]*k}const i=(py*W+px)*4;d[i]=a;d[i+1]=b;d[i+2]=c;d[i+3]=255};
+ const put=(px,py,rgb,mul=1)=>{let a=rgb[0]*mul,b=rgb[1]*mul,c=rgb[2]*mul;if(tint){const[t,k]=tint;a=a*(1-k)+t[0]*k;b=b*(1-k)+t[1]*k;c=c*(1-k)+t[2]*k}const i=(py*COLS*TT+px)*4;d[i]=a;d[i+1]=b;d[i+2]=c;d[i+3]=255};
  const H_=(c,rr)=>c<0||rr<0||c>=COLS||rr>=ROWS?null:hg[rr][c];
  const P={};for(const k in PAL)P[k]=PAL[k].map(hex);
  const SAND=hex('#c9b27a'),DARKG=hex('#3c6e2c'),STONE=hex('#8e8a78'),FL=['#e8d36a','#e88aa0','#f0f0f0'].map(hex);
@@ -114,16 +114,16 @@ function renderTerrain(){
   const southRampUp=hs!==null&&m[ty+1][tx]===4&&hs===h-1&&rampDir(tx,ty+1)[1]===-1;
   const face=southRampUp?0:drop*5;
   const rd=t===4?rampDir(tx,ty):null;
-  for(let py=0;py<T;py++)for(let px=0;px<T;px++){
-   const X=tx*T+px,Y=ty*T+py;let c,mul=1;
+  for(let py=0;py<TT;py++)for(let px=0;px<TT;px++){
+   const X=tx*TT+px,Y=ty*TT+py;let c,mul=1;
    if(t===3){c=pick(P.w);if((py===0&&hn!==null&&m[ty-1][tx]!==3)||(py===15&&hs!==null&&m[ty+1][tx]!==3)||(px===0&&hw!==null&&m[ty][tx-1]!==3)||(px===15&&he!==null&&m[ty][tx+1]!==3))c=SAND}
    else if(t===4){c=pick(P.ramp);const along=rd[1]!==0?py:px;if(along%4===0)mul=0.8;if(along%4===1)mul=1.08;
     const k=rd[1]===-1?1-py/15:rd[1]===1?py/15:rd[0]===-1?1-px/15:px/15;mul*=0.85+0.3*k;const side=rd[1]!==0?px:py;if(side===0||side===15)c=P.cliff[2];else if(side===1||side===14)mul*=0.8}
    else if(t===2){c=pick(P.f);mul=h===2?1.25:h===1?1.12:1;if(r()<0.05)c=DARKG}
    else{c=pick(h===2?P.g2:h===1?P.g1:P.g0);if(h===2&&r()<0.06)c=STONE;if(h===0&&r()<0.04)c=DARKG;if(r()<0.008)c=FL[(r()*3)|0]}
    if(h>0&&t!==4){
-    if(face&&py>=T-face){const k=T-py;c=py===T-face?P.cliff[2]:(k%4===0?P.cliff[2]:r()<0.5?P.cliff[0]:P.cliff[1]);if(drop===2&&py===T-5)c=P.cliff[2];if(py===T-1)c=P.cliff[2];mul=1-0.04*(py-(T-face))}
-    else if(face&&py===T-face-1)c=hex('#d4e090');
+    if(face&&py>=TT-face){const k=TT-py;c=py===TT-face?P.cliff[2]:(k%4===0?P.cliff[2]:r()<0.5?P.cliff[0]:P.cliff[1]);if(drop===2&&py===TT-5)c=P.cliff[2];if(py===TT-1)c=P.cliff[2];mul=1-0.04*(py-(TT-face))}
+    else if(face&&py===TT-face-1)c=hex('#d4e090');
     else{if(hn!==null&&hn<h&&py===0)mul=1.2;if(hw!==null&&hw<h&&px===0)mul=0.62;else if(hw!==null&&hw<h&&px===1)mul=0.85;if(he!==null&&he<h&&px===15)mul=0.62;else if(he!==null&&he<h&&px===14)mul=0.85}
    }
    put(X,Y,c,mul);
@@ -131,13 +131,13 @@ function renderTerrain(){
  }
  x.putImageData(img,0,0);
  // sombra del acantilado sobre la casilla de abajo
- for(let ty=0;ty<ROWS-1;ty++)for(let tx=0;tx<COLS;tx++){const k=hg[ty][tx]-hg[ty+1][tx];if(k>0&&m[ty+1][tx]!==4){x.fillStyle=`rgba(0,0,0,${0.18+0.08*k})`;x.fillRect(tx*T,(ty+1)*T,T,2+2*k)}}
- for(let ty=0;ty<ROWS;ty++)for(let tx=1;tx<COLS;tx++){const k=hg[ty][tx-1]-hg[ty][tx];if(k>0&&m[ty][tx]!==4){x.fillStyle='rgba(0,0,0,0.2)';x.fillRect(tx*T,ty*T,2*k+1,T)}}
+ for(let ty=0;ty<ROWS-1;ty++)for(let tx=0;tx<COLS;tx++){const k=hg[ty][tx]-hg[ty+1][tx];if(k>0&&m[ty+1][tx]!==4){x.fillStyle=`rgba(0,0,0,${0.18+0.08*k})`;x.fillRect(tx*TT,(ty+1)*TT,TT,2+2*k)}}
+ for(let ty=0;ty<ROWS;ty++)for(let tx=1;tx<COLS;tx++){const k=hg[ty][tx-1]-hg[ty][tx];if(k>0&&m[ty][tx]!==4){x.fillStyle='rgba(0,0,0,0.2)';x.fillRect(tx*TT,ty*TT,2*k+1,TT)}}
 }
 function buildTrees(){
  const r=rng(S.seed^0x51ed);S.trees=[];
  for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++)if(S.map[ty][tx]===2){
   const rr=rng(S.seed^(ty*97+tx*13));const jx=(rr()-0.5)*5,jy=(rr()-0.5)*3;
-  S.trees.push({x:tx*T+8+jx,y:ty*T+13+jy,lift:S.hgt[ty][tx]*4,v:(rr()*2)|0});
+  S.trees.push({x:tx*T+16+jx*2,y:ty*T+27+jy*2,lift:S.hgt[ty][tx]*8,v:(rr()*2)|0});
  }
 }
