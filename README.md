@@ -2,7 +2,7 @@
 
 Juego de estrategia de batallas de ejércitos en pixel art. Armas un ejército con capacidad limitada (60 de capacidad, máximo 30 grupos), lo despliegas y la batalla se juega sola. El terreno y el clima deciden la estrategia.
 
-Nombre provisional. Prototipo 0.8.
+Nombre provisional. Prototipo 0.9.
 
 ## Jugar
 
@@ -28,6 +28,7 @@ Nombre provisional. Prototipo 0.8.
 - Terreno: llanura, colina, montaña, rampa, bosque (cobertura contra proyectiles), río (lento, -3 armadura).
 - 7 climas: despejado, lluvia, niebla, ventisca, viento del oeste, viento del este, sol abrasador.
 - Órdenes en batalla: clic en una tropa para seleccionar su grupo (Mayús para sumar, recuadro arrastrando). Clic derecho sobre un enemigo: atacar ese grupo. Clic derecho en el suelo: ir y quedarse. H: mantener posición. G y clic: atacar zona (cursor de mira). Espacio: pausa. En táctil: tocar tropas y luego el destino.
+- Interfaz dentro del campo: el mapa ocupa toda la pantalla y el panel de mando es una ventana flotante que se puede plegar (−) y arrastrar por su barra. En pantallas estrechas pasa a ser una hoja inferior plegable.
 - Modos: contra la IA y 2 jugadores en el mismo dispositivo.
 
 ## Estructura
@@ -47,6 +48,7 @@ src/js/render.js    dibujo del campo, unidades y proyectiles
 src/js/ui.js        paneles, resultado y despliegue con el puntero
 src/js/orders.js    selección de grupos y órdenes durante la batalla
 src/js/camera.js    zoom, desplazamiento y minimapa
+src/js/windows.js   ventana flotante del panel (plegar y arrastrar)
 src/js/main.js      arranque
 tools/build.py      empaqueta todo en dist/altozano.html
 tools/balance.js    simula batallas IA contra IA para revisar el equilibrio

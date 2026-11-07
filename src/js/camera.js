@@ -10,9 +10,9 @@ function centerOn(wx,wy){const c=S.cam;c.x=wx-W/c.z/2;c.y=wy-H/c.z/2;clampCam()}
 function resetCam(){S.cam.z=1;S.cam.x=0;S.cam.y=0;updZoomUI()}
 const scr=e=>{const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}};
 const toWorld=p=>({x:S.cam.x+p.x/S.cam.z,y:S.cam.y+p.y/S.cam.z});
-// minimapa (solo con zoom): esquina superior derecha
+// minimapa (solo con zoom): esquina inferior izquierda
 const MM={w:Math.round(W/6),h:Math.round(H/6),pad:10};
-const mmRect=()=>({x:W-MM.w-MM.pad,y:MM.pad,w:MM.w,h:MM.h});
+const mmRect=()=>({x:MM.pad,y:H-MM.h-MM.pad,w:MM.w,h:MM.h});
 function drawMinimap(){
  if(S.cam.z<=1.02)return;const r=mmRect();
  ctx.fillStyle='#120c14';ctx.fillRect(r.x-3,r.y-3,r.w+6,r.h+6);ctx.drawImage(terrCv,r.x,r.y,r.w,r.h);

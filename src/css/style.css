@@ -94,3 +94,46 @@ select{font:inherit;background:var(--panel-2);color:var(--ink);border:1px solid 
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
 .btn[aria-pressed="true"]{background:var(--bad);color:#1a0a08;border-color:var(--bad)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ===== Interfaz dentro del campo: el mapa ocupa la pantalla y todo flota encima en ventanas ===== */
+html,body{height:100%;overflow:hidden}
+body{padding:0;margin:0}
+.game{position:fixed;inset:0;background:#0c0a10;overflow:hidden}
+.game .canvas-wrap{position:absolute;inset:0;border:0;background:#0c0a10;display:flex;align-items:center;justify-content:center}
+.game canvas#cv{width:min(100vw,calc(100dvh * 1408 / 832));height:auto;max-height:100dvh}
+.float{background:rgba(26,20,33,.9);border:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.45);backdrop-filter:blur(3px)}
+.game .top{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:10px;margin:0;max-width:min(560px,calc(100vw - 400px));display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none;z-index:4}
+.game .top > *{pointer-events:auto}
+.game .brand{background:rgba(26,20,33,.88);border:1px solid var(--line);padding:3px 10px}
+.game .brand h1{font-size:22px}
+.game .fieldtag{font-size:13px;gap:6px}
+.game .chip{background:rgba(26,20,33,.88)}
+.game .hud{width:min(520px,100%);background:rgba(26,20,33,.88);border:1px solid var(--line);padding:6px 10px;min-height:0}
+.game .hud:empty{display:none}
+.win{position:absolute;top:10px;right:max(12px,env(safe-area-inset-right,0px));width:360px;max-height:calc(100dvh - 70px);display:flex;flex-direction:column;z-index:5;background:rgba(26,20,33,.93);border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.5)}
+.win-head{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 10px;border-bottom:1px solid var(--line);cursor:grab;user-select:none;touch-action:none;background:rgba(43,35,54,.95)}
+.win-head:active{cursor:grabbing}
+.win-head h2{flex:1;margin:0;font-family:var(--f-display);font-size:15px;color:var(--gold);letter-spacing:.04em}
+.win-head .grip{color:var(--muted);font-size:12px;letter-spacing:-2px}
+.win-head button{background:transparent;border:1px solid var(--line);width:28px;height:26px;line-height:1;font-size:16px}
+.win .panel{background:transparent;border:0;overflow:auto;min-height:0;flex:1 1 auto}
+.win.min{max-height:none}
+.win.min .panel{display:none}
+.win.min .win-head{border-bottom:0}
+.game .tileinfo{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;max-width:min(560px,calc(100vw - 420px));min-height:0;padding:6px 10px;font-size:13px;z-index:3;background:rgba(26,20,33,.88);border:1px solid var(--line);color:var(--muted)}
+.game .tileinfo:empty{display:none}
+.game .zoombar{z-index:3;right:auto;left:auto;position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:10px}
+.game .overlay{position:absolute;inset:0;z-index:10}
+/* pantallas estrechas: el panel pasa a ser una hoja inferior plegable */
+@media (max-width:760px){
+  .game .canvas-wrap{align-items:flex-start;padding-top:96px}
+  .game .top{max-width:calc(100vw - 24px);right:12px;flex-direction:row;flex-wrap:wrap;align-items:center}
+  .game .fieldtag{display:none}
+  .game .brand h1{font-size:18px}
+  .game .hud{width:100%}
+  .win{left:0;right:0;top:auto;bottom:0;width:auto;max-height:55dvh;border-left:0;border-right:0;border-bottom:0}
+  .win-head{cursor:default}
+  .win-head .grip{display:none}
+  .game .tileinfo{left:12px;right:12px;transform:none;max-width:none;bottom:auto;top:calc(96px + 100vw * 832 / 1408 + 6px)}
+  .game .zoombar{bottom:auto;top:calc(96px + 100vw * 832 / 1408 - 40px)}
+}

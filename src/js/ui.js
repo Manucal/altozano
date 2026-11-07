@@ -27,7 +27,7 @@ function legendHTML(){
 }
 function playerLabel(side){if(S.mode==='ai')return side===0?'Tu ejército':'IA';return side===0?'Jugador 1':'Jugador 2'}
 function renderPanel(){
- const P=$('panel');
+ const P=$('panel');if(typeof syncWin==='function')syncWin();
  if(S.state==='setup'){
   P.innerHTML=`
   <div class="sec"><h2>Modo</h2><div class="seg" role="group">
@@ -122,7 +122,7 @@ function renderHud(){
   h.innerHTML=`<div class="side"><span>${esc(playerLabel(S.side))}: ${S.side===S.def?'defiende':'ataca'} desde el triángulo ${S.side?'rojo':'azul'}</span></div><div></div><div></div>`;
  }else h.innerHTML=`<div class="side"><span>Estudia el campo antes de elegir tropas</span></div><div></div><div></div>`;
 }
-const HINT='Pasa el cursor por el mapa para ver qué hace cada terreno. Rueda del ratón o pellizco para acercar; arrastra para moverte (al colocar tropas, con el botón derecho o con dos dedos).';
+const HINT=matchMedia('(pointer:coarse)').matches?'Toca el mapa para ver qué hace cada terreno. Pellizca para acercar y arrastra con dos dedos para moverte.':'Pasa el cursor por el mapa para ver cada terreno. Rueda para acercar; arrastra con el botón derecho para moverte.';
 let toastT=0;
 function toast(msg){const el=$('tileinfo');el.textContent=msg;el.classList.add('warn');clearTimeout(toastT);toastT=setTimeout(()=>{el.classList.remove('warn');updateTileInfo()},2200)}
 function updateTileInfo(){
