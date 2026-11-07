@@ -1,0 +1,35 @@
+<!doctype html><!--dev-only-->
+<html lang="es"><!--dev-only-->
+<meta charset="utf-8"><!--dev-only-->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><!--dev-only-->
+<title>Altozano</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<header class="top">
+  <div class="brand"><h1>Altozano</h1><span>prototipo 0.1</span></div>
+  <div class="fieldtag" id="fieldtag"></div>
+</header>
+<main class="layout">
+  <section class="stage">
+    <div class="hud" id="hud"></div>
+    <div class="canvas-wrap">
+      <canvas id="cv" width="480" height="288" aria-label="Campo de batalla"></canvas>
+      <div class="overlay" id="overlay" hidden></div>
+    </div>
+    <div class="tileinfo" id="tileinfo">Pasa el cursor por el mapa para ver qué hace cada terreno.</div>
+  </section>
+  <aside class="panel" id="panel"></aside>
+</main>
+<script src="js/core.js"></script>
+<script src="js/data.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/state.js"></script>
+<script src="js/map.js"></script>
+<script src="js/weather.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
