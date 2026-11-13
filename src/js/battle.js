@@ -6,23 +6,32 @@ const tier=(side,t)=>S.syn[side].tier[t]||0;
 function mkUnit(def,side,x,y){
  const u={def,side,x,y,hp:def.hp/def.n,max:def.hp/def.n,cd:0.3+Math.random()*0.6,tgt:null,ret:0,moved:0,anim:Math.random()*2,lunge:0,flash:0,alive:true,hold:false,dest:null,face:side?-1:1,moving:false,rad:def.big?0.34:def.mount?0.24:0.17,mass:def.big?3:def.mount?2:1,sh:0,shMax:0,burn:0,raiseT:4,raised:0,risen:false,aT:1+Math.random(),reveal:0,insp:0,rage:0,blinkCD:0,slowT:0,sunderT:0,poison:0,mor:100,rout:0};
  applyProg(u,side);
- if(def.tr.includes('Draconico')){const t=tier(side,'Draconico');u.max=u.hp=def.hp/def.n*(t===2?1.35:t===1?1.2:1)}
+ if(def.tr.includes('Draconico')){const t=tier(side,'Draconico');u.max=u.hp=def.hp/def.n*(t===2?1.22:t===1?1.12:1)}
  if(def.tr.includes('Celestial')){const t=tier(side,'Celestial');u.sh=u.shMax=u.max*(t===2?0.4:t===1?0.25:0)}
  return u;
 }
 function startBattle(){
  resetField();
- S.units=[];S.proj=[];S.parts=[];S.corpses=[];S.fields=[];S.marks=[];S.selG=new Set();S.gMode=false;S.paused=false;S.gidN=5000;S.time=0;S.result=null;S.claims=new Set();
+ S.units=[];S.proj=[];S.parts=[];S.corpses=[];S.fields=[];S.marks=[];S.hadFlood=false;S.selG=new Set();S.gMode=false;S.paused=false;S.gidN=5000;S.time=0;S.result=null;S.claims=new Set();
  S.stats=[{dmg:0,kills:0,byType:{}},{dmg:0,kills:0,byType:{}}];
  for(const side of [0,1]){
   const a=S.armies[side];S.syn[side]=computeSyn(a.units);
   a.units.forEach((it,gi)=>{const def=UBY[it.id];for(const [ox,oy] of FORM[def.n]){const u=mkUnit(def,side,it.c+0.5+ox,it.r+0.5+oy);u.gid=side*1000+gi;S.units.push(u)}});
  }
- for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&elev(u)>=1)u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
+ for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&(elev(u)>=1||(amph(u)&&terrAt(u)===3)))u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
  S.total=[0,1].map(s=>S.units.filter(u=>u.side===s).reduce((a,u)=>a+u.def.cost/u.def.n,0));S.count0=[0,1].map(s=>S.units.filter(u=>u.side===s).length);
  initGen();S.morT=0;
  S.state='battle';S.lastPanel=0;renderPanel();
 }
+// --- agua: río, charcas e inundación. u.fl=1 dentro de una charca cualquiera, 2 si es enemiga (se calcula al empezar cada paso)
+const amph=u=>u.def.tr.includes('Anfibio');
+const onWater=u=>!u.def.fly&&(terrAt(u)===3||u.fl>0);
+const wet=u=>onWater(u)||(S.weather.id==='rain'&&tier(u.side,'Anfibio')>=2);
+function markFloods(alive){
+ const fl=S.fields.filter(f=>f.flood);if(!fl.length&&!S.hadFlood)return;S.hadFlood=fl.length>0;
+ for(const u of alive){u.fl=0;if(u.def.fly)continue;for(const f of fl)if(Math.hypot(u.x-f.x,u.y-f.y)<f.r){if(f.side!==u.side){u.fl=2;break}u.fl=1}}
+}
+function addFlood(x,y,r,t,att){const wid=S.weather.id;S.fields.push({flood:true,x,y,r,t:t*(wid==='rain'?1.5:wid==='heat'?0.6:1),side:att.side,att})}
 const heatProof=u=>u.def.fly||u.def.tr.includes('Draconico')||u.def.tr.includes('Infernal');
 const elev=u=>u.def.fly?0:hgtTile(Math.floor(u.x),Math.floor(u.y));
 function effRange(u,tg){
@@ -38,11 +47,13 @@ function speedOf(u){
  if(!u.def.fly){
   if(t===4)s*=TER[4].mv;
   else if(t===2&&!u.def.tr.includes('Silvano'))s*=TER[2].mv;
-  else if(t===3)s*=wid==='rain'?0.3:wid==='heat'?0.8:TER[3].mv;
-  else if(t===6&&!heatProof(u))s*=wid==='heat'?0.7:TER[6].mv;
+  else if(t===3)s*=amph(u)?1.15:wid==='rain'?0.3:wid==='heat'?0.8:TER[3].mv;
+  else if(t===6&&!heatProof(u))s*=(wid==='heat'?0.7:TER[6].mv)*(amph(u)?0.85:1);
   else if(t===9)s*=(u.def.mount||u.def.big)?0.7:0.9;
   else if(t===12)s*=1.2;
  }
+ if(u.fl&&t!==3)s*=amph(u)?1.15:u.fl===2?0.65:1;
+ if(amph(u))s*=wid==='rain'?1.15:wid==='heat'?0.9:1;
  if(u.slowT>S.time)s*=0.6;
  if(wid==='snow'&&!u.def.tr.includes('Bestia')&&!u.def.tr.includes('NoMuerto'))s*=0.7;
  if(u.def.tr.includes('Montado')&&tier(u.side,'Montado')>=1)s*=1.2;
@@ -50,7 +61,7 @@ function speedOf(u){
 }
 function cool(u){let c=u.def.as*u.def.n*(u.cdM||1);if(u.rage>S.time)c*=0.65;if(S.weather.id==='heat'&&u.def.arm>=4)c*=1.25;if(u.def.arm>=4&&!heatProof(u)&&terrAt(u)===6)c*=S.weather.id==='heat'?1.3:1.15;if(S.weather.id==='snow'&&u.def.tr.includes('Draconico'))c*=1.2;if(u.def.frenzy&&u.hp<u.max*0.5)c*=0.67;if(u.def.fly){const t=tier(u.side,'Volador');c/=t===2?1.5:t===1?1.25:1}return c*(0.92+Math.random()*0.16)}
 // la Acechadora no se puede apuntar mientras está oculta (salvo a quemarropa)
-function hiddenFrom(e,u){if(!e.def.stealth||S.time<e.reveal)return false;return dist(e,u)>(terrAt(e)===2?1.2:2.2)}
+function hiddenFrom(e,u){if(e.def.lurk)return S.time>=e.reveal&&onWater(e)&&dist(e,u)>1.6;if(!e.def.stealth||S.time<e.reveal)return false;return dist(e,u)>(terrAt(e)===2?1.2:2.2)}
 function pickTarget(u){
  let best=null,bd=1e9;const ranged=u.def.fly||u.def.hunter;
  for(const e of S.units){if(!e.alive||e.side===u.side||hiddenFrom(e,u))continue;let d=dist(u,e);if(ranged&&e.def.rng>1)d*=0.45;if(d<bd){bd=d;best=e}}
@@ -61,13 +72,13 @@ function objFor(u,dT){if(!S.objs)return null;let b=null,bd=Math.min(14,dT);for(c
 function nearestOfGroup(u,gid){let b=null,bd=1e9;for(const e of S.units){if(!e.alive||e.gid!==gid||hiddenFrom(e,u))continue;const d=dist(u,e);if(d<bd){bd=d;b=e}}return b}
 function pickHeal(u){let best=null,br=0.92;for(const a of S.units){if(!a.alive||a.side!==u.side||a===u)continue;const r=a.hp/a.max;if(r<br&&dist(u,a)<8){br=r;best=a}}return best}
 function seekHill(u){
- const cur=elev(u);if(cur>=2||u.def.fly||!u.tgt)return;
+ const cur=elev(u),aw=amph(u)&&terrAt(u)!==3;if((cur>=2&&!aw)||u.def.fly||!u.tgt)return;
  if(u.dest&&S.claims.has(u.dest.k))return;
  const dT=dist(u,u.tgt);let best=null,bd=1e9;
  const c0=Math.floor(u.x),r0=Math.floor(u.y);
  for(let r=r0-7;r<=r0+7;r++)for(let c=c0-7;c<=c0+7;c++){
-  if(r<0||c<0||r>=ROWS||c>=COLS||S.hgt[r][c]<=cur||S.map[r][c]===4)continue;const k=c+','+r;if(S.claims.has(k))continue;
-  const p={x:c+0.5,y:r+0.5};const d=dist(u,p);if(d>7)continue;if(dist(p,u.tgt)>dT-0.5)continue;const sc=d-2*S.hgt[r][c];if(sc<bd){bd=sc;best={x:p.x,y:p.y,k}}
+  if(r<0||c<0||r>=ROWS||c>=COLS||S.map[r][c]===4)continue;const wt=aw&&S.map[r][c]===3&&S.hgt[r][c]===cur;if(S.hgt[r][c]<=cur&&!wt)continue;const k=c+','+r;if(S.claims.has(k))continue;
+  const p={x:c+0.5,y:r+0.5};const d=dist(u,p);if(d>7)continue;if(dist(p,u.tgt)>dT-0.5)continue;const sc=d-2*S.hgt[r][c]-(wt?1.5:0);if(sc<bd){bd=sc;best={x:p.x,y:p.y,k}}
  }
  if(best){u.dest=best;S.claims.add(best.k)}
 }
@@ -104,6 +115,7 @@ function attack(u,tg){
  if(u.def.tr.includes('Silvano')){{const t=tier(u.side,'Silvano');base*=terrAt(u)===2?(t===2?1.45:t===1?1.3:1):t===2?1.1:1}if(wid==='fog')base*=1.2}
  if(wid==='heat'&&(u.def.tr.includes('Draconico')||u.def.tr.includes('Infernal')))base*=1.15;
  if(wid==='rain'&&u.def.tr.includes('Infernal'))base*=0.85;
+ if(amph(u)){if(wid==='heat')base*=0.9;if(!u.def.fly&&terrAt(u)===6)base*=0.9;const t=tier(u.side,'Anfibio');if(t&&wet(u))base*=t===2?1.4:1.25}
  if(!u.def.fly&&terrAt(u)===7&&(u.def.tr.includes('Draconico')||u.def.tr.includes('Infernal')))base*=1.1;
  if(wid==='fog'&&u.def.tr.includes('Celestial'))base*=0.85;
  if(u.def.holy&&(tg.def.tr.includes('NoMuerto')||tg.def.tr.includes('Infernal')))base*=1.5;
@@ -113,7 +125,7 @@ function attack(u,tg){
  if(u.def.anti&&tg.def.tr.includes(u.def.anti))base*=2;
  if(u.insp>S.time)base*=1.15;
  base*=(1+0.1*objOwned(u.side,'estandarte'))*(u.atkM||1);
- if(u.def.stealth)u.reveal=S.time+2.5;
+ if(u.def.stealth||u.def.lurk)u.reveal=S.time+2.5;
  if(u.def.charge&&u.moved>=3&&wid!=='snow'){base*=tier(u.side,'Montado')>=2?2.5:2;burst(tg.x*T,tg.y*T,'#ffe066',8)}
  u.moved=0;
  if(u.def.explode){for(const e of S.units)if(e.alive&&e.side!==u.side&&dist(e,u)<1.4)deal(u,e,base,false);burst(u.x*T,u.y*T-6,'#ffb040',24);burst(u.x*T,u.y*T-6,'#5a4a4a',12);kill(u,null);return}
@@ -138,9 +150,11 @@ function deal(att,tg,base,ranged){
  if(tg.def.dodge&&Math.random()<tg.def.dodge){burst(tg.x*T,tg.y*T-8,'#ffffff',2);return}
  if(att.def.sunder)tg.sunderT=S.time+4;
  if(att.def.slow)tg.slowT=S.time+2;
+ if(att.def.net&&!tg.def.fly&&!(tg.netCD>S.time)){tg.rootT=Math.max(tg.rootT||0,S.time+1.2);tg.netCD=S.time+(tg.def.big?5:3)}
+ if(att.def.pull&&ranged&&att.alive&&!tg.def.big&&!tg.def.fly){const dd=dist(att,tg);if(dd>1.2){const st=Math.min(1.5,dd-0.8),ux=(att.x-tg.x)/dd,uy=(att.y-tg.y)/dd;for(let i=0;i<5;i++)if(!tryMove(tg,tg.x+ux*st/5,tg.y+uy*st/5))break;tg.path=null;tg.moved=0;tg.rootT=Math.max(tg.rootT||0,S.time+0.8)}}
  if(att.def.poison&&!tg.def.tr.includes('NoMuerto')){tg.poison=4;tg.poisonDps=Math.max(tg.poison>0&&tg.poisonDps?tg.poisonDps:0,base*0.15)}
  let arm=tg.def.arm;if(tg.def.tr.includes('Infanteria')){const t=tier(tg.side,'Infanteria');arm+=t===2?3:t===1?2:0}
- if(!tg.def.fly&&terrAt(tg)===3)arm-=3;
+ if(!tg.def.fly&&!amph(tg)&&(terrAt(tg)===3||tg.fl===2))arm-=3;
  if(tg.insp>S.time)arm+=2;
  arm+=(tg.armB||0)+(tg.wallT>S.time?4:0);
  if(tg.sunderT>S.time)arm-=3;
@@ -158,7 +172,7 @@ function kill(tg,att){
  if(!tg.alive)return;
  if(tg.def.tr.includes('NoMuerto')&&!tg.risen){const t=tier(tg.side,'NoMuerto'),ch=t===2?0.55:t===1?0.35:0;if(Math.random()<ch){tg.risen=true;tg.hp=tg.max*0.4;tg.burn=0;burst(tg.x*T,tg.y*T-6,'#b06aff',12);return}}
  tg.alive=false;moraleHit(tg);
- if(att){S.stats[att.side].kills++;if(att.alive&&att.def.tr.includes('Infernal')){const t=tier(att.side,'Infernal');if(t)att.hp=Math.min(att.max,att.hp+att.max*(t===2?0.25:0.15))}}
+ if(att){S.stats[att.side].kills++;if(att.alive&&att.def.tr.includes('Infernal')){const t=tier(att.side,'Infernal');if(t)att.hp=Math.min(att.max,att.hp+att.max*(t===2?0.2:0.12))}}
  S.corpses.push({x:tg.x,y:tg.y,def:tg.def,face:tg.face,el:elev(tg),t:0});burst(tg.x*T,tg.y*T-4,tg.def.tr.includes('NoMuerto')?'#e6e0cc':'#b23a2a',10);if(tg.dest)S.claims.delete(tg.dest.k);
 }
 // --- moral: baja con las bajas cercanas y al verse rodeado; por debajo de 25 el soldado huye 4 s
@@ -186,12 +200,14 @@ function doHeal(u,ally){
 // habilidades de las élites
 function abilities(alive,dt){
  for(const u of alive){
-  const df=u.def;if(!(df.aura||df.warcry||df.drain||df.massheal)||!u.alive)continue;
+  const df=u.def;if(!(df.aura||df.warcry||df.drain||df.massheal||df.tide||df.spring)||!u.alive)continue;
   if(df.aura){for(const a of alive)if(a.side===u.side&&a!==u&&Math.hypot(a.x-u.x,a.y-u.y)<2.5)a.insp=S.time+0.3}
   u.aT-=dt;if(u.aT>0)continue;
   if(df.warcry){if(!u.tgt||dist(u,u.tgt)>8){u.aT=0.5;continue}u.aT=8;for(const a of alive)if(a.side===u.side&&Math.hypot(a.x-u.x,a.y-u.y)<3.5)a.rage=S.time+4;ring(u,3.5,'#ff5a3a')}
   else if(df.drain){u.aT=2;let got=0;for(const e of alive){if(!e.alive||e.side===u.side||Math.hypot(e.x-u.x,e.y-u.y)>=2.5)continue;const dm=Math.min(7,e.hp);e.hp-=7;got+=dm;S.stats[u.side].dmg+=dm;S.stats[u.side].byType[df.id]=(S.stats[u.side].byType[df.id]||0)+dm;S.parts.push({x:e.x*T,y:e.y*T-8,vx:(u.x-e.x)*T*1.6,vy:(u.y-e.y)*T*1.6-20,life:0.6,col:'#7dffcf'});if(e.hp<=0)kill(e,u)}if(got)u.hp=Math.min(u.max,u.hp+got*0.7)}
   else if(df.massheal){u.aT=5;let any=false;for(const a of alive)if(a.alive&&a.side===u.side&&Math.hypot(a.x-u.x,a.y-u.y)<3&&a.hp<a.max){a.hp=Math.min(a.max,a.hp+22);any=true;S.parts.push({x:a.x*T,y:a.y*T-6,vx:0,vy:-22,life:0.6,col:'#fff0a0'})}if(any)ring(u,3,'#fff0a0');else u.aT=0.5}
+  else if(df.spring){u.aT=4;addFlood(u.x,u.y,1.9,4.6,u)}
+  else if(df.tide){const tg=u.tgt;if(!tg||!tg.alive||dist(u,tg)>9){u.aT=0.5;continue}u.aT=8;addFlood(tg.x,tg.y,2.6,6,u);ring(tg,2.6,'#6ad0ff')}
   else u.aT=99;
  }
 }
@@ -206,6 +222,7 @@ function step(dt){
  S.time+=dt;
  const alive=S.units.filter(u=>u.alive);
  for(let i=alive.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=alive[i];alive[i]=alive[j];alive[j]=t}
+ markFloods(alive);
  abilities(alive,dt);
  for(const u of alive){
   if(!u.alive)continue;
@@ -215,6 +232,7 @@ function step(dt){
   if(u.poison>0){u.poison-=dt;u.hp-=(u.poisonDps||2)*dt;if(Math.random()<dt*5)S.parts.push({x:u.x*T+(Math.random()-0.5)*6,y:u.y*T-4,vx:0,vy:-18,life:0.35,col:'#8fd05a'});if(u.hp<=0){kill(u,null);continue}}
   if(u.def.regen)u.hp=Math.min(u.max,u.hp+u.max*u.def.regen*dt);
   if(u.def.raise){u.raiseT-=dt;if(u.raiseT<=0){u.raiseT=1;for(let q=0;q<2&&u.raised<8;q++){const c=S.corpses.find(c=>!c.used&&!c.def.big&&Math.hypot(c.x-u.x,c.y-u.y)<5);if(c){c.used=true;u.raised++;u.raiseT=4;const z=mkUnit(UBY.esqueleto,u.side,c.x,c.y);z.risen=true;z.gid=S.gidN++;S.units.push(z);burst(c.x*T,c.y*T-4,'#b06aff',12)}}}}
+  if(amph(u)&&tier(u.side,'Anfibio')>=1&&wet(u))u.hp=Math.min(u.max,u.hp+u.max*0.04*dt);
   if(u.def.tr.includes('Silvano')){const t=tier(u.side,'Silvano');if((t>=1&&terrAt(u)===2)||t>=2)u.hp=Math.min(u.max,u.hp+u.max*0.03*dt)}
   if(u.ret<=0||!u.tgt||!u.tgt.alive||hiddenFrom(u.tgt,u)){u.tgt=pickTarget(u);u.ret=0.4+Math.random()*0.2;if(u.def.rng>1&&!u.def.heal&&!u.hold&&!u.order&&!(u.seekCD>S.time))seekHill(u)}
   if(u.rout>S.time){const cx=u.side?COLS-1.5:1.5,cy=u.side?ROWS-1.5:1.5;goTo(u,cx,cy,dt,0.5);continue}
@@ -240,7 +258,7 @@ function step(dt){
    if(u.guard){if(d<rg+5||S.time>60||u.hp<u.max||(S.objs&&S.objs.some(ob=>ob.owner!==u.side||Math.abs(ob.prog)<0.95)))u.guard=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
    if(u.hold){u.idle=(u.idle||0)+dt;if(u.side!==S.def&&((S.time>20&&d>rg+6)||u.idle>6)){u.hold=false;u.seekCD=S.time+25}else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
    if(u.def.blink&&d>3&&!(u.blinkCD>S.time)&&!tg.def.fly&&blink(u,tg))continue;
-   if(u.dest){goTo(u,u.dest.x,u.dest.y,dt,0.05);if(dist(u,u.dest)<0.2){S.claims.delete(u.dest.k);u.dest=null;if(elev(u))u.hold=true}}
+   if(u.dest){goTo(u,u.dest.x,u.dest.y,dt,0.05);if(dist(u,u.dest)<0.2){S.claims.delete(u.dest.k);u.dest=null;if(elev(u)||(amph(u)&&terrAt(u)===3))u.hold=true}}
    else{const ob=!o&&d>6?objFor(u,d):null;if(ob){const k=(u.gid*37)%9;goTo(u,ob.x+((k%3)-1)*0.6,ob.y+(Math.floor(k/3)-1)*0.6,dt,0.2)}else goTo(u,tg.x,tg.y,dt,blocked?0:reach*0.9)}
   }
  }
@@ -249,10 +267,10 @@ function step(dt){
  for(let i=0;i<al.length;i++){const a=al[i];for(let j=i+1;j<al.length;j++){const b=al[j];if(!!a.def.fly!==!!b.def.fly)continue;const dx=b.x-a.x,dy=b.y-a.y,rr=a.rad+b.rad,d2=dx*dx+dy*dy;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2),p=(rr-d),nx=dx/d,ny=dy/d,tm=a.mass+b.mass;const fa=(a.hold?0.15:1)*b.mass/tm,fb=(b.hold?0.15:1)*a.mass/tm;tryMove(a,a.x-nx*p*fa,a.y-ny*p*fa);tryMove(b,b.x+nx*p*fb,b.y+ny*p*fb)}}}
  for(const u of al){u.x=clamp(u.x,0.3,COLS-0.3);u.y=clamp(u.y,0.3,ROWS-0.3)}
  // proyectiles
- for(const p of S.proj){p.t+=dt;if(p.t>=p.dur){p.done=true;if(p.tgt.alive){if(p.kind==='heal'){p.tgt.hp=Math.min(p.tgt.max,p.tgt.hp+p.base);for(let i=0;i<4;i++)S.parts.push({x:p.tgt.x*T+(Math.random()-0.5)*8,y:p.tgt.y*T-6,vx:0,vy:-20,life:0.5,col:'#7dff8a'})}else{deal(p.att,p.tgt,p.base,true);if(p.att.def.lava)S.fields.push({x:p.tgt.x,y:p.tgt.y,r:1.3,t:S.weather.id==='rain'?2:4,dps:8,side:p.att.side,att:p.att});if(p.att.def.splash){const t=tier(p.att.side,'Gigante'),f=t===2?0.7:t===1?0.5:0.35;for(const e of S.units)if(e.alive&&e.side!==p.att.side&&e!==p.tgt&&dist(e,p.tgt)<1.2)deal(p.att,e,p.base*f,true);burst(p.tgt.x*T,p.tgt.y*T-4,'#ff9a30',6)}}}}}
+ for(const p of S.proj){p.t+=dt;if(p.t>=p.dur){p.done=true;if(p.tgt.alive){if(p.kind==='heal'){p.tgt.hp=Math.min(p.tgt.max,p.tgt.hp+p.base);for(let i=0;i<4;i++)S.parts.push({x:p.tgt.x*T+(Math.random()-0.5)*8,y:p.tgt.y*T-6,vx:0,vy:-20,life:0.5,col:'#7dff8a'})}else{deal(p.att,p.tgt,p.base,true);if(p.att.def.flood&&!p.tgt.def.fly)addFlood(p.tgt.x,p.tgt.y,1.4,5,p.att);if(p.att.def.lava)S.fields.push({x:p.tgt.x,y:p.tgt.y,r:1.3,t:S.weather.id==='rain'?2:4,dps:8,side:p.att.side,att:p.att});if(p.att.def.splash){const t=tier(p.att.side,'Gigante'),f=t===2?0.7:t===1?0.5:0.35;for(const e of S.units)if(e.alive&&e.side!==p.att.side&&e!==p.tgt&&dist(e,p.tgt)<1.2)deal(p.att,e,p.base*f,true);burst(p.tgt.x*T,p.tgt.y*T-4,'#ff9a30',6)}}}}}
  S.proj=S.proj.filter(p=>!p.done);
  // charcos de magma
- for(const f of S.fields){f.t-=dt;for(const e of S.units){if(!e.alive||e.side===f.side||e.def.fly)continue;if(Math.hypot(e.x-f.x,e.y-f.y)<f.r){const dm=f.dps*dt;e.hp-=dm;S.stats[f.side].dmg+=dm;S.stats[f.side].byType[f.att.def.id]=(S.stats[f.side].byType[f.att.def.id]||0)+dm;if(e.hp<=0)kill(e,f.att)}}}
+ for(const f of S.fields){f.t-=dt;if(f.flood)continue;for(const e of S.units){if(!e.alive||e.side===f.side||e.def.fly)continue;if(Math.hypot(e.x-f.x,e.y-f.y)<f.r){const dm=f.dps*dt;e.hp-=dm;S.stats[f.side].dmg+=dm;S.stats[f.side].byType[f.att.def.id]=(S.stats[f.side].byType[f.att.def.id]||0)+dm;if(e.hp<=0)kill(e,f.att)}}}
  S.fields=S.fields.filter(f=>f.t>0);
  for(const c of S.corpses)c.t+=dt;
  const n0=al.filter(u=>u.side===0).length,n1=al.filter(u=>u.side===1).length;

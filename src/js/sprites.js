@@ -17,6 +17,10 @@ const HEADS={
  demon:['....t....t','.....tssst','.....sssses','.....sssss','......sss'],
  goblin:['......hhhh','...ssssssss','....ssssess','.....sssst','......sss'],
  lich:['.....y.y.y','.....yyyyyy','.....sesses','.....sssss','......s.s'],
+ fish:['.....hh.h','.....hsssss','.....hssses','.....ssssst','......sss'],
+ frog:['.....ss..ss','.....es..es','....sssssssss','....sttttttts','......sss'],
+ shell:['......aaaa','.....aamaaa','.....aasses','.....assss','......sss'],
+ tide:['.....y.b.y','.....yyyyyy','.....hhsses','.....hssss','......sss'],
  angel:['.....yyyy','......hhhh','.....hhsses','.....hssss','......sss'],
 };
 const TORSO={
@@ -48,10 +52,16 @@ const WEAP={
  dagger:[[12,7,'m'],[12,8,'m'],[12,9,'b'],[3,8,'m'],[3,9,'m'],[3,10,'b']],
  sling:[...vline(12,6,9,'w'),[13,5,'t'],[14,5,'t'],[14,6,'d']],
  gun:[[8,9,'w'],[9,9,'w'],[10,9,'w'],[11,9,'w'],[12,9,'m'],[13,9,'m'],[14,9,'m'],[15,9,'m'],[9,10,'w'],[8,10,'w']],
+ trident:[...vline(12,3,13,'w'),[11,0,'m'],[12,0,'m'],[13,0,'m'],[11,1,'m'],[12,1,'m'],[13,1,'m'],[11,2,'m'],[12,2,'m'],[13,2,'m'],[10,0,'m'],[14,0,'m'],[12,1,'w']],
+ net:[[2,7,'t'],[4,7,'t'],[3,8,'t'],[5,8,'t'],[2,9,'t'],[4,9,'t'],[3,10,'t'],[5,10,'t'],[2,11,'t'],[4,11,'t'],[1,8,'t'],[1,10,'t'],[12,6,'m'],[12,7,'m'],[12,8,'m'],[12,9,'b']],
+ blowpipe:[[10,5,'w'],[11,5,'w'],[12,5,'w'],[13,5,'w'],[14,5,'w'],[15,5,'b']],
+ harpoon:[...vline(13,2,12,'w'),[13,0,'m'],[13,1,'m'],[12,1,'m'],[14,2,'m'],[12,2,'m'],[14,10,'t'],[14,11,'t'],[13,13,'t']],
+ conch:[...vline(12,4,14,'w'),[11,1,'b'],[12,1,'t'],[13,1,'b'],[11,2,'t'],[12,2,'y'],[13,2,'t'],[11,3,'b'],[12,3,'t'],[13,3,'b'],[12,0,'t']],
  haxe:[...vline(12,6,11,'w'),[13,5,'m'],[13,6,'m'],[14,6,'m'],[13,7,'m'],[3,10,'w'],[3,11,'w'],[2,10,'m'],[2,9,'m']],
 };
 const MBODY=['..............kk..','...k.........kkkK.','..kkccccccccckkk..','.k.kccccccccckk...','...kkkkkkkkkkk....'];
 const WBODY=['..............k.k.','.............kkkkK','..kkkkkkkkkkkkkk..','kk.kkkkkkkkkkkk...','...kkkkkkkkkkk....'];
+const TBODY=['.............kkk..','...........kkkekk.','..kkkkkkkkkkkkkkkt','.kkkkKkkkKkkkkkk..','.kkkkkkkkkkkkk....'];
 const MLEGS=[['...k.k.....k.k....','...k.k.....k.k....','...K.K.....K.K....'],['..k...k...k...k...','.k.....k.k.....k..','.K.....K.K.....K..']];
 const BRUTE_TOP=['.......hhhhhh.......','......ssssssss......','......sssssesst.....','......ssssssstt.....','.......ssssss.......','....aaaaaaaaaaaa....','...ssaaaabbaaaass...','..sssaaabbbbaaasss..','..sss.aaabbaaa.sss..','..ss..aaaaaaaa..ss..','..ss..dddddddd..ss..','......aaaaaaaa......'];
 const BRUTE_LEGS=[['.......ddd..ddd.....','.......ddd..ddd.....','......eeee..eeee....'],['......ddd....ddd....','......ddd....ddd....','.....eeee....eeee...']];
@@ -68,6 +78,11 @@ const BIGLEGS=[['...kk.kk.....kk.kk....','...kk.kk.....kk.kk....','...KK.KK.....
 const DBODY=['...............kk.','.............kkkek','k.kkkbbbbbbbbkkk..','.kkkkcccccccckk...','...kkkkkkkkkkk....'];
 const IMP=[['..t....t..','..ssssss..','..sssses..','...ssss...','aa.sbbs.aa','aaasbbsaaa','.aassssaa.','...s..s...','..ss..ss..'],['..t....t..','..ssssss..','..sssses..','...ssss...','...sbbs...','aaasbbsaaa','aa.ssss.aa','a..s..s..a','..ss..ss..']];
 const DRAGON=[['........aa..............','.......aaaa.............','......aaaaaa............','.....aaabaaaa......kk...','....aaabbbaaa....kkkkk..','..k.aabbbbaa....kkekkkt.','.kk.kkkkkkkkkkkkkkkK....','kk..kkkbbbbbbbkkkk......','k....kkbbbbbbkkk........','.....kk.....kk..........','.....K......K...........'],['........................','........................','........................','..................kk....','.................kkkkk..','..k.............kkekkkt.','.kk.kkkkkkkkkkkkkkkK....','kk..kkkaaaabbbkkkk......','k....kaaaaaabkkk........','.....aaaaaaa.k..........','....aaaaaa..K...........']];
+const CRAB=[['.aa..............aa.','aaaa............aaaa','aa.a...e....e...a.aa','.a.....a....a.....a.','.aa..aaaaaaaaaa..aa.','..aaaaabbaabbaaaaa..','...aaaaaaaaaaaaaa...','..d.aaaaaaaaaaaa.d..','.d.d.dddddddddd.d.d.','d..d...d....d...d..d'],['.aa..............aa.','aa.a............a.aa','aaaa...e....e...aaaa','.a.....a....a.....a.','.aa..aaaaaaaaaa..aa.','..aaaaabbaabbaaaaa..','...aaaaaaaaaaaaaa...','.d..aaaaaaaaaaaa..d.','d..d.dddddddddd.d..d','..d...d......d...d..']];
+const TURTLE_TOP=['.......aaaaaaaa.......','.....aaabaaaabaaa.....','....aabaaabaaaabaa....','...aaaabaaaabaaaaa.ss.','..aabaaaabaaaabaaasses','..aaaabaaaabaaaaaassss','.ddddddddddddddddd.ss.','s.dddddddddddddddd....'];
+const TURTLE_LEGS=[['...ss..ss....ss..ss...','...ss..ss....ss..ss...','...ee..ee....ee..ee...'],['..ss....ss..ss....ss..','..ss....ss..ss....ss..','..ee....ee..ee....ee..']];
+const SERPENT=[['..................kk..','.................kkek.','....kkk.....kkk..kkkkt','...kkbkk...kkbkk.kkk..','..kk..kkk.kkk.kkkkk...','.kk....kkkkk...kkk....','kk......kkk...........','K.....................'],['..................kk..','.................kkek.','.......kkk.......kkkkt','..kk..kkbkk..kkkkkkk..','.kkkkkkk.kkkkkbkk.....','kk.kkk....kkkk........','K.....................','......................']];
+const JELLY=[['..aaaaaa..','.aabaabaa.','.aaaaaaaa.','.aeaaaaea.','..aaaaaa..','..b.b.b.b.','.b..b.b..b','.b.b...b.b','..........'],['..........','..aaaaaa..','.aabaabaa.','.aeaaaaea.','.aaaaaaaa.','..aaaaaa..','..b.b.b.b.','..b.b.b.b.','.b..b.b..b']];
 const TREE=['.....gggg.....','...gggLLggg...','..ggLLLgggGg..','.ggLLgggggGGg.','.gggggggggGGg.','ggggggggGgGGGg','gGgggggGGGGGGg','.gGGgGGGGGGGg.','..gGGGGGGGGg..','....GGwGG.....','......ww......','......ww......','.....wwww.....'];
 
 const PALM=['..gg.....gg...','.gLLg..gLLgg..','gLg.ggLggg.Lg.','g...gLLLg...g.','...gg.k.gg....','..g...k...g...','......k.......','.......k......','.......k......','.......K......','......kK......','......kK......','.....KKKK.....'];
@@ -75,7 +90,7 @@ const BURNT=['..............','...k.....k....','....k...k..k..','..k.k..k..k...'
 function buildGrids(sp){const g0=buildGrids0(sp);if(sp.ops)for(const g of g0)ops(g,sp.ops);return g0}
 function buildGrids0(sp){
  if(sp.k==='foot')return [0,1].map(f=>{const g=blank(16,16);if(sp.wings)ops(g,wing(WING16,sp.wings,f));stamp(g,LEGS[sp.legs][f],0,12);stamp(g,TORSO[sp.torso],0,7);stamp(g,HEADS[sp.head],0,2);for(const w of sp.weap)ops(g,WEAP[w]);return g});
- if(sp.k==='mount')return [0,1].map(f=>{const g=blank(18,16);const body=sp.mount==='wolf'?WBODY:sp.mount==='drake'?DBODY:MBODY;if(sp.wings)ops(g,wing(WING16,sp.wings,f),4,0);stamp(g,[...body,...MLEGS[f]],0,8);stamp(g,TORSO[sp.torso].slice(0,4),1,5);stamp(g,HEADS[sp.head],1,0);for(const w of sp.weap)ops(g,WEAP[w],1,-2);return g});
+ if(sp.k==='mount')return [0,1].map(f=>{const g=blank(18,16);const body=sp.mount==='wolf'?WBODY:sp.mount==='drake'?DBODY:sp.mount==='toad'?TBODY:MBODY;if(sp.wings)ops(g,wing(WING16,sp.wings,f),4,0);stamp(g,[...body,...MLEGS[f]],0,8);stamp(g,TORSO[sp.torso].slice(0,4),1,5);stamp(g,HEADS[sp.head],1,0);for(const w of sp.weap)ops(g,WEAP[w],1,-2);return g});
  if(sp.k==='brute')return [0,1].map(f=>{const g=blank(20,16);if(sp.wings)ops(g,wing(WING20,sp.wings,f));stamp(g,[...BRUTE_TOP,...BRUTE_LEGS[f]],0,1);ops(g,CLUB,0,1);
   if(sp.horns)ops(g,[[6,1,'t'],[5,0,'t'],[13,1,'t'],[14,0,'t']]);if(sp.halo)ops(g,[[8,0,'y'],[9,0,'y'],[10,0,'y'],[11,0,'y']]);if(sp.spikes)ops(g,[[3,5,'m'],[4,5,'m'],[15,5,'m'],[16,5,'m'],[3,4,'t'],[16,4,'t']]);return g});
  if(sp.k==='beast')return [0,1].map(f=>{const g=blank(18,9);stamp(g,[...WBODY,...MLEGS[f]],0,1);ops(g,[[16,2,'y']]);return g});
@@ -84,6 +99,10 @@ function buildGrids0(sp){
  if(sp.k==='imp')return [0,1].map(f=>{const g=blank(10,9);stamp(g,IMP[f],0,0);return g});
  if(sp.k==='dragon')return [0,1].map(f=>{const g=blank(24,11);stamp(g,DRAGON[f],0,0);return g});
  if(sp.k==='treant')return [0,1].map(f=>{const g=blank(20,16);stamp(g,[...TREANT_TOP,...TREANT_LEGS[f]],0,0);return g});
+ if(sp.k==='crab')return [0,1].map(f=>{const g=blank(20,10);stamp(g,CRAB[f],0,0);return g});
+ if(sp.k==='turtle')return [0,1].map(f=>{const g=blank(22,11);stamp(g,[...TURTLE_TOP,...TURTLE_LEGS[f]],0,0);return g});
+ if(sp.k==='serpent')return [0,1].map(f=>{const g=blank(22,8);stamp(g,SERPENT[f],0,0);return g});
+ if(sp.k==='jelly')return [0,1].map(f=>{const g=blank(10,9);stamp(g,JELLY[f],0,0);return g});
  if(sp.k==='bird')return [0,1].map(f=>{const g=blank(12,7);stamp(g,BIRD[f],0,0);return g});
 }
 function raster(g,pal,white){

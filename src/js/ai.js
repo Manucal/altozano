@@ -23,11 +23,13 @@ function autoArmy(side,fi){
  const depth=t=>(ZV-dvOf(side,t.c,t.r))*10;
  const fl=t=>Math.abs(uOf(t.c,t.r))*9;
  const sil=u=>u.tr.includes('Silvano');
+ // los Anfibios buscan el agua: dentro del río o pegados a él
+ const anf=u=>u.tr.includes('Anfibio'),wat=t=>m[t.r][t.c]===3?2.5:[[1,0],[-1,0],[0,1],[0,-1]].some(([i,j])=>m[t.r+j]&&m[t.r+j][t.c+i]===3)?1:0;
  const key={
-  ranged:(t,u)=>S.hgt[t.r][t.c]>=1&&m[t.r][t.c]!==4?(2-S.hgt[t.r][t.c])*1.5+depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
-  big:t=>depth(t)+fl(t)*0.1+r()*0.5,
-  melee:t=>depth(t)+fl(t)*0.06+r()*0.8,
-  mount:t=>depth(t)*0.6-fl(t)*0.3+r()*0.6,
+  ranged:(t,u)=>S.hgt[t.r][t.c]>=1&&m[t.r][t.c]!==4?(2-S.hgt[t.r][t.c])*1.5+depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)||(anf(u)&&m[t.r][t.c]===3)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
+  big:(t,u)=>depth(t)+fl(t)*0.1+r()*0.5-(anf(u)?wat(t):0),
+  melee:(t,u)=>depth(t)+fl(t)*0.06+r()*0.8-(anf(u)?wat(t):0),
+  mount:(t,u)=>depth(t)*0.6-fl(t)*0.3+r()*0.6-(anf(u)?wat(t)*0.6:0),
   heal:t=>Math.abs(depth(t)-3.5)+fl(t)*0.1+r()*0.5,
   fly:t=>Math.abs(depth(t)-4)+r(),
  };
@@ -41,7 +43,10 @@ function autoArmy(side,fi){
 }
 
 function aiArmy(){
- const f=(Math.random()*FACTIONS.length)|0;if(Math.random()>0.35)return autoArmy(1,f);
+ // la IA elige más a los Hijos de la Marea con lluvia o mucho río, y menos con calor o en el desierto
+ const wid=S.weather.id,rivers=S.map.reduce((a,row)=>a+row.filter(v=>v===3).length,0),wF=FACTIONS.map((_,i)=>i!==7?1:wid==='rain'?2.2:wid==='heat'||S.biome==='desierto'?0.4:rivers>60?1.5:rivers<12?0.6:1);
+ let x=Math.random()*wF.reduce((a,b)=>a+b,0),f=0;while(f<wF.length-1&&(x-=wF[f])>0)f++;
+ if(Math.random()>0.35)return autoArmy(1,f);
  const g=(f+1+((Math.random()*(FACTIONS.length-1))|0))%FACTIONS.length;
  const A=autoArmy(1,f),B=autoArmy(1,g);const occ=new Set(),units=[];let cost=0;
  const all=sortBy([...A.units,...B.units],()=>Math.random());
