@@ -171,7 +171,7 @@ body{padding:0;margin:0}
     <div class="zoombar" role="group" aria-label="Zoom"><button id="z-in" aria-label="Acercar">+</button><span id="z-lvl">x1</span><button id="z-out" aria-label="Alejar">−</button><button id="z-fit">Vista general</button></div>
   </div>
   <header class="top">
-    <div class="brand"><h1>Altozano</h1><span>prototipo 1.0</span></div>
+    <div class="brand"><h1>Altozano</h1><span>prototipo 1.1</span></div>
     <div class="fieldtag" id="fieldtag"></div>
     <div class="hud" id="hud"></div>
   </header>
@@ -212,6 +212,7 @@ const FACTIONS=[
  {name:'Muertos vivientes',blurb:'Esqueletos baratos que vuelven a levantarse. El nigromante recluta a los caídos.',pal:{s:'#e6e0cc',a:'#5a5a66',b:'#7a4aa0',d:'#2a2632',m:'#b8bcc0',h:'#2a2632',c:'#3a2a4a'}},
  {name:'Demonios',blurb:'Fuego y frenesí. Se curan al matar. La lluvia los apaga.',pal:{s:'#c0382a',a:'#3a1a1e',b:'#ff9a30',d:'#1e0a0e',m:'#d0c0b0',h:'#1e0a0e',c:'#5a1a2a'}},
  {name:'Ángeles',blurb:'Caros y protegidos por un escudo divino. Su luz castiga a muertos y demonios.',pal:{s:'#f1d8bc',a:'#e8e4f4',b:'#e0b84a',d:'#8a8aa8',m:'#ffffff',h:'#f0dc8a',c:'#d8d4f0'}},
+ {name:'Hijos de la Marea',blurb:'Anfibios de río y pantano. El agua no los frena: en ella pegan más y se curan, y la traen consigo. El calor y la arena los secan.',pal:{s:'#5fc0a0',a:'#2f6f8a',b:'#ff8a6a',d:'#173a4c',m:'#cfeee6',h:'#1f8a7a',c:'#1f5f7a'}},
 ];
 const TRAITS={
  Infanteria:{n:'Infantería',tiers:[4,8],fx:['+2 armadura','+3 armadura']},
@@ -223,21 +224,22 @@ const TRAITS={
  Silvano:{n:'Silvano',tiers:[3,6],fx:['En bosque: +30% daño y regeneran','En bosque +45% (fuera +10%); regeneran siempre']},
  Gigante:{n:'Gigante',tiers:[2,3],fx:['Golpe en área al 50%','Golpe en área al 70%']},
  Volador:{n:'Volador',tiers:[3,6],fx:['+25% vel. de ataque','+50% vel. de ataque']},
- Draconico:{n:'Dracónico',tiers:[3,6],fx:['+20% de vida','+35% de vida']},
+ Draconico:{n:'Dracónico',tiers:[3,6],fx:['+12% de vida','+22% de vida']},
  NoMuerto:{n:'No muerto',tiers:[3,6],fx:['35% de levantarse al morir','55% de levantarse al morir']},
- Infernal:{n:'Infernal',tiers:[3,6],fx:['Al matar recuperan 15% de vida','Al matar recuperan 25% de vida']},
+ Infernal:{n:'Infernal',tiers:[3,6],fx:['Al matar recuperan 12% de vida','Al matar recuperan 20% de vida']},
+ Anfibio:{n:'Anfibio',tiers:[3,6],fx:['En el agua: +25% de daño y regeneran','En el agua +40%, y la lluvia cuenta como agua']},
  Celestial:{n:'Celestial',tiers:[3,6],fx:['Escudo divino del 25% de vida','Escudo divino del 40% de vida']},
 };
 const UNITS=[
- {id:'lancero',f:0,name:'Lancero',cost:2,hp:120,atk:12,rng:1,as:1.1,spd:1.1,arm:3,tr:['Infanteria','Escudo'],anti:'Montado',desc:'Doble daño contra montados.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['spear','shield']}},
- {id:'arquero',f:0,name:'Arquero',cost:2,hp:55,atk:9,rng:6,as:1.2,spd:1.2,arm:0,tr:['Tirador'],proj:'arrow',desc:'Tirador básico. En colina es otro.',sp:{k:'foot',head:'hood',torso:'leather',legs:'pants',weap:['bow']}},
- {id:'ballestero',f:0,name:'Ballestero',cost:3,hp:75,atk:20,rng:7,as:2.4,spd:1.0,arm:1,tr:['Tirador','Infanteria'],pierce:true,proj:'bolt',desc:'Perforante: ignora la armadura. Recarga lenta.',sp:{k:'foot',head:'helm',torso:'leather',legs:'pants',weap:['crossbow']}},
- {id:'caballero',f:0,name:'Caballero',cost:5,hp:210,atk:20,rng:1,as:1.2,spd:2.2,arm:5,tr:['Montado','Escudo'],charge:true,mount:true,desc:'Carga: tras galopar 3 casillas, el golpe hace doble daño.',sp:{k:'mount',mount:'horse',head:'helm',torso:'armor',weap:['spear'],pal:{k:'#e8e0d0',K:'#9a8f80'}}},
- {id:'clerigo',f:0,name:'Clérigo',cost:4,hp:70,atk:5,rng:4,as:1.6,spd:1.0,arm:1,tr:['Mistico','Infanteria'],heal:14,proj:'orb',desc:'Cura al aliado más herido.',sp:{k:'foot',head:'hood',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#e9e2cf',y:'#ffe066'}}},
- {id:'saqueador',f:1,name:'Saqueador',cost:1,hp:70,atk:9,rng:1,as:0.9,spd:1.5,arm:0,tr:['Bestia','Infanteria'],desc:'Barato y rápido: llena las 50 plazas.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['axe']}},
- {id:'hachero',f:1,name:'Lanzahachas',cost:2,hp:65,atk:12,rng:4,as:1.5,spd:1.3,arm:0,tr:['Bestia','Tirador'],proj:'axe',desc:'Alcance corto, golpe fuerte.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['haxe']}},
- {id:'jinete',f:1,name:'Jinete de lobo',cost:4,hp:150,atk:15,rng:1,as:0.9,spd:2.7,arm:2,tr:['Bestia','Montado'],charge:true,mount:true,desc:'El más rápido. Carga y flanquea.',sp:{k:'mount',mount:'wolf',head:'orcHelm',torso:'leather',weap:['axe'],pal:{k:'#8a8a92',K:'#55555e'}}},
- {id:'bruto',f:1,name:'Bruto',cost:5,hp:330,atk:30,rng:1,as:1.9,spd:0.85,arm:4,tr:['Bestia','Gigante'],splash:true,big:true,desc:'Golpe en área (35% a los de alrededor).',sp:{k:'brute'}},
+ {id:'lancero',f:0,name:'Lancero',cost:2,hp:130,atk:12,rng:1,as:1.1,spd:1.1,arm:3,tr:['Infanteria','Escudo'],anti:'Montado',desc:'Doble daño contra montados.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['spear','shield']}},
+ {id:'arquero',f:0,name:'Arquero',cost:2,hp:55,atk:10,rng:6,as:1.2,spd:1.2,arm:0,tr:['Tirador'],proj:'arrow',desc:'Tirador básico. En colina es otro.',sp:{k:'foot',head:'hood',torso:'leather',legs:'pants',weap:['bow']}},
+ {id:'ballestero',f:0,name:'Ballestero',cost:3,hp:75,atk:20,rng:7,as:2.3,spd:1.0,arm:1,tr:['Tirador','Infanteria'],pierce:true,proj:'bolt',desc:'Perforante: ignora la armadura. Recarga lenta.',sp:{k:'foot',head:'helm',torso:'leather',legs:'pants',weap:['crossbow']}},
+ {id:'caballero',f:0,name:'Caballero',cost:5,hp:230,atk:20,rng:1,as:1.2,spd:2.2,arm:5,tr:['Montado','Escudo'],charge:true,mount:true,desc:'Carga: tras galopar 3 casillas, el golpe hace doble daño.',sp:{k:'mount',mount:'horse',head:'helm',torso:'armor',weap:['spear'],pal:{k:'#e8e0d0',K:'#9a8f80'}}},
+ {id:'clerigo',f:0,name:'Clérigo',cost:3,hp:70,atk:5,rng:4,as:1.6,spd:1.0,arm:1,tr:['Mistico','Infanteria'],heal:14,proj:'orb',desc:'Cura al aliado más herido.',sp:{k:'foot',head:'hood',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#e9e2cf',y:'#ffe066'}}},
+ {id:'saqueador',f:1,name:'Saqueador',cost:1,hp:75,atk:10,rng:1,as:0.9,spd:1.5,arm:0,tr:['Bestia','Infanteria'],desc:'Barato y rápido: llena las plazas.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['axe']}},
+ {id:'hachero',f:1,name:'Lanzahachas',cost:2,hp:70,atk:12,rng:4,as:1.5,spd:1.3,arm:0,tr:['Bestia','Tirador'],proj:'axe',desc:'Alcance corto, golpe fuerte.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['haxe']}},
+ {id:'jinete',f:1,name:'Jinete de lobo',cost:4,hp:160,atk:15,rng:1,as:0.9,spd:2.7,arm:2,tr:['Bestia','Montado'],charge:true,mount:true,desc:'El más rápido. Carga y flanquea.',sp:{k:'mount',mount:'wolf',head:'orcHelm',torso:'leather',weap:['axe'],pal:{k:'#8a8a92',K:'#55555e'}}},
+ {id:'bruto',f:1,name:'Bruto',cost:5,hp:350,atk:30,rng:1,as:1.9,spd:0.85,arm:4,tr:['Bestia','Gigante'],splash:true,big:true,desc:'Golpe en área (35% a los de alrededor).',sp:{k:'brute'}},
  {id:'chaman',f:1,name:'Chamán',cost:3,hp:65,atk:6,rng:4,as:1.4,spd:1.1,arm:0,tr:['Mistico','Bestia'],heal:10,proj:'orb',desc:'Cura y cuenta para la manada.',sp:{k:'foot',head:'orcHelm',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#5a2a6a',y:'#ff6040'}}},
  {id:'guarda',f:2,name:'Guardabosques',cost:2,hp:60,atk:11,rng:6,as:1.1,spd:1.4,arm:0,tr:['Tirador','Silvano'],proj:'arrow',desc:'Buen alcance; el bosque no lo frena.',sp:{k:'foot',head:'elfHood',torso:'leather',legs:'pants',weap:['bow']}},
  {id:'danza',f:2,name:'Danzaespadas',cost:3,hp:115,atk:15,rng:1,as:0.7,spd:1.8,arm:1,tr:['Infanteria','Silvano'],dodge:0.25,desc:'Esquiva el 25% de los golpes.',sp:{k:'foot',head:'elf',torso:'armor',legs:'pants',weap:['sword','sword2']}},
@@ -266,27 +268,27 @@ const UNITS=[
  {id:'halcon',f:2,name:'Halcón espíritu',cost:3,hp:55,atk:10,rng:1,as:0.6,spd:3.2,arm:0,tr:['Volador','Silvano'],fly:true,desc:'Vuela sobre todo terreno y caza tiradores.',sp:{k:'bird'}},
  // ===== Ampliación: 10 tropas más por facción =====
  // Legión de Hierro
- {id:'espadachin',f:0,n:4,name:'Espadachín',cost:2,hp:100,atk:13,rng:1,as:1.0,spd:1.2,arm:3,tr:['Infanteria','Escudo'],desc:'Infantería equilibrada con espada y escudo.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['sword','shield']}},
- {id:'alabardero',f:0,n:3,name:'Alabardero',cost:3,hp:120,atk:16,rng:1,as:1.4,spd:1.0,arm:3,tr:['Infanteria'],anti:'Montado',sunder:true,desc:'Doble daño a montados. Sus golpes rompen 3 de armadura durante 4 s.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['halberd']}},
+ {id:'espadachin',f:0,n:4,name:'Espadachín',cost:2,hp:110,atk:13,rng:1,as:1.0,spd:1.2,arm:3,tr:['Infanteria','Escudo'],desc:'Infantería equilibrada con espada y escudo.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['sword','shield']}},
+ {id:'alabardero',f:0,n:3,name:'Alabardero',cost:3,hp:130,atk:16,rng:1,as:1.4,spd:1.0,arm:3,tr:['Infanteria'],anti:'Montado',sunder:true,desc:'Doble daño a montados. Sus golpes rompen 3 de armadura durante 4 s.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['halberd']}},
  {id:'hondero',f:0,n:4,name:'Hondero',cost:1,hp:45,atk:6,rng:5,as:1.1,spd:1.3,arm:0,tr:['Tirador'],proj:'stone',desc:'Tirador muy barato.',sp:{k:'foot',head:'hood',torso:'leather',legs:'pants',weap:['sling'],pal:{c:'#7a6a4a'}}},
  {id:'mangonel',f:0,n:1,name:'Mangonel',cost:5,hp:170,atk:26,rng:10,as:3.6,spd:0.45,arm:2,tr:['Tirador'],splash:true,proj:'rock',desc:'Máquina de asedio: alcance 10 y golpe en área. Muy lenta.',sp:{k:'siege'}},
- {id:'guardiareal',f:0,n:3,name:'Guardia real',cost:4,hp:180,atk:14,rng:1,as:1.1,spd:1.0,arm:7,tr:['Infanteria','Escudo'],desc:'Armadura 7: casi inmune a tropas débiles.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['sword','shield'],pal:{a:'#d4a52a',b:'#8d9bb0',m:'#fff2c0'}}},
- {id:'batidor',f:0,n:3,name:'Batidor',cost:3,hp:100,atk:11,rng:1,as:0.9,spd:2.7,arm:1,tr:['Montado'],charge:true,mount:true,hunter:true,desc:'Caballería ligera que va a por los tiradores.',sp:{k:'mount',mount:'horse',head:'hood',torso:'leather',weap:['sword'],pal:{k:'#8a5a32',K:'#5a3a1e'}}},
+ {id:'guardiareal',f:0,n:3,name:'Guardia real',cost:4,hp:180,atk:15,rng:1,as:1.1,spd:1.0,arm:7,tr:['Infanteria','Escudo'],desc:'Armadura 7: casi inmune a tropas débiles.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['sword','shield'],pal:{a:'#d4a52a',b:'#8d9bb0',m:'#fff2c0'}}},
+ {id:'batidor',f:0,n:3,name:'Batidor',cost:3,hp:110,atk:12,rng:1,as:0.9,spd:2.7,arm:1,tr:['Montado'],charge:true,mount:true,hunter:true,desc:'Caballería ligera que va a por los tiradores.',sp:{k:'mount',mount:'horse',head:'hood',torso:'leather',weap:['sword'],pal:{k:'#8a5a32',K:'#5a3a1e'}}},
  {id:'arcabucero',f:0,n:3,name:'Arcabucero',cost:3,hp:65,atk:24,rng:6,as:3.0,spd:1.0,arm:1,tr:['Tirador','Infanteria'],pierce:true,proj:'bolt',desc:'Disparo perforante muy fuerte y recarga muy lenta.',sp:{k:'foot',head:'helm',torso:'leather',legs:'pants',weap:['gun']}},
- {id:'monje',f:0,n:2,name:'Monje',cost:3,hp:85,atk:8,rng:3,as:1.3,spd:1.1,arm:2,tr:['Mistico','Infanteria'],heal:9,proj:'orb',desc:'Curandero resistente.',sp:{k:'foot',head:'hood',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#8a5a32',y:'#ffe066'}}},
+ {id:'monje',f:0,n:2,name:'Monje',cost:3,hp:85,atk:8,rng:3,as:1.3,spd:1.1,arm:2,tr:['Mistico','Infanteria'],heal:10,proj:'orb',desc:'Curandero resistente.',sp:{k:'foot',head:'hood',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#8a5a32',y:'#ffe066'}}},
  {id:'inquisidor',f:0,n:1,name:'Inquisidor',cost:4,hp:150,atk:22,rng:5,as:1.8,spd:1.0,arm:2,tr:['Mistico','Tirador'],holy:true,proj:'light',desc:'Luz sagrada: +50% contra no muertos e infernales.',sp:{k:'foot',head:'hood',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#9a2a2a',y:'#fff6c0'}}},
- {id:'catafracto',f:0,n:2,name:'Catafracto',cost:6,hp:330,atk:22,rng:1,as:1.2,spd:1.8,arm:7,tr:['Montado','Escudo'],charge:true,mount:true,desc:'Caballería acorazada: lenta para ser montada, pero casi imparable.',sp:{k:'mount',mount:'horse',head:'helm',torso:'armor',weap:['spear'],pal:{k:'#8d9bb0',K:'#4a5468'}}},
+ {id:'catafracto',f:0,n:2,name:'Catafracto',cost:6,hp:350,atk:22,rng:1,as:1.2,spd:1.8,arm:7,tr:['Montado','Escudo'],charge:true,mount:true,desc:'Caballería acorazada: lenta para ser montada, pero casi imparable.',sp:{k:'mount',mount:'horse',head:'helm',torso:'armor',weap:['spear'],pal:{k:'#8d9bb0',K:'#4a5468'}}},
  // Clan Colmillo
- {id:'goblin',f:1,n:5,name:'Goblin',cost:1,hp:40,atk:6,rng:1,as:0.8,spd:1.7,arm:0,tr:['Bestia'],dodge:0.15,desc:'Enjambre barato y escurridizo.',sp:{k:'foot',head:'goblin',torso:'leather',legs:'pants',weap:['dagger'],pal:{s:'#9ac25a'}}},
+ {id:'goblin',f:1,n:5,name:'Goblin',cost:1,hp:45,atk:6,rng:1,as:0.8,spd:1.7,arm:0,tr:['Bestia'],dodge:0.15,desc:'Enjambre barato y escurridizo.',sp:{k:'foot',head:'goblin',torso:'leather',legs:'pants',weap:['dagger'],pal:{s:'#9ac25a'}}},
  {id:'bombgob',f:1,n:3,name:'Goblin bombardero',cost:2,hp:45,atk:34,rng:1,as:1,spd:1.7,arm:0,tr:['Bestia'],explode:true,desc:'Corre hacia el enemigo y explota (34 de daño en área).',sp:{k:'foot',head:'goblin',torso:'leather',legs:'pants',weap:['flame'],pal:{s:'#9ac25a'}}},
  {id:'jabalinero',f:1,n:3,name:'Jabalinero',cost:2,hp:75,atk:14,rng:5,as:1.8,spd:1.3,arm:1,tr:['Bestia','Tirador'],proj:'axe',desc:'Jabalinas pesadas a media distancia.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['spear']}},
- {id:'jabali',f:1,n:3,name:'Jinete de jabalí',cost:4,hp:180,atk:14,rng:1,as:1.0,spd:2.3,arm:3,tr:['Bestia','Montado'],charge:true,mount:true,desc:'Carga dura y aguanta golpes.',sp:{k:'mount',mount:'wolf',head:'orcHelm',torso:'armor',weap:['axe'],pal:{k:'#6a4a2e',K:'#3a281a'},ops:[[17,3,'t'],[16,4,'t']]}},
+ {id:'jabali',f:1,n:3,name:'Jinete de jabalí',cost:4,hp:180,atk:15,rng:1,as:1.0,spd:2.3,arm:3,tr:['Bestia','Montado'],charge:true,mount:true,desc:'Carga dura y aguanta golpes.',sp:{k:'mount',mount:'wolf',head:'orcHelm',torso:'armor',weap:['axe'],pal:{k:'#6a4a2e',K:'#3a281a'},ops:[[17,3,'t'],[16,4,'t']]}},
  {id:'troll',f:1,n:1,name:'Trol',cost:5,hp:380,atk:24,rng:1,as:1.7,spd:0.9,arm:2,tr:['Bestia','Gigante'],splash:true,big:true,regen:0.02,desc:'Regenera un 2% de vida por segundo.',sp:{k:'brute',pal:{s:'#5a8a8a',a:'#4a3a2a',b:'#6a5a3a',h:'#2a4a4a'}}},
- {id:'berserker',f:1,n:3,name:'Berserker',cost:3,hp:140,atk:15,rng:1,as:0.9,spd:1.6,arm:0,tr:['Bestia','Infanteria'],frenzy:true,lifesteal:0.3,desc:'Frenesí y roba un 30% del daño que hace.',sp:{k:'foot',head:'orc',torso:'ribs',legs:'pants',weap:['axe','sword2']}},
- {id:'cazacabezas',f:1,n:3,name:'Cazacabezas',cost:3,hp:80,atk:10,rng:6,as:1.4,spd:1.2,arm:0,tr:['Bestia','Tirador'],poison:true,proj:'arrow',desc:'Flechas envenenadas: el veneno no lo apaga la lluvia.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['bow'],pal:{b:'#4a6a2a'}}},
+ {id:'berserker',f:1,n:3,name:'Berserker',cost:3,hp:150,atk:15,rng:1,as:0.9,spd:1.6,arm:0,tr:['Bestia','Infanteria'],frenzy:true,lifesteal:0.3,desc:'Frenesí y roba un 30% del daño que hace.',sp:{k:'foot',head:'orc',torso:'ribs',legs:'pants',weap:['axe','sword2']}},
+ {id:'cazacabezas',f:1,n:3,name:'Cazacabezas',cost:3,hp:80,atk:11,rng:6,as:1.4,spd:1.2,arm:0,tr:['Bestia','Tirador'],poison:true,proj:'arrow',desc:'Flechas envenenadas: el veneno no lo apaga la lluvia.',sp:{k:'foot',head:'orc',torso:'leather',legs:'pants',weap:['bow'],pal:{b:'#4a6a2a'}}},
  {id:'ogro',f:1,n:1,name:'Ogro',cost:6,hp:470,atk:32,rng:1,as:2.0,spd:0.8,arm:3,tr:['Gigante','Bestia'],splash:true,big:true,desc:'El golpe más fuerte del clan.',sp:{k:'brute',pal:{s:'#c8a070',a:'#6a4a2a',b:'#8a2a2a',h:'#3a2a1a'}}},
- {id:'tambor',f:1,n:1,name:'Tamborilero',cost:3,hp:120,atk:8,rng:1,as:1.2,spd:1.1,arm:1,tr:['Bestia','Mistico'],warcry:true,desc:'Cada 8 s, los aliados cercanos atacan un 35% más rápido durante 4 s.',sp:{k:'foot',head:'orcHelm',torso:'leather',legs:'pants',weap:['mace']}},
- {id:'lobo',f:1,n:4,name:'Lobo salvaje',cost:2,hp:60,atk:8,rng:1,as:0.8,spd:2.9,arm:0,tr:['Bestia'],hunter:true,desc:'Manada rapidísima que caza tiradores.',sp:{k:'beast',pal:{k:'#9a9aa2',K:'#5a5a62'}}},
+ {id:'tambor',f:1,n:1,name:'Tamborilero',cost:3,hp:130,atk:8,rng:1,as:1.2,spd:1.1,arm:1,tr:['Bestia','Mistico'],warcry:true,desc:'Cada 8 s, los aliados cercanos atacan un 35% más rápido durante 4 s.',sp:{k:'foot',head:'orcHelm',torso:'leather',legs:'pants',weap:['mace']}},
+ {id:'lobo',f:1,n:4,name:'Lobo salvaje',cost:2,hp:60,atk:9,rng:1,as:0.8,spd:2.9,arm:0,tr:['Bestia'],hunter:true,desc:'Manada rapidísima que caza tiradores.',sp:{k:'beast',pal:{k:'#9a9aa2',K:'#5a5a62'}}},
  // Círculo del Bosque
  {id:'driada',f:2,n:2,name:'Dríada',cost:3,hp:70,atk:6,rng:4,as:1.4,spd:1.2,arm:0,tr:['Mistico','Silvano'],heal:10,proj:'orb',desc:'Cura con savia.',sp:{k:'foot',head:'elf',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#3f8a3a',h:'#8fd05a',y:'#b8ff8a'}}},
  {id:'centinela',f:2,n:3,name:'Centinela élfico',cost:3,hp:85,atk:13,rng:7,as:1.4,spd:1.2,arm:1,tr:['Tirador','Silvano'],proj:'arrow',desc:'Arco largo: alcance 7.',sp:{k:'foot',head:'elf',torso:'armor',legs:'pants',weap:['bow']}},
@@ -308,7 +310,7 @@ const UNITS=[
  {id:'furia',f:3,n:3,name:'Furia de fuego',cost:3,hp:120,atk:14,rng:1,as:0.9,spd:1.6,arm:1,tr:['Draconico','Infanteria'],frenzy:true,desc:'Frenesí: con menos de media vida ataca un 50% más rápido.',sp:{k:'foot',head:'drac',torso:'ribs',legs:'pants',weap:['sword','sword2']}},
  {id:'wyvern',f:3,n:1,name:'Guiverno',cost:5,hp:230,atk:18,rng:1,as:1.1,spd:2.4,arm:2,tr:['Draconico','Volador'],fly:true,poison:true,hunter:true,desc:'Vuela, caza tiradores y envenena con la cola.',sp:{k:'dragon',pal:{k:'#4a8a3a',K:'#2a5a22',a:'#7ac05a',b:'#c0e080'}}},
  {id:'chamanesc',f:3,n:2,name:'Chamán de ceniza',cost:3,hp:75,atk:6,rng:4,as:1.5,spd:1.0,arm:1,tr:['Draconico','Mistico'],heal:9,proj:'orb',desc:'Cura a los aliados.',sp:{k:'foot',head:'drac',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#4a4040',y:'#ffb040'}}},
- {id:'anciano',f:3,n:1,name:'Dragón anciano',cost:8,hp:480,atk:30,rng:4,as:1.9,spd:1.3,arm:5,tr:['Draconico','Volador','Gigante'],fly:true,big:true,splash:true,proj:'fire',desc:'El más caro del juego: vuela y escupe fuego en área.',sp:{k:'dragon',pal:{k:'#6a1a1a',K:'#3a0a0a',a:'#a83a2a',b:'#ffb040'}}},
+ {id:'anciano',f:3,n:1,name:'Dragón anciano',cost:8,hp:440,atk:30,rng:4,as:1.9,spd:1.3,arm:5,tr:['Draconico','Volador','Gigante'],fly:true,big:true,splash:true,proj:'fire',desc:'El más caro del juego: vuela y escupe fuego en área.',sp:{k:'dragon',pal:{k:'#6a1a1a',K:'#3a0a0a',a:'#a83a2a',b:'#ffb040'}}},
  // Muertos vivientes
  {id:'zombi',f:4,n:4,name:'Zombi',cost:1,hp:110,atk:8,rng:1,as:1.2,spd:0.8,arm:0,tr:['NoMuerto','Infanteria'],desc:'Lento pero aguanta mucho por lo que cuesta.',sp:{k:'foot',head:'orc',torso:'ribs',legs:'pants',weap:[],pal:{s:'#8fa08a',h:'#4a5a4a',d:'#4a4a3a'}}},
  {id:'necrofago',f:4,n:3,name:'Necrófago',cost:2,hp:80,atk:12,rng:1,as:0.9,spd:1.9,arm:0,tr:['NoMuerto','Bestia'],lifesteal:0.3,desc:'Rápido; roba un 30% del daño que hace.',sp:{k:'foot',head:'goblin',torso:'ribs',legs:'bones',weap:['dagger'],pal:{s:'#a0a0b0',h:'#4a4a5a'}}},
@@ -342,14 +344,31 @@ const UNITS=[
  {id:'espadaluz',f:6,n:3,name:'Espada de luz',cost:3,hp:100,atk:13,rng:1,as:0.8,spd:1.6,arm:1,tr:['Celestial','Infanteria'],dodge:0.2,holy:true,desc:'Ágil y sagrada: esquiva el 20%.',sp:{k:'foot',head:'angel',torso:'leather',legs:'pants',weap:['sword','sword2'],wings:'W'}},
  {id:'heraldo',f:6,n:1,name:'Heraldo',cost:3,hp:110,atk:7,rng:1,as:1.2,spd:1.1,arm:2,tr:['Celestial','Mistico'],aura:true,desc:'Los aliados a 2,5 casillas hacen +15% de daño y tienen +2 de armadura.',sp:{k:'foot',head:'angel',torso:'robe',legs:'robe',weap:['banner'],wings:'W',pal:{c:'#ffffff'}}},
  {id:'vigia',f:6,n:3,name:'Vigía alado',cost:3,hp:70,atk:9,rng:6,as:1.3,spd:1.8,arm:0,tr:['Celestial','Volador'],fly:true,proj:'light',desc:'Tirador volador.',sp:{k:'foot',head:'angel',torso:'leather',legs:'pants',weap:['bow'],wings:'W'}},
+ // ===== Hijos de la Marea: octava facción. El agua (río, charcas e inundación) no los frena ni les quita armadura =====
+ {id:'renacuajo',f:7,n:5,name:'Renacuajo',cost:1,hp:50,atk:7,rng:1,as:0.8,spd:1.6,arm:0,tr:['Anfibio'],dodge:0.15,desc:'Enjambre barato y resbaladizo: esquiva el 15%.',sp:{k:'foot',head:'frog',torso:'ribs',legs:'pants',weap:['dagger'],pal:{s:'#8fd07a',d:'#3a6a3a'}}},
+ {id:'tridente',f:7,n:4,name:'Tridentero',cost:2,hp:110,atk:13,rng:1,as:1.0,spd:1.2,arm:2,tr:['Anfibio','Infanteria'],anti:'Montado',desc:'Infantería de línea. Doble daño contra montados.',sp:{k:'foot',head:'fish',torso:'leather',legs:'pants',weap:['trident']}},
+ {id:'caparazon',f:7,n:3,name:'Guardia de caparazón',cost:3,hp:180,atk:13,rng:1,as:1.1,spd:0.95,arm:6,tr:['Anfibio','Escudo'],desc:'Muro de conchas: armadura 6, y en el agua no la pierde.',sp:{k:'foot',head:'shell',torso:'armor',legs:'pants',weap:['trident','shield']}},
+ {id:'cerbatana',f:7,n:4,name:'Cerbatanero',cost:2,hp:55,atk:9,rng:6,as:1.2,spd:1.3,arm:0,tr:['Anfibio','Tirador'],poison:true,proj:'arrow',desc:'Dardos de rana venenosa: el veneno dura 4 s.',sp:{k:'foot',head:'frog',torso:'leather',legs:'pants',weap:['blowpipe']}},
+ {id:'arponmar',f:7,n:3,name:'Arponero de marea',cost:3,hp:85,atk:15,rng:6,as:1.8,spd:1.1,arm:1,tr:['Anfibio','Tirador'],pull:true,proj:'bolt',desc:'Su arpón arrastra al objetivo 1,5 casillas hacia él y lo deja clavado 0,8 s (a los gigantes no).',sp:{k:'foot',head:'fish',torso:'leather',legs:'pants',weap:['harpoon']}},
+ {id:'reciario',f:7,n:3,name:'Reciario',cost:3,hp:130,atk:14,rng:1,as:1.1,spd:1.4,arm:1,tr:['Anfibio','Infanteria'],net:true,desc:'Su red deja clavado al objetivo 1,2 s.',sp:{k:'foot',head:'fish',torso:'ribs',legs:'pants',weap:['net']}},
+ {id:'sapojinete',f:7,n:3,name:'Jinete de sapo',cost:4,hp:180,atk:16,rng:1,as:1.0,spd:2.3,arm:2,tr:['Anfibio','Montado'],charge:true,mount:true,desc:'Caballería de pantano: carga y cruza los ríos sin frenar.',sp:{k:'mount',mount:'toad',head:'fish',torso:'leather',weap:['trident'],pal:{k:'#6a9a3a',K:'#3a5a22',t:'#e8f0b0'}}},
+ {id:'cangrejo',f:7,n:1,name:'Cangrejo gigante',cost:5,hp:400,atk:22,rng:1,as:1.6,spd:0.9,arm:7,tr:['Anfibio','Gigante'],splash:true,big:true,sunder:true,desc:'Pinzas en área que rompen 3 de armadura durante 4 s.',sp:{k:'crab',pal:{a:'#d8553a',b:'#ffb08a',d:'#7a2a1e'}}},
+ {id:'chamancharca',f:7,n:2,name:'Chamán de charca',cost:3,hp:70,atk:6,rng:4,as:1.4,spd:1.1,arm:0,tr:['Anfibio','Mistico'],heal:11,proj:'orb',desc:'Cura a los aliados. Con lluvia, aún más.',sp:{k:'foot',head:'frog',torso:'robe',legs:'robe',weap:['conch'],pal:{y:'#6ad0ff'}}},
+ {id:'llamalluvia',f:7,n:2,name:'Llamadora de lluvia',cost:3,hp:130,atk:12,rng:5,as:1.6,spd:1.1,arm:0,tr:['Anfibio','Mistico'],flood:true,proj:'orb',desc:'Sus proyectiles dejan una charca 5 s: frena un 35% a los enemigos de a pie y les quita 3 de armadura. Para los Anfibios cuenta como agua.',sp:{k:'foot',head:'fish',torso:'robe',legs:'robe',weap:['conch'],pal:{c:'#2a8ab0',y:'#6ad0ff'}}},
+ {id:'acechacienaga',f:7,n:3,name:'Acechador de ciénaga',cost:3,hp:100,atk:17,rng:1,as:0.9,spd:1.7,arm:0,tr:['Anfibio','Infanteria'],lurk:true,hunter:true,desc:'Caza tiradores. Dentro del agua es invisible hasta que ataca.',sp:{k:'foot',head:'frog',torso:'leather',legs:'pants',weap:['dagger'],pal:{s:'#4a7a5a',b:'#2a4a3a',a:'#3a5a4a',d:'#1a2a22'}}},
+ {id:'anguila',f:7,n:1,name:'Anguila de tormenta',cost:4,hp:260,atk:17,rng:1,as:1.0,spd:1.7,arm:2,tr:['Anfibio','Bestia'],big:true,slow:true,desc:'Bestia rápida: su descarga frena al objetivo un 40% durante 2 s.',sp:{k:'serpent',pal:{k:'#2a6a9a',K:'#173a5a',b:'#ffe066',t:'#e8f0ff'}}},
+ {id:'martin',f:7,n:3,name:'Martín pescador',cost:2,hp:50,atk:10,rng:1,as:0.7,spd:3.0,arm:0,tr:['Anfibio','Volador'],fly:true,hunter:true,desc:'Vuela sobre todo terreno y se lanza sobre los tiradores.',sp:{k:'bird',pal:{a:'#2a9ad0',b:'#ffb060',t:'#3a2a1a'}}},
+ {id:'medusa',f:7,n:3,name:'Medusa de bruma',cost:3,hp:70,atk:10,rng:4,as:1.2,spd:1.4,arm:0,tr:['Anfibio','Volador'],fly:true,poison:true,proj:'orb',desc:'Flota sobre el campo y envenena a distancia corta.',sp:{k:'jelly',pal:{a:'#b08ae0',b:'#f0d0ff',y:'#d0a0ff'}}},
+ {id:'tortuga',f:7,n:1,name:'Tortuga bastión',cost:6,hp:540,atk:20,rng:1,as:1.9,spd:0.65,arm:8,tr:['Anfibio','Gigante'],splash:true,big:true,regen:0.015,spring:true,desc:'Armadura 8, golpe en área y se regenera. Mana agua: mantiene una charca a su alrededor que frena a los enemigos y moja a los Anfibios.',sp:{k:'turtle',pal:{a:'#3a7a5a',b:'#8ac08a',d:'#1f4a3a',s:'#8fd07a'}}},
  // ===== ÉLITES: una por facción, con una mecánica propia (máximo ELITEMAX grupos de élite por ejército) =====
- {id:'paladin',f:0,elite:true,name:'Paladín abanderado',cost:6,hp:320,atk:18,rng:1,as:1.2,spd:1.1,arm:6,tr:['Infanteria','Escudo'],aura:true,desc:'Estandarte: los aliados a 2,5 casillas hacen +15% de daño y tienen +2 de armadura.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['banner','sword2'],pal:{a:'#c9d2de',c:'#2f4f9a'}}},
+ {id:'paladin',f:0,elite:true,name:'Paladín abanderado',cost:6,hp:340,atk:18,rng:1,as:1.2,spd:1.1,arm:6,tr:['Infanteria','Escudo'],aura:true,desc:'Estandarte: los aliados a 2,5 casillas hacen +15% de daño y tienen +2 de armadura.',sp:{k:'foot',head:'helm',torso:'armor',legs:'pants',weap:['banner','sword2'],pal:{a:'#c9d2de',c:'#2f4f9a'}}},
  {id:'caudillo',f:1,elite:true,name:'Caudillo de guerra',cost:6,hp:400,atk:26,rng:1,as:1.5,spd:1.15,arm:4,tr:['Bestia','Gigante'],splash:true,big:true,warcry:true,desc:'Grito de guerra cada 8 s: los aliados a 3,5 casillas atacan un 35% más rápido durante 4 s.',sp:{k:'brute',horns:true,spikes:true,pal:{a:'#4a2e1a',b:'#d8a030',d:'#2a1a10',h:'#1a0e08'}}},
  {id:'acechadora',f:2,elite:true,name:'Acechadora',cost:6,hp:150,atk:30,rng:8,as:2.6,spd:1.3,arm:0,tr:['Tirador','Silvano'],pierce:true,stealth:true,proj:'arrow',desc:'Invisible hasta que dispara (y otra vez 2,5 s después). En el bosque solo la ve quien está pegado a ella. Perforante.',sp:{k:'foot',head:'elfHood',torso:'leather',legs:'pants',weap:['bow'],pal:{c:'#1f3d26',b:'#2c4a2a',a:'#556b3a',d:'#1e2a1a'}}},
  {id:'magma',f:3,elite:true,name:'Invocadora de magma',cost:6,hp:150,atk:18,rng:6,as:2.2,spd:1.0,arm:2,tr:['Draconico','Mistico'],lava:true,proj:'magma',desc:'Sus proyectiles dejan un charco de magma 4 s que quema a todos los enemigos de a pie que lo pisen.',sp:{k:'foot',head:'drac',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#3a1610',b:'#ff7a1a',y:'#ff5a1a',s:'#d0702a'}}},
  {id:'liche',f:4,elite:true,name:'Liche',cost:6,hp:300,atk:12,rng:5,as:1.6,spd:0.9,arm:2,tr:['NoMuerto','Mistico'],drain:true,proj:'orb',desc:'Cada 2 s absorbe vida de todos los enemigos a 2,5 casillas (ignora armadura) y se cura con ella.',sp:{k:'foot',head:'lich',torso:'robe',legs:'robe',weap:['staff'],pal:{c:'#2a1a3a',b:'#7dffcf',y:'#7dffcf'}}},
  {id:'segador',f:5,elite:true,name:'Segador de almas',cost:6,hp:250,atk:27,rng:1,as:1.3,spd:1.4,arm:3,tr:['Infernal','Infanteria'],blink:true,desc:'Cada 6 s se teletransporta junto a su objetivo si está a más de 3 casillas. Ignora acantilados y ríos.',sp:{k:'foot',head:'demon',torso:'robe',legs:'robe',weap:['scythe'],wings:'v',pal:{c:'#2a0a12',b:'#ff9a30'}}},
  {id:'serafin',f:6,elite:true,name:'Serafín',cost:7,hp:270,atk:14,rng:5,as:1.4,spd:1.4,arm:2,tr:['Celestial','Volador'],fly:true,holy:true,massheal:true,proj:'light',desc:'Vuela. Cada 5 s cura 22 de vida a todos los aliados a 3 casillas. Sagrado.',sp:{k:'foot',head:'angel',torso:'robe',legs:'robe',weap:['staff'],wings:'y',pal:{c:'#fff4d4',b:'#e0b84a',y:'#fff0a0'}}},
+ {id:'mareas',f:7,elite:true,name:'Sacerdotisa de las mareas',cost:6,hp:240,atk:18,rng:6,as:1.5,spd:1.0,arm:2,tr:['Anfibio','Mistico'],tide:true,proj:'orb',desc:'Cada 8 s inunda la zona de su objetivo durante 6 s (radio 2,6): frena un 35% a los enemigos de a pie, les quita 3 de armadura y da a los Anfibios sus ventajas del agua.',sp:{k:'foot',head:'tide',torso:'robe',legs:'robe',weap:['conch'],pal:{c:'#1a4a7a',b:'#6ad0ff',y:'#6ad0ff',h:'#e8f8ff'}}},
 ];
 for(const u of UNITS)u.n=u.n||SQUAD[u.id]||1;
 // orden en el panel: por facción, élite al final
@@ -359,10 +378,10 @@ const TER=[
  {n:'Llanura',mv:1,col:['#5f9e48','#69aa4f','#578f41'],d:'Sin efectos.'},
  {n:'Colina',mv:1,col:['#83b356','#8fbf60','#78a84c'],d:'Altura 1. Tiradores: +2 de alcance y +25% de daño contra unidades más bajas. Cuerpo a cuerpo cuesta arriba: -20%. Solo se sube por una rampa.'},
  {n:'Bosque',mv:0.6,col:['#45793a','#3e7033','#376629'],d:'Cobertura: -40% de daño de proyectiles, pero el fuego hace +25%. Frena el paso (a los Silvanos no).'},
- {n:'Río',mv:0.45,col:['#2f6fa8','#3579b5','#2a6299'],d:'Muy lento de cruzar y -3 de armadura dentro del agua. Los voladores lo ignoran.'},
+ {n:'Río',mv:0.45,col:['#2f6fa8','#3579b5','#2a6299'],d:'Muy lento de cruzar y -3 de armadura dentro del agua. Los voladores lo ignoran. Los Anfibios lo cruzan más rápido que la llanura y no pierden armadura.'},
  {n:'Rampa',mv:0.75,col:['#b39466','#a68759','#c2a374'],d:'La única forma de subir o bajar un nivel. Es estrecha: un buen sitio para defender.'},
  {n:'Montaña',mv:1,col:['#a7b97a','#b5c688','#98ab6c'],d:'Altura 2. Tiradores: +3 de alcance y +40% de daño contra unidades más bajas. Cuerpo a cuerpo cuesta arriba: -20% por nivel. Se sube por rampa desde la colina.'},
- {n:'Desierto',mv:0.85,col:['#d8c07a','#e0c988','#cdb46c'],d:'Arena: las tropas de a pie van un 15% más lentas y la armadura pesada (4 o más) ataca un 15% más lenta. Con sol abrasador, el doble. Dracónicos, Infernales y voladores no lo notan.'},
+ {n:'Desierto',mv:0.85,col:['#d8c07a','#e0c988','#cdb46c'],d:'Arena: las tropas de a pie van un 15% más lentas y la armadura pesada (4 o más) ataca un 15% más lenta. Con sol abrasador, el doble. Dracónicos, Infernales y voladores no lo notan. Los Anfibios se secan: otro 15% más lentos y -10% de daño.'},
  {n:'Ceniza volcánica',mv:1,col:['#4e4646','#575050','#463e3e'],d:'Suelo ardiente: las tropas de a pie pierden un 0,5% de vida por segundo (la lluvia lo apaga). Dracónicos e Infernales no sufren y hacen +10% de daño sobre ella.'},
  {n:'Lava',mv:0,col:['#ff7a1a','#ffb040','#d8401a'],d:'Infranqueable para las tropas de a pie. Los voladores pasan por encima.'},
  {n:'Ruinas',mv:0.9,col:['#8f887a','#857e70','#9a9384'],d:'Escombros: quien está dentro recibe -25% de daño de proyectiles. Montados y gigantes van un 30% más lentos (el resto, un 10%). Los Místicos curan un 25% más desde las ruinas.'},
@@ -372,12 +391,12 @@ const TER=[
 ];
 const WEATHERS=[
  {id:'clear',n:'Despejado',d:'Sin efectos.'},
- {id:'rain',n:'Lluvia',d:'Proyectiles -25% de daño. El fuego no quema. El río frena todavía más. Los místicos curan +20% y los Infernales hacen -15%.'},
+ {id:'rain',n:'Lluvia',d:'Proyectiles -25% de daño. El fuego no quema. El río frena todavía más. Los místicos curan +20% y los Infernales hacen -15%. Los Anfibios van un 15% más rápido y sus charcas duran más.'},
  {id:'fog',n:'Niebla',d:'Los tiradores no ven más allá de 4 casillas (cada nivel de altura suma solo +1). Los Silvanos hacen +20% de daño y los Celestiales -15%.'},
  {id:'snow',n:'Ventisca',d:'Todos se mueven un 30% más lento, salvo Bestias y No muertos. Los montados no pueden cargar. Los Dracónicos atacan un 20% más lento.'},
  {id:'windE',n:'Viento del oeste',d:'Ayuda al azul: proyectiles hacia el este +2 de alcance, hacia el oeste -2.'},
  {id:'windW',n:'Viento del este',d:'Ayuda al rojo: proyectiles hacia el oeste +2 de alcance, hacia el este -2.'},
- {id:'heat',n:'Sol abrasador',d:'Armadura pesada (4 o más) ataca un 25% más lento. El río baja y se cruza más rápido. Dracónicos e Infernales hacen +15% de daño.'},
+ {id:'heat',n:'Sol abrasador',d:'Armadura pesada (4 o más) ataca un 25% más lento. El río baja y se cruza más rápido. Dracónicos e Infernales hacen +15% de daño. Los Anfibios hacen -10%, van un 10% más lentos y sus charcas se secan antes.'},
 ];
 const PRESETS=[
  {id:'random',n:'Aleatorio'},
@@ -411,6 +430,10 @@ const HEADS={
  demon:['....t....t','.....tssst','.....sssses','.....sssss','......sss'],
  goblin:['......hhhh','...ssssssss','....ssssess','.....sssst','......sss'],
  lich:['.....y.y.y','.....yyyyyy','.....sesses','.....sssss','......s.s'],
+ fish:['.....hh.h','.....hsssss','.....hssses','.....ssssst','......sss'],
+ frog:['.....ss..ss','.....es..es','....sssssssss','....sttttttts','......sss'],
+ shell:['......aaaa','.....aamaaa','.....aasses','.....assss','......sss'],
+ tide:['.....y.b.y','.....yyyyyy','.....hhsses','.....hssss','......sss'],
  angel:['.....yyyy','......hhhh','.....hhsses','.....hssss','......sss'],
 };
 const TORSO={
@@ -442,10 +465,16 @@ const WEAP={
  dagger:[[12,7,'m'],[12,8,'m'],[12,9,'b'],[3,8,'m'],[3,9,'m'],[3,10,'b']],
  sling:[...vline(12,6,9,'w'),[13,5,'t'],[14,5,'t'],[14,6,'d']],
  gun:[[8,9,'w'],[9,9,'w'],[10,9,'w'],[11,9,'w'],[12,9,'m'],[13,9,'m'],[14,9,'m'],[15,9,'m'],[9,10,'w'],[8,10,'w']],
+ trident:[...vline(12,3,13,'w'),[11,0,'m'],[12,0,'m'],[13,0,'m'],[11,1,'m'],[12,1,'m'],[13,1,'m'],[11,2,'m'],[12,2,'m'],[13,2,'m'],[10,0,'m'],[14,0,'m'],[12,1,'w']],
+ net:[[2,7,'t'],[4,7,'t'],[3,8,'t'],[5,8,'t'],[2,9,'t'],[4,9,'t'],[3,10,'t'],[5,10,'t'],[2,11,'t'],[4,11,'t'],[1,8,'t'],[1,10,'t'],[12,6,'m'],[12,7,'m'],[12,8,'m'],[12,9,'b']],
+ blowpipe:[[10,5,'w'],[11,5,'w'],[12,5,'w'],[13,5,'w'],[14,5,'w'],[15,5,'b']],
+ harpoon:[...vline(13,2,12,'w'),[13,0,'m'],[13,1,'m'],[12,1,'m'],[14,2,'m'],[12,2,'m'],[14,10,'t'],[14,11,'t'],[13,13,'t']],
+ conch:[...vline(12,4,14,'w'),[11,1,'b'],[12,1,'t'],[13,1,'b'],[11,2,'t'],[12,2,'y'],[13,2,'t'],[11,3,'b'],[12,3,'t'],[13,3,'b'],[12,0,'t']],
  haxe:[...vline(12,6,11,'w'),[13,5,'m'],[13,6,'m'],[14,6,'m'],[13,7,'m'],[3,10,'w'],[3,11,'w'],[2,10,'m'],[2,9,'m']],
 };
 const MBODY=['..............kk..','...k.........kkkK.','..kkccccccccckkk..','.k.kccccccccckk...','...kkkkkkkkkkk....'];
 const WBODY=['..............k.k.','.............kkkkK','..kkkkkkkkkkkkkk..','kk.kkkkkkkkkkkk...','...kkkkkkkkkkk....'];
+const TBODY=['.............kkk..','...........kkkekk.','..kkkkkkkkkkkkkkkt','.kkkkKkkkKkkkkkk..','.kkkkkkkkkkkkk....'];
 const MLEGS=[['...k.k.....k.k....','...k.k.....k.k....','...K.K.....K.K....'],['..k...k...k...k...','.k.....k.k.....k..','.K.....K.K.....K..']];
 const BRUTE_TOP=['.......hhhhhh.......','......ssssssss......','......sssssesst.....','......ssssssstt.....','.......ssssss.......','....aaaaaaaaaaaa....','...ssaaaabbaaaass...','..sssaaabbbbaaasss..','..sss.aaabbaaa.sss..','..ss..aaaaaaaa..ss..','..ss..dddddddd..ss..','......aaaaaaaa......'];
 const BRUTE_LEGS=[['.......ddd..ddd.....','.......ddd..ddd.....','......eeee..eeee....'],['......ddd....ddd....','......ddd....ddd....','.....eeee....eeee...']];
@@ -462,6 +491,11 @@ const BIGLEGS=[['...kk.kk.....kk.kk....','...kk.kk.....kk.kk....','...KK.KK.....
 const DBODY=['...............kk.','.............kkkek','k.kkkbbbbbbbbkkk..','.kkkkcccccccckk...','...kkkkkkkkkkk....'];
 const IMP=[['..t....t..','..ssssss..','..sssses..','...ssss...','aa.sbbs.aa','aaasbbsaaa','.aassssaa.','...s..s...','..ss..ss..'],['..t....t..','..ssssss..','..sssses..','...ssss...','...sbbs...','aaasbbsaaa','aa.ssss.aa','a..s..s..a','..ss..ss..']];
 const DRAGON=[['........aa..............','.......aaaa.............','......aaaaaa............','.....aaabaaaa......kk...','....aaabbbaaa....kkkkk..','..k.aabbbbaa....kkekkkt.','.kk.kkkkkkkkkkkkkkkK....','kk..kkkbbbbbbbkkkk......','k....kkbbbbbbkkk........','.....kk.....kk..........','.....K......K...........'],['........................','........................','........................','..................kk....','.................kkkkk..','..k.............kkekkkt.','.kk.kkkkkkkkkkkkkkkK....','kk..kkkaaaabbbkkkk......','k....kaaaaaabkkk........','.....aaaaaaa.k..........','....aaaaaa..K...........']];
+const CRAB=[['.aa..............aa.','aaaa............aaaa','aa.a...e....e...a.aa','.a.....a....a.....a.','.aa..aaaaaaaaaa..aa.','..aaaaabbaabbaaaaa..','...aaaaaaaaaaaaaa...','..d.aaaaaaaaaaaa.d..','.d.d.dddddddddd.d.d.','d..d...d....d...d..d'],['.aa..............aa.','aa.a............a.aa','aaaa...e....e...aaaa','.a.....a....a.....a.','.aa..aaaaaaaaaa..aa.','..aaaaabbaabbaaaaa..','...aaaaaaaaaaaaaa...','.d..aaaaaaaaaaaa..d.','d..d.dddddddddd.d..d','..d...d......d...d..']];
+const TURTLE_TOP=['.......aaaaaaaa.......','.....aaabaaaabaaa.....','....aabaaabaaaabaa....','...aaaabaaaabaaaaa.ss.','..aabaaaabaaaabaaasses','..aaaabaaaabaaaaaassss','.ddddddddddddddddd.ss.','s.dddddddddddddddd....'];
+const TURTLE_LEGS=[['...ss..ss....ss..ss...','...ss..ss....ss..ss...','...ee..ee....ee..ee...'],['..ss....ss..ss....ss..','..ss....ss..ss....ss..','..ee....ee..ee....ee..']];
+const SERPENT=[['..................kk..','.................kkek.','....kkk.....kkk..kkkkt','...kkbkk...kkbkk.kkk..','..kk..kkk.kkk.kkkkk...','.kk....kkkkk...kkk....','kk......kkk...........','K.....................'],['..................kk..','.................kkek.','.......kkk.......kkkkt','..kk..kkbkk..kkkkkkk..','.kkkkkkk.kkkkkbkk.....','kk.kkk....kkkk........','K.....................','......................']];
+const JELLY=[['..aaaaaa..','.aabaabaa.','.aaaaaaaa.','.aeaaaaea.','..aaaaaa..','..b.b.b.b.','.b..b.b..b','.b.b...b.b','..........'],['..........','..aaaaaa..','.aabaabaa.','.aeaaaaea.','.aaaaaaaa.','..aaaaaa..','..b.b.b.b.','..b.b.b.b.','.b..b.b..b']];
 const TREE=['.....gggg.....','...gggLLggg...','..ggLLLgggGg..','.ggLLgggggGGg.','.gggggggggGGg.','ggggggggGgGGGg','gGgggggGGGGGGg','.gGGgGGGGGGGg.','..gGGGGGGGGg..','....GGwGG.....','......ww......','......ww......','.....wwww.....'];
 
 const PALM=['..gg.....gg...','.gLLg..gLLgg..','gLg.ggLggg.Lg.','g...gLLLg...g.','...gg.k.gg....','..g...k...g...','......k.......','.......k......','.......k......','.......K......','......kK......','......kK......','.....KKKK.....'];
@@ -469,7 +503,7 @@ const BURNT=['..............','...k.....k....','....k...k..k..','..k.k..k..k...'
 function buildGrids(sp){const g0=buildGrids0(sp);if(sp.ops)for(const g of g0)ops(g,sp.ops);return g0}
 function buildGrids0(sp){
  if(sp.k==='foot')return [0,1].map(f=>{const g=blank(16,16);if(sp.wings)ops(g,wing(WING16,sp.wings,f));stamp(g,LEGS[sp.legs][f],0,12);stamp(g,TORSO[sp.torso],0,7);stamp(g,HEADS[sp.head],0,2);for(const w of sp.weap)ops(g,WEAP[w]);return g});
- if(sp.k==='mount')return [0,1].map(f=>{const g=blank(18,16);const body=sp.mount==='wolf'?WBODY:sp.mount==='drake'?DBODY:MBODY;if(sp.wings)ops(g,wing(WING16,sp.wings,f),4,0);stamp(g,[...body,...MLEGS[f]],0,8);stamp(g,TORSO[sp.torso].slice(0,4),1,5);stamp(g,HEADS[sp.head],1,0);for(const w of sp.weap)ops(g,WEAP[w],1,-2);return g});
+ if(sp.k==='mount')return [0,1].map(f=>{const g=blank(18,16);const body=sp.mount==='wolf'?WBODY:sp.mount==='drake'?DBODY:sp.mount==='toad'?TBODY:MBODY;if(sp.wings)ops(g,wing(WING16,sp.wings,f),4,0);stamp(g,[...body,...MLEGS[f]],0,8);stamp(g,TORSO[sp.torso].slice(0,4),1,5);stamp(g,HEADS[sp.head],1,0);for(const w of sp.weap)ops(g,WEAP[w],1,-2);return g});
  if(sp.k==='brute')return [0,1].map(f=>{const g=blank(20,16);if(sp.wings)ops(g,wing(WING20,sp.wings,f));stamp(g,[...BRUTE_TOP,...BRUTE_LEGS[f]],0,1);ops(g,CLUB,0,1);
   if(sp.horns)ops(g,[[6,1,'t'],[5,0,'t'],[13,1,'t'],[14,0,'t']]);if(sp.halo)ops(g,[[8,0,'y'],[9,0,'y'],[10,0,'y'],[11,0,'y']]);if(sp.spikes)ops(g,[[3,5,'m'],[4,5,'m'],[15,5,'m'],[16,5,'m'],[3,4,'t'],[16,4,'t']]);return g});
  if(sp.k==='beast')return [0,1].map(f=>{const g=blank(18,9);stamp(g,[...WBODY,...MLEGS[f]],0,1);ops(g,[[16,2,'y']]);return g});
@@ -478,6 +512,10 @@ function buildGrids0(sp){
  if(sp.k==='imp')return [0,1].map(f=>{const g=blank(10,9);stamp(g,IMP[f],0,0);return g});
  if(sp.k==='dragon')return [0,1].map(f=>{const g=blank(24,11);stamp(g,DRAGON[f],0,0);return g});
  if(sp.k==='treant')return [0,1].map(f=>{const g=blank(20,16);stamp(g,[...TREANT_TOP,...TREANT_LEGS[f]],0,0);return g});
+ if(sp.k==='crab')return [0,1].map(f=>{const g=blank(20,10);stamp(g,CRAB[f],0,0);return g});
+ if(sp.k==='turtle')return [0,1].map(f=>{const g=blank(22,11);stamp(g,[...TURTLE_TOP,...TURTLE_LEGS[f]],0,0);return g});
+ if(sp.k==='serpent')return [0,1].map(f=>{const g=blank(22,8);stamp(g,SERPENT[f],0,0);return g});
+ if(sp.k==='jelly')return [0,1].map(f=>{const g=blank(10,9);stamp(g,JELLY[f],0,0);return g});
  if(sp.k==='bird')return [0,1].map(f=>{const g=blank(12,7);stamp(g,BIRD[f],0,0);return g});
 }
 function raster(g,pal,white){
@@ -872,11 +910,13 @@ function autoArmy(side,fi){
  const depth=t=>(ZV-dvOf(side,t.c,t.r))*10;
  const fl=t=>Math.abs(uOf(t.c,t.r))*9;
  const sil=u=>u.tr.includes('Silvano');
+ // los Anfibios buscan el agua: dentro del río o pegados a él
+ const anf=u=>u.tr.includes('Anfibio'),wat=t=>m[t.r][t.c]===3?2.5:[[1,0],[-1,0],[0,1],[0,-1]].some(([i,j])=>m[t.r+j]&&m[t.r+j][t.c+i]===3)?1:0;
  const key={
-  ranged:(t,u)=>S.hgt[t.r][t.c]>=1&&m[t.r][t.c]!==4?(2-S.hgt[t.r][t.c])*1.5+depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
-  big:t=>depth(t)+fl(t)*0.1+r()*0.5,
-  melee:t=>depth(t)+fl(t)*0.06+r()*0.8,
-  mount:t=>depth(t)*0.6-fl(t)*0.3+r()*0.6,
+  ranged:(t,u)=>S.hgt[t.r][t.c]>=1&&m[t.r][t.c]!==4?(2-S.hgt[t.r][t.c])*1.5+depth(t)*0.2+r()*0.3:(sil(u)&&m[t.r][t.c]===2)||(anf(u)&&m[t.r][t.c]===3)?5+depth(t)*0.2+r()*0.3:10-depth(t)+fl(t)*0.05+r()*0.6,
+  big:(t,u)=>depth(t)+fl(t)*0.1+r()*0.5-(anf(u)?wat(t):0),
+  melee:(t,u)=>depth(t)+fl(t)*0.06+r()*0.8-(anf(u)?wat(t):0),
+  mount:(t,u)=>depth(t)*0.6-fl(t)*0.3+r()*0.6-(anf(u)?wat(t)*0.6:0),
   heal:t=>Math.abs(depth(t)-3.5)+fl(t)*0.1+r()*0.5,
   fly:t=>Math.abs(depth(t)-4)+r(),
  };
@@ -890,7 +930,10 @@ function autoArmy(side,fi){
 }
 
 function aiArmy(){
- const f=(Math.random()*FACTIONS.length)|0;if(Math.random()>0.35)return autoArmy(1,f);
+ // la IA elige más a los Hijos de la Marea con lluvia o mucho río, y menos con calor o en el desierto
+ const wid=S.weather.id,rivers=S.map.reduce((a,row)=>a+row.filter(v=>v===3).length,0),wF=FACTIONS.map((_,i)=>i!==7?1:wid==='rain'?2.2:wid==='heat'||S.biome==='desierto'?0.4:rivers>60?1.5:rivers<12?0.6:1);
+ let x=Math.random()*wF.reduce((a,b)=>a+b,0),f=0;while(f<wF.length-1&&(x-=wF[f])>0)f++;
+ if(Math.random()>0.35)return autoArmy(1,f);
  const g=(f+1+((Math.random()*(FACTIONS.length-1))|0))%FACTIONS.length;
  const A=autoArmy(1,f),B=autoArmy(1,g);const occ=new Set(),units=[];let cost=0;
  const all=sortBy([...A.units,...B.units],()=>Math.random());
@@ -906,23 +949,32 @@ const tier=(side,t)=>S.syn[side].tier[t]||0;
 function mkUnit(def,side,x,y){
  const u={def,side,x,y,hp:def.hp/def.n,max:def.hp/def.n,cd:0.3+Math.random()*0.6,tgt:null,ret:0,moved:0,anim:Math.random()*2,lunge:0,flash:0,alive:true,hold:false,dest:null,face:side?-1:1,moving:false,rad:def.big?0.34:def.mount?0.24:0.17,mass:def.big?3:def.mount?2:1,sh:0,shMax:0,burn:0,raiseT:4,raised:0,risen:false,aT:1+Math.random(),reveal:0,insp:0,rage:0,blinkCD:0,slowT:0,sunderT:0,poison:0,mor:100,rout:0};
  applyProg(u,side);
- if(def.tr.includes('Draconico')){const t=tier(side,'Draconico');u.max=u.hp=def.hp/def.n*(t===2?1.35:t===1?1.2:1)}
+ if(def.tr.includes('Draconico')){const t=tier(side,'Draconico');u.max=u.hp=def.hp/def.n*(t===2?1.22:t===1?1.12:1)}
  if(def.tr.includes('Celestial')){const t=tier(side,'Celestial');u.sh=u.shMax=u.max*(t===2?0.4:t===1?0.25:0)}
  return u;
 }
 function startBattle(){
  resetField();
- S.units=[];S.proj=[];S.parts=[];S.corpses=[];S.fields=[];S.marks=[];S.selG=new Set();S.gMode=false;S.paused=false;S.gidN=5000;S.time=0;S.result=null;S.claims=new Set();
+ S.units=[];S.proj=[];S.parts=[];S.corpses=[];S.fields=[];S.marks=[];S.hadFlood=false;S.selG=new Set();S.gMode=false;S.paused=false;S.gidN=5000;S.time=0;S.result=null;S.claims=new Set();
  S.stats=[{dmg:0,kills:0,byType:{}},{dmg:0,kills:0,byType:{}}];
  for(const side of [0,1]){
   const a=S.armies[side];S.syn[side]=computeSyn(a.units);
   a.units.forEach((it,gi)=>{const def=UBY[it.id];for(const [ox,oy] of FORM[def.n]){const u=mkUnit(def,side,it.c+0.5+ox,it.r+0.5+oy);u.gid=side*1000+gi;S.units.push(u)}});
  }
- for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&elev(u)>=1)u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
+ for(const u of S.units){if(u.def.rng>1&&!u.def.heal&&(elev(u)>=1||(amph(u)&&terrAt(u)===3)))u.hold=true;if(u.side===S.def&&!u.def.heal)u.guard=true}
  S.total=[0,1].map(s=>S.units.filter(u=>u.side===s).reduce((a,u)=>a+u.def.cost/u.def.n,0));S.count0=[0,1].map(s=>S.units.filter(u=>u.side===s).length);
  initGen();S.morT=0;
  S.state='battle';S.lastPanel=0;renderPanel();
 }
+// --- agua: río, charcas e inundación. u.fl=1 dentro de una charca cualquiera, 2 si es enemiga (se calcula al empezar cada paso)
+const amph=u=>u.def.tr.includes('Anfibio');
+const onWater=u=>!u.def.fly&&(terrAt(u)===3||u.fl>0);
+const wet=u=>onWater(u)||(S.weather.id==='rain'&&tier(u.side,'Anfibio')>=2);
+function markFloods(alive){
+ const fl=S.fields.filter(f=>f.flood);if(!fl.length&&!S.hadFlood)return;S.hadFlood=fl.length>0;
+ for(const u of alive){u.fl=0;if(u.def.fly)continue;for(const f of fl)if(Math.hypot(u.x-f.x,u.y-f.y)<f.r){if(f.side!==u.side){u.fl=2;break}u.fl=1}}
+}
+function addFlood(x,y,r,t,att){const wid=S.weather.id;S.fields.push({flood:true,x,y,r,t:t*(wid==='rain'?1.5:wid==='heat'?0.6:1),side:att.side,att})}
 const heatProof=u=>u.def.fly||u.def.tr.includes('Draconico')||u.def.tr.includes('Infernal');
 const elev=u=>u.def.fly?0:hgtTile(Math.floor(u.x),Math.floor(u.y));
 function effRange(u,tg){
@@ -938,11 +990,13 @@ function speedOf(u){
  if(!u.def.fly){
   if(t===4)s*=TER[4].mv;
   else if(t===2&&!u.def.tr.includes('Silvano'))s*=TER[2].mv;
-  else if(t===3)s*=wid==='rain'?0.3:wid==='heat'?0.8:TER[3].mv;
-  else if(t===6&&!heatProof(u))s*=wid==='heat'?0.7:TER[6].mv;
+  else if(t===3)s*=amph(u)?1.15:wid==='rain'?0.3:wid==='heat'?0.8:TER[3].mv;
+  else if(t===6&&!heatProof(u))s*=(wid==='heat'?0.7:TER[6].mv)*(amph(u)?0.85:1);
   else if(t===9)s*=(u.def.mount||u.def.big)?0.7:0.9;
   else if(t===12)s*=1.2;
  }
+ if(u.fl&&t!==3)s*=amph(u)?1.15:u.fl===2?0.65:1;
+ if(amph(u))s*=wid==='rain'?1.15:wid==='heat'?0.9:1;
  if(u.slowT>S.time)s*=0.6;
  if(wid==='snow'&&!u.def.tr.includes('Bestia')&&!u.def.tr.includes('NoMuerto'))s*=0.7;
  if(u.def.tr.includes('Montado')&&tier(u.side,'Montado')>=1)s*=1.2;
@@ -950,7 +1004,7 @@ function speedOf(u){
 }
 function cool(u){let c=u.def.as*u.def.n*(u.cdM||1);if(u.rage>S.time)c*=0.65;if(S.weather.id==='heat'&&u.def.arm>=4)c*=1.25;if(u.def.arm>=4&&!heatProof(u)&&terrAt(u)===6)c*=S.weather.id==='heat'?1.3:1.15;if(S.weather.id==='snow'&&u.def.tr.includes('Draconico'))c*=1.2;if(u.def.frenzy&&u.hp<u.max*0.5)c*=0.67;if(u.def.fly){const t=tier(u.side,'Volador');c/=t===2?1.5:t===1?1.25:1}return c*(0.92+Math.random()*0.16)}
 // la Acechadora no se puede apuntar mientras está oculta (salvo a quemarropa)
-function hiddenFrom(e,u){if(!e.def.stealth||S.time<e.reveal)return false;return dist(e,u)>(terrAt(e)===2?1.2:2.2)}
+function hiddenFrom(e,u){if(e.def.lurk)return S.time>=e.reveal&&onWater(e)&&dist(e,u)>1.6;if(!e.def.stealth||S.time<e.reveal)return false;return dist(e,u)>(terrAt(e)===2?1.2:2.2)}
 function pickTarget(u){
  let best=null,bd=1e9;const ranged=u.def.fly||u.def.hunter;
  for(const e of S.units){if(!e.alive||e.side===u.side||hiddenFrom(e,u))continue;let d=dist(u,e);if(ranged&&e.def.rng>1)d*=0.45;if(d<bd){bd=d;best=e}}
@@ -961,13 +1015,13 @@ function objFor(u,dT){if(!S.objs)return null;let b=null,bd=Math.min(14,dT);for(c
 function nearestOfGroup(u,gid){let b=null,bd=1e9;for(const e of S.units){if(!e.alive||e.gid!==gid||hiddenFrom(e,u))continue;const d=dist(u,e);if(d<bd){bd=d;b=e}}return b}
 function pickHeal(u){let best=null,br=0.92;for(const a of S.units){if(!a.alive||a.side!==u.side||a===u)continue;const r=a.hp/a.max;if(r<br&&dist(u,a)<8){br=r;best=a}}return best}
 function seekHill(u){
- const cur=elev(u);if(cur>=2||u.def.fly||!u.tgt)return;
+ const cur=elev(u),aw=amph(u)&&terrAt(u)!==3;if((cur>=2&&!aw)||u.def.fly||!u.tgt)return;
  if(u.dest&&S.claims.has(u.dest.k))return;
  const dT=dist(u,u.tgt);let best=null,bd=1e9;
  const c0=Math.floor(u.x),r0=Math.floor(u.y);
  for(let r=r0-7;r<=r0+7;r++)for(let c=c0-7;c<=c0+7;c++){
-  if(r<0||c<0||r>=ROWS||c>=COLS||S.hgt[r][c]<=cur||S.map[r][c]===4)continue;const k=c+','+r;if(S.claims.has(k))continue;
-  const p={x:c+0.5,y:r+0.5};const d=dist(u,p);if(d>7)continue;if(dist(p,u.tgt)>dT-0.5)continue;const sc=d-2*S.hgt[r][c];if(sc<bd){bd=sc;best={x:p.x,y:p.y,k}}
+  if(r<0||c<0||r>=ROWS||c>=COLS||S.map[r][c]===4)continue;const wt=aw&&S.map[r][c]===3&&S.hgt[r][c]===cur;if(S.hgt[r][c]<=cur&&!wt)continue;const k=c+','+r;if(S.claims.has(k))continue;
+  const p={x:c+0.5,y:r+0.5};const d=dist(u,p);if(d>7)continue;if(dist(p,u.tgt)>dT-0.5)continue;const sc=d-2*S.hgt[r][c]-(wt?1.5:0);if(sc<bd){bd=sc;best={x:p.x,y:p.y,k}}
  }
  if(best){u.dest=best;S.claims.add(best.k)}
 }
@@ -1004,6 +1058,7 @@ function attack(u,tg){
  if(u.def.tr.includes('Silvano')){{const t=tier(u.side,'Silvano');base*=terrAt(u)===2?(t===2?1.45:t===1?1.3:1):t===2?1.1:1}if(wid==='fog')base*=1.2}
  if(wid==='heat'&&(u.def.tr.includes('Draconico')||u.def.tr.includes('Infernal')))base*=1.15;
  if(wid==='rain'&&u.def.tr.includes('Infernal'))base*=0.85;
+ if(amph(u)){if(wid==='heat')base*=0.9;if(!u.def.fly&&terrAt(u)===6)base*=0.9;const t=tier(u.side,'Anfibio');if(t&&wet(u))base*=t===2?1.4:1.25}
  if(!u.def.fly&&terrAt(u)===7&&(u.def.tr.includes('Draconico')||u.def.tr.includes('Infernal')))base*=1.1;
  if(wid==='fog'&&u.def.tr.includes('Celestial'))base*=0.85;
  if(u.def.holy&&(tg.def.tr.includes('NoMuerto')||tg.def.tr.includes('Infernal')))base*=1.5;
@@ -1013,7 +1068,7 @@ function attack(u,tg){
  if(u.def.anti&&tg.def.tr.includes(u.def.anti))base*=2;
  if(u.insp>S.time)base*=1.15;
  base*=(1+0.1*objOwned(u.side,'estandarte'))*(u.atkM||1);
- if(u.def.stealth)u.reveal=S.time+2.5;
+ if(u.def.stealth||u.def.lurk)u.reveal=S.time+2.5;
  if(u.def.charge&&u.moved>=3&&wid!=='snow'){base*=tier(u.side,'Montado')>=2?2.5:2;burst(tg.x*T,tg.y*T,'#ffe066',8)}
  u.moved=0;
  if(u.def.explode){for(const e of S.units)if(e.alive&&e.side!==u.side&&dist(e,u)<1.4)deal(u,e,base,false);burst(u.x*T,u.y*T-6,'#ffb040',24);burst(u.x*T,u.y*T-6,'#5a4a4a',12);kill(u,null);return}
@@ -1038,9 +1093,11 @@ function deal(att,tg,base,ranged){
  if(tg.def.dodge&&Math.random()<tg.def.dodge){burst(tg.x*T,tg.y*T-8,'#ffffff',2);return}
  if(att.def.sunder)tg.sunderT=S.time+4;
  if(att.def.slow)tg.slowT=S.time+2;
+ if(att.def.net&&!tg.def.fly&&!(tg.netCD>S.time)){tg.rootT=Math.max(tg.rootT||0,S.time+1.2);tg.netCD=S.time+(tg.def.big?5:3)}
+ if(att.def.pull&&ranged&&att.alive&&!tg.def.big&&!tg.def.fly){const dd=dist(att,tg);if(dd>1.2){const st=Math.min(1.5,dd-0.8),ux=(att.x-tg.x)/dd,uy=(att.y-tg.y)/dd;for(let i=0;i<5;i++)if(!tryMove(tg,tg.x+ux*st/5,tg.y+uy*st/5))break;tg.path=null;tg.moved=0;tg.rootT=Math.max(tg.rootT||0,S.time+0.8)}}
  if(att.def.poison&&!tg.def.tr.includes('NoMuerto')){tg.poison=4;tg.poisonDps=Math.max(tg.poison>0&&tg.poisonDps?tg.poisonDps:0,base*0.15)}
  let arm=tg.def.arm;if(tg.def.tr.includes('Infanteria')){const t=tier(tg.side,'Infanteria');arm+=t===2?3:t===1?2:0}
- if(!tg.def.fly&&terrAt(tg)===3)arm-=3;
+ if(!tg.def.fly&&!amph(tg)&&(terrAt(tg)===3||tg.fl===2))arm-=3;
  if(tg.insp>S.time)arm+=2;
  arm+=(tg.armB||0)+(tg.wallT>S.time?4:0);
  if(tg.sunderT>S.time)arm-=3;
@@ -1058,7 +1115,7 @@ function kill(tg,att){
  if(!tg.alive)return;
  if(tg.def.tr.includes('NoMuerto')&&!tg.risen){const t=tier(tg.side,'NoMuerto'),ch=t===2?0.55:t===1?0.35:0;if(Math.random()<ch){tg.risen=true;tg.hp=tg.max*0.4;tg.burn=0;burst(tg.x*T,tg.y*T-6,'#b06aff',12);return}}
  tg.alive=false;moraleHit(tg);
- if(att){S.stats[att.side].kills++;if(att.alive&&att.def.tr.includes('Infernal')){const t=tier(att.side,'Infernal');if(t)att.hp=Math.min(att.max,att.hp+att.max*(t===2?0.25:0.15))}}
+ if(att){S.stats[att.side].kills++;if(att.alive&&att.def.tr.includes('Infernal')){const t=tier(att.side,'Infernal');if(t)att.hp=Math.min(att.max,att.hp+att.max*(t===2?0.2:0.12))}}
  S.corpses.push({x:tg.x,y:tg.y,def:tg.def,face:tg.face,el:elev(tg),t:0});burst(tg.x*T,tg.y*T-4,tg.def.tr.includes('NoMuerto')?'#e6e0cc':'#b23a2a',10);if(tg.dest)S.claims.delete(tg.dest.k);
 }
 // --- moral: baja con las bajas cercanas y al verse rodeado; por debajo de 25 el soldado huye 4 s
@@ -1086,12 +1143,14 @@ function doHeal(u,ally){
 // habilidades de las élites
 function abilities(alive,dt){
  for(const u of alive){
-  const df=u.def;if(!(df.aura||df.warcry||df.drain||df.massheal)||!u.alive)continue;
+  const df=u.def;if(!(df.aura||df.warcry||df.drain||df.massheal||df.tide||df.spring)||!u.alive)continue;
   if(df.aura){for(const a of alive)if(a.side===u.side&&a!==u&&Math.hypot(a.x-u.x,a.y-u.y)<2.5)a.insp=S.time+0.3}
   u.aT-=dt;if(u.aT>0)continue;
   if(df.warcry){if(!u.tgt||dist(u,u.tgt)>8){u.aT=0.5;continue}u.aT=8;for(const a of alive)if(a.side===u.side&&Math.hypot(a.x-u.x,a.y-u.y)<3.5)a.rage=S.time+4;ring(u,3.5,'#ff5a3a')}
   else if(df.drain){u.aT=2;let got=0;for(const e of alive){if(!e.alive||e.side===u.side||Math.hypot(e.x-u.x,e.y-u.y)>=2.5)continue;const dm=Math.min(7,e.hp);e.hp-=7;got+=dm;S.stats[u.side].dmg+=dm;S.stats[u.side].byType[df.id]=(S.stats[u.side].byType[df.id]||0)+dm;S.parts.push({x:e.x*T,y:e.y*T-8,vx:(u.x-e.x)*T*1.6,vy:(u.y-e.y)*T*1.6-20,life:0.6,col:'#7dffcf'});if(e.hp<=0)kill(e,u)}if(got)u.hp=Math.min(u.max,u.hp+got*0.7)}
   else if(df.massheal){u.aT=5;let any=false;for(const a of alive)if(a.alive&&a.side===u.side&&Math.hypot(a.x-u.x,a.y-u.y)<3&&a.hp<a.max){a.hp=Math.min(a.max,a.hp+22);any=true;S.parts.push({x:a.x*T,y:a.y*T-6,vx:0,vy:-22,life:0.6,col:'#fff0a0'})}if(any)ring(u,3,'#fff0a0');else u.aT=0.5}
+  else if(df.spring){u.aT=4;addFlood(u.x,u.y,1.9,4.6,u)}
+  else if(df.tide){const tg=u.tgt;if(!tg||!tg.alive||dist(u,tg)>9){u.aT=0.5;continue}u.aT=8;addFlood(tg.x,tg.y,2.6,6,u);ring(tg,2.6,'#6ad0ff')}
   else u.aT=99;
  }
 }
@@ -1106,6 +1165,7 @@ function step(dt){
  S.time+=dt;
  const alive=S.units.filter(u=>u.alive);
  for(let i=alive.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=alive[i];alive[i]=alive[j];alive[j]=t}
+ markFloods(alive);
  abilities(alive,dt);
  for(const u of alive){
   if(!u.alive)continue;
@@ -1115,6 +1175,7 @@ function step(dt){
   if(u.poison>0){u.poison-=dt;u.hp-=(u.poisonDps||2)*dt;if(Math.random()<dt*5)S.parts.push({x:u.x*T+(Math.random()-0.5)*6,y:u.y*T-4,vx:0,vy:-18,life:0.35,col:'#8fd05a'});if(u.hp<=0){kill(u,null);continue}}
   if(u.def.regen)u.hp=Math.min(u.max,u.hp+u.max*u.def.regen*dt);
   if(u.def.raise){u.raiseT-=dt;if(u.raiseT<=0){u.raiseT=1;for(let q=0;q<2&&u.raised<8;q++){const c=S.corpses.find(c=>!c.used&&!c.def.big&&Math.hypot(c.x-u.x,c.y-u.y)<5);if(c){c.used=true;u.raised++;u.raiseT=4;const z=mkUnit(UBY.esqueleto,u.side,c.x,c.y);z.risen=true;z.gid=S.gidN++;S.units.push(z);burst(c.x*T,c.y*T-4,'#b06aff',12)}}}}
+  if(amph(u)&&tier(u.side,'Anfibio')>=1&&wet(u))u.hp=Math.min(u.max,u.hp+u.max*0.04*dt);
   if(u.def.tr.includes('Silvano')){const t=tier(u.side,'Silvano');if((t>=1&&terrAt(u)===2)||t>=2)u.hp=Math.min(u.max,u.hp+u.max*0.03*dt)}
   if(u.ret<=0||!u.tgt||!u.tgt.alive||hiddenFrom(u.tgt,u)){u.tgt=pickTarget(u);u.ret=0.4+Math.random()*0.2;if(u.def.rng>1&&!u.def.heal&&!u.hold&&!u.order&&!(u.seekCD>S.time))seekHill(u)}
   if(u.rout>S.time){const cx=u.side?COLS-1.5:1.5,cy=u.side?ROWS-1.5:1.5;goTo(u,cx,cy,dt,0.5);continue}
@@ -1140,7 +1201,7 @@ function step(dt){
    if(u.guard){if(d<rg+5||S.time>60||u.hp<u.max||(S.objs&&S.objs.some(ob=>ob.owner!==u.side||Math.abs(ob.prog)<0.95)))u.guard=false;else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
    if(u.hold){u.idle=(u.idle||0)+dt;if(u.side!==S.def&&((S.time>20&&d>rg+6)||u.idle>6)){u.hold=false;u.seekCD=S.time+25}else{u.moving=false;u.face=Math.sign(tg.x-u.x)||u.face;continue}}
    if(u.def.blink&&d>3&&!(u.blinkCD>S.time)&&!tg.def.fly&&blink(u,tg))continue;
-   if(u.dest){goTo(u,u.dest.x,u.dest.y,dt,0.05);if(dist(u,u.dest)<0.2){S.claims.delete(u.dest.k);u.dest=null;if(elev(u))u.hold=true}}
+   if(u.dest){goTo(u,u.dest.x,u.dest.y,dt,0.05);if(dist(u,u.dest)<0.2){S.claims.delete(u.dest.k);u.dest=null;if(elev(u)||(amph(u)&&terrAt(u)===3))u.hold=true}}
    else{const ob=!o&&d>6?objFor(u,d):null;if(ob){const k=(u.gid*37)%9;goTo(u,ob.x+((k%3)-1)*0.6,ob.y+(Math.floor(k/3)-1)*0.6,dt,0.2)}else goTo(u,tg.x,tg.y,dt,blocked?0:reach*0.9)}
   }
  }
@@ -1149,10 +1210,10 @@ function step(dt){
  for(let i=0;i<al.length;i++){const a=al[i];for(let j=i+1;j<al.length;j++){const b=al[j];if(!!a.def.fly!==!!b.def.fly)continue;const dx=b.x-a.x,dy=b.y-a.y,rr=a.rad+b.rad,d2=dx*dx+dy*dy;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2),p=(rr-d),nx=dx/d,ny=dy/d,tm=a.mass+b.mass;const fa=(a.hold?0.15:1)*b.mass/tm,fb=(b.hold?0.15:1)*a.mass/tm;tryMove(a,a.x-nx*p*fa,a.y-ny*p*fa);tryMove(b,b.x+nx*p*fb,b.y+ny*p*fb)}}}
  for(const u of al){u.x=clamp(u.x,0.3,COLS-0.3);u.y=clamp(u.y,0.3,ROWS-0.3)}
  // proyectiles
- for(const p of S.proj){p.t+=dt;if(p.t>=p.dur){p.done=true;if(p.tgt.alive){if(p.kind==='heal'){p.tgt.hp=Math.min(p.tgt.max,p.tgt.hp+p.base);for(let i=0;i<4;i++)S.parts.push({x:p.tgt.x*T+(Math.random()-0.5)*8,y:p.tgt.y*T-6,vx:0,vy:-20,life:0.5,col:'#7dff8a'})}else{deal(p.att,p.tgt,p.base,true);if(p.att.def.lava)S.fields.push({x:p.tgt.x,y:p.tgt.y,r:1.3,t:S.weather.id==='rain'?2:4,dps:8,side:p.att.side,att:p.att});if(p.att.def.splash){const t=tier(p.att.side,'Gigante'),f=t===2?0.7:t===1?0.5:0.35;for(const e of S.units)if(e.alive&&e.side!==p.att.side&&e!==p.tgt&&dist(e,p.tgt)<1.2)deal(p.att,e,p.base*f,true);burst(p.tgt.x*T,p.tgt.y*T-4,'#ff9a30',6)}}}}}
+ for(const p of S.proj){p.t+=dt;if(p.t>=p.dur){p.done=true;if(p.tgt.alive){if(p.kind==='heal'){p.tgt.hp=Math.min(p.tgt.max,p.tgt.hp+p.base);for(let i=0;i<4;i++)S.parts.push({x:p.tgt.x*T+(Math.random()-0.5)*8,y:p.tgt.y*T-6,vx:0,vy:-20,life:0.5,col:'#7dff8a'})}else{deal(p.att,p.tgt,p.base,true);if(p.att.def.flood&&!p.tgt.def.fly)addFlood(p.tgt.x,p.tgt.y,1.4,5,p.att);if(p.att.def.lava)S.fields.push({x:p.tgt.x,y:p.tgt.y,r:1.3,t:S.weather.id==='rain'?2:4,dps:8,side:p.att.side,att:p.att});if(p.att.def.splash){const t=tier(p.att.side,'Gigante'),f=t===2?0.7:t===1?0.5:0.35;for(const e of S.units)if(e.alive&&e.side!==p.att.side&&e!==p.tgt&&dist(e,p.tgt)<1.2)deal(p.att,e,p.base*f,true);burst(p.tgt.x*T,p.tgt.y*T-4,'#ff9a30',6)}}}}}
  S.proj=S.proj.filter(p=>!p.done);
  // charcos de magma
- for(const f of S.fields){f.t-=dt;for(const e of S.units){if(!e.alive||e.side===f.side||e.def.fly)continue;if(Math.hypot(e.x-f.x,e.y-f.y)<f.r){const dm=f.dps*dt;e.hp-=dm;S.stats[f.side].dmg+=dm;S.stats[f.side].byType[f.att.def.id]=(S.stats[f.side].byType[f.att.def.id]||0)+dm;if(e.hp<=0)kill(e,f.att)}}}
+ for(const f of S.fields){f.t-=dt;if(f.flood)continue;for(const e of S.units){if(!e.alive||e.side===f.side||e.def.fly)continue;if(Math.hypot(e.x-f.x,e.y-f.y)<f.r){const dm=f.dps*dt;e.hp-=dm;S.stats[f.side].dmg+=dm;S.stats[f.side].byType[f.att.def.id]=(S.stats[f.side].byType[f.att.def.id]||0)+dm;if(e.hp<=0)kill(e,f.att)}}}
  S.fields=S.fields.filter(f=>f.t>0);
  for(const c of S.corpses)c.t+=dt;
  const n0=al.filter(u=>u.side===0).length,n1=al.filter(u=>u.side===1).length;
@@ -1169,16 +1230,19 @@ function endBattle(n0,n1){
 'use strict';
 /* ================= OBJETIVOS, CLIMA CAMBIANTE Y TERRENO VIVO ================= */
 // --- Objetivos: 3 puntos que empiezan en manos del defensor. El atacante gana si mantiene 2 durante OBJWIN segundos.
-const OBJWIN=40;
+const OBJWIN=45;
 const OBJTYPES={
  estandarte:{n:'Estandarte',art:'el estandarte',d:'Su dueño hace +10% de daño.'},
  pozo:{n:'Pozo sagrado',art:'el pozo sagrado',d:'Todo el ejército de su dueño regenera un 0,8% de vida por segundo.'},
  atalaya:{n:'Atalaya',art:'la atalaya',d:'Los tiradores de su dueño tienen +1 de alcance.'},
 };
+// Desplazamiento de los objetivos en cada campo: negativo = más cerca del defensor. Ajustado con tools/balance.js para que el atacante gane cerca del 50%.
+const OBJSHIFT={cumbre:-0.12,emboscada:-0.1,oasis:-0.09,valle:-0.06,rio:-0.07,random:-0.03,paso:-0.03,fortaleza:-0.01,altiplano:0.02,caldera:0.1},OBJSHIFT_BIO={};
 function placeObjectives(){
  const r=rng(S.seed^0x0b1),d=S.def,cands=[];
+ const sh=S.dbg&&S.dbg.objSh!=null?S.dbg.objSh:(OBJSHIFT[S.preset]||0)+(OBJSHIFT_BIO[S.biome]||0);
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-  const dv=dvOf(d,x,y),v=S.map[y][x];if(dv<0.66||dv>0.98||BLOCK(v)||v===3||v===4)continue;
+  const dv=dvOf(d,x,y),v=S.map[y][x];if(dv<0.66+sh||dv>0.98+sh||BLOCK(v)||v===3||v===4)continue;
   let free=0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const w=S.map[y+j][x+i];if(!BLOCK(w)&&w!==3&&S.hgt[y+j][x+i]===S.hgt[y][x])free++}
   if(free>=7)cands.push({x,y,dv});
  }
@@ -1537,12 +1601,12 @@ function frame(now){
  for(const c of S.corpses)drawCorpse(c);
  if(S.state==='battle')drawSelection();
  if(S.state==='battle'||S.state==='result')drawGen(now);
- for(const f of S.fields||[]){const a=Math.min(1,f.t/1.2);const g=ctx.createRadialGradient(f.x*T,f.y*T,2,f.x*T,f.y*T,f.r*T);g.addColorStop(0,`rgba(255,200,80,${0.75*a})`);g.addColorStop(0.55,`rgba(240,90,20,${0.55*a})`);g.addColorStop(1,'rgba(120,20,10,0)');ctx.fillStyle=g;ctx.fillRect(f.x*T-f.r*T,f.y*T-f.r*T,f.r*T*2,f.r*T*2)}
+ for(const f of S.fields||[]){const a=Math.min(1,f.t/1.2);if(f.flood){const R=f.r*T,ph=now/600;ctx.save();ctx.translate(f.x*T,f.y*T+3);ctx.scale(1,0.72);const g=ctx.createRadialGradient(0,0,2,0,0,R);g.addColorStop(0,`rgba(70,150,215,${0.62*a})`);g.addColorStop(0.75,`rgba(47,111,168,${0.5*a})`);g.addColorStop(1,'rgba(47,111,168,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,R,0,6.283);ctx.fill();ctx.strokeStyle=`rgba(200,235,255,${0.5*a})`;ctx.lineWidth=1;for(let i=0;i<3;i++){const k=((ph+i/3)%1);ctx.globalAlpha=(1-k)*a;ctx.beginPath();ctx.arc(0,0,R*(0.25+0.7*k),0,6.283);ctx.stroke()}ctx.restore();continue}const g=ctx.createRadialGradient(f.x*T,f.y*T,2,f.x*T,f.y*T,f.r*T);g.addColorStop(0,`rgba(255,200,80,${0.75*a})`);g.addColorStop(0.55,`rgba(240,90,20,${0.55*a})`);g.addColorStop(1,'rgba(120,20,10,0)');ctx.fillStyle=g;ctx.fillRect(f.x*T-f.r*T,f.y*T-f.r*T,f.r*T*2,f.r*T*2)}
  const list=S.trees.map(t=>({y:t.y,f:()=>drawTree(t)}));
  for(const h of S.houses||[])list.push({y:h.y-2,f:()=>drawHouse(h)});
  list.push({y:-1e9,f:()=>{}});for(const o of S.objs||[])list.push({y:o.y*T+4,f:()=>drawObjectiveOne(o,now)});
  if(S.state==='battle'||S.state==='result'){
-  for(const u of S.units)if(u.alive)list.push({y:u.y*T+5+(u.def.fly?30:0),f:()=>drawUnitAt(u.def,u.side,u.x,u.y,{frame:u.moving?(Math.floor(u.anim)%2):(u.def.fly?Math.floor(now/180)%2:0),face:u.face,el:elev(u),flash:u.flash,hp:u.hp/u.max,sh:u.shMax?u.sh/u.shMax:0,lunge:u.lunge>0,t:now/1000,ghost:u.def.stealth&&S.time>u.reveal,rout:u.rout>S.time})});
+  for(const u of S.units)if(u.alive)list.push({y:u.y*T+5+(u.def.fly?30:0),f:()=>drawUnitAt(u.def,u.side,u.x,u.y,{frame:u.moving?(Math.floor(u.anim)%2):(u.def.fly?Math.floor(now/180)%2:0),face:u.face,el:elev(u),flash:u.flash,hp:u.hp/u.max,sh:u.shMax?u.sh/u.shMax:0,lunge:u.lunge>0,t:now/1000,ghost:(u.def.stealth&&S.time>u.reveal)||(u.def.lurk&&S.time>=u.reveal&&onWater(u)),rout:u.rout>S.time})});
  }else if(S.state==='deploy'||S.state==='handoff'||S.state==='reveal'){
   const rv=S.state==='reveal';
   if(rv&&S.revPick!=null){const it=S.armies[S.side].units[S.revPick];if(it){const x=(it.c+0.5)*T,y=(it.r+0.5)*T+4-hgtTile(it.c,it.r)*8,k=0.5+0.5*Math.sin(now/150);ctx.strokeStyle=`rgba(255,224,102,${0.6+0.4*k})`;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y,14,8,0,0,6.283);ctx.stroke()}}
@@ -2013,6 +2077,6 @@ for(const u of UNITS)ICON[u.id]=iconURL(u.id);
 S.armies[1].fac=1;
 newField();renderPanel();renderHud();updateTileInfo();
 requestAnimationFrame(frame);
-window.__altozano=S;window.__alt={step,startBattle,autoArmy,newField,FACTIONS};
+window.__altozano=S;window.__alt={step,startBattle,autoArmy,newField,FACTIONS,UNITS,SPR};
 })();
 </script>

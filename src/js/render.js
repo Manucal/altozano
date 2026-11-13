@@ -73,12 +73,12 @@ function frame(now){
  for(const c of S.corpses)drawCorpse(c);
  if(S.state==='battle')drawSelection();
  if(S.state==='battle'||S.state==='result')drawGen(now);
- for(const f of S.fields||[]){const a=Math.min(1,f.t/1.2);const g=ctx.createRadialGradient(f.x*T,f.y*T,2,f.x*T,f.y*T,f.r*T);g.addColorStop(0,`rgba(255,200,80,${0.75*a})`);g.addColorStop(0.55,`rgba(240,90,20,${0.55*a})`);g.addColorStop(1,'rgba(120,20,10,0)');ctx.fillStyle=g;ctx.fillRect(f.x*T-f.r*T,f.y*T-f.r*T,f.r*T*2,f.r*T*2)}
+ for(const f of S.fields||[]){const a=Math.min(1,f.t/1.2);if(f.flood){const R=f.r*T,ph=now/600;ctx.save();ctx.translate(f.x*T,f.y*T+3);ctx.scale(1,0.72);const g=ctx.createRadialGradient(0,0,2,0,0,R);g.addColorStop(0,`rgba(70,150,215,${0.62*a})`);g.addColorStop(0.75,`rgba(47,111,168,${0.5*a})`);g.addColorStop(1,'rgba(47,111,168,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,R,0,6.283);ctx.fill();ctx.strokeStyle=`rgba(200,235,255,${0.5*a})`;ctx.lineWidth=1;for(let i=0;i<3;i++){const k=((ph+i/3)%1);ctx.globalAlpha=(1-k)*a;ctx.beginPath();ctx.arc(0,0,R*(0.25+0.7*k),0,6.283);ctx.stroke()}ctx.restore();continue}const g=ctx.createRadialGradient(f.x*T,f.y*T,2,f.x*T,f.y*T,f.r*T);g.addColorStop(0,`rgba(255,200,80,${0.75*a})`);g.addColorStop(0.55,`rgba(240,90,20,${0.55*a})`);g.addColorStop(1,'rgba(120,20,10,0)');ctx.fillStyle=g;ctx.fillRect(f.x*T-f.r*T,f.y*T-f.r*T,f.r*T*2,f.r*T*2)}
  const list=S.trees.map(t=>({y:t.y,f:()=>drawTree(t)}));
  for(const h of S.houses||[])list.push({y:h.y-2,f:()=>drawHouse(h)});
  list.push({y:-1e9,f:()=>{}});for(const o of S.objs||[])list.push({y:o.y*T+4,f:()=>drawObjectiveOne(o,now)});
  if(S.state==='battle'||S.state==='result'){
-  for(const u of S.units)if(u.alive)list.push({y:u.y*T+5+(u.def.fly?30:0),f:()=>drawUnitAt(u.def,u.side,u.x,u.y,{frame:u.moving?(Math.floor(u.anim)%2):(u.def.fly?Math.floor(now/180)%2:0),face:u.face,el:elev(u),flash:u.flash,hp:u.hp/u.max,sh:u.shMax?u.sh/u.shMax:0,lunge:u.lunge>0,t:now/1000,ghost:u.def.stealth&&S.time>u.reveal,rout:u.rout>S.time})});
+  for(const u of S.units)if(u.alive)list.push({y:u.y*T+5+(u.def.fly?30:0),f:()=>drawUnitAt(u.def,u.side,u.x,u.y,{frame:u.moving?(Math.floor(u.anim)%2):(u.def.fly?Math.floor(now/180)%2:0),face:u.face,el:elev(u),flash:u.flash,hp:u.hp/u.max,sh:u.shMax?u.sh/u.shMax:0,lunge:u.lunge>0,t:now/1000,ghost:(u.def.stealth&&S.time>u.reveal)||(u.def.lurk&&S.time>=u.reveal&&onWater(u)),rout:u.rout>S.time})});
  }else if(S.state==='deploy'||S.state==='handoff'||S.state==='reveal'){
   const rv=S.state==='reveal';
   if(rv&&S.revPick!=null){const it=S.armies[S.side].units[S.revPick];if(it){const x=(it.c+0.5)*T,y=(it.r+0.5)*T+4-hgtTile(it.c,it.r)*8,k=0.5+0.5*Math.sin(now/150);ctx.strokeStyle=`rgba(255,224,102,${0.6+0.4*k})`;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y,14,8,0,0,6.283);ctx.stroke()}}

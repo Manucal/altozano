@@ -1,16 +1,19 @@
 'use strict';
 /* ================= OBJETIVOS, CLIMA CAMBIANTE Y TERRENO VIVO ================= */
 // --- Objetivos: 3 puntos que empiezan en manos del defensor. El atacante gana si mantiene 2 durante OBJWIN segundos.
-const OBJWIN=40;
+const OBJWIN=45;
 const OBJTYPES={
  estandarte:{n:'Estandarte',art:'el estandarte',d:'Su dueño hace +10% de daño.'},
  pozo:{n:'Pozo sagrado',art:'el pozo sagrado',d:'Todo el ejército de su dueño regenera un 0,8% de vida por segundo.'},
  atalaya:{n:'Atalaya',art:'la atalaya',d:'Los tiradores de su dueño tienen +1 de alcance.'},
 };
+// Desplazamiento de los objetivos en cada campo: negativo = más cerca del defensor. Ajustado con tools/balance.js para que el atacante gane cerca del 50%.
+const OBJSHIFT={cumbre:-0.12,emboscada:-0.1,oasis:-0.09,valle:-0.06,rio:-0.07,random:-0.03,paso:-0.03,fortaleza:-0.01,altiplano:0.02,caldera:0.1},OBJSHIFT_BIO={};
 function placeObjectives(){
  const r=rng(S.seed^0x0b1),d=S.def,cands=[];
+ const sh=S.dbg&&S.dbg.objSh!=null?S.dbg.objSh:(OBJSHIFT[S.preset]||0)+(OBJSHIFT_BIO[S.biome]||0);
  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
-  const dv=dvOf(d,x,y),v=S.map[y][x];if(dv<0.66||dv>0.98||BLOCK(v)||v===3||v===4)continue;
+  const dv=dvOf(d,x,y),v=S.map[y][x];if(dv<0.66+sh||dv>0.98+sh||BLOCK(v)||v===3||v===4)continue;
   let free=0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const w=S.map[y+j][x+i];if(!BLOCK(w)&&w!==3&&S.hgt[y+j][x+i]===S.hgt[y][x])free++}
   if(free>=7)cands.push({x,y,dv});
  }
